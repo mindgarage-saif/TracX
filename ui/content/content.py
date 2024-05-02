@@ -1,6 +1,6 @@
 import time
 
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QPushButton, QLabel, QWidget, QComboBox, QScrollBar
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QWidget
 from PyQt5.QtCore import QTimer
 
 from pocketpose import PoseInferencer
@@ -10,152 +10,7 @@ from pocketpose.apis import list_models
 from ..data import RuntimeParams
 from ..widgets import Chip
 from .camera import Camera
-
-
-class ControlPanel(QFrame):
-    def __init__(self, camera, parent=None):
-        super().__init__(parent)
-        self.camera = camera
-        self.statusBar = parent.statusBar
-        self.setObjectName("ControlPanel")
-        self.setStyleSheet("""
-            #ControlPanel {
-            }
-                           
-            #ControlPanel #StartButton {
-                background-color: rgb(0, 139, 0);
-                color: white;
-            }
-                           
-            #ControlPanel #StopButton {
-                background-color: rgb(139, 0, 0);
-                color: white;
-            }
-            
-            #ControlPanel #ExportMenu {
-                border-radius: 8px;
-                padding: 8px;
-            }
-                           
-            #ControlPanel #ExportMenu::drop-down {
-                border-radius: 8px;
-            }
-                           
-            #ControlPanel #TimerLabel {
-                font-size: 16px;
-                color: white;
-            }
-            
-            #ControlPanel #SeekBar {
-                background-color: transparent;
-                border: 1px solid white;
-                border-radius: 8px;
-            }
-                           
-            #ControlPanel #SeekBar::handle {
-                background-color: white;
-                border: 1px solid black;
-                border-radius: 8px;
-            }
-                           
-            #ControlPanel #SeekBar::add-page, #ControlPanel #SeekBar::sub-page {
-                background-color: transparent;
-            }
-                           
-            #ControlPanel #SeekBar::add-line, #ControlPanel #SeekBar::sub-line {
-                background-color: transparent;
-            }
-        """)
-        self.setFixedHeight(48)
-        self.setFixedWidth(parent.width() - 16)
-        self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(8, 8, 8, 8)
-        self.layout.setSpacing(8)
-        self.setLayout(self.layout)
-
-        # Add start/stop buttons
-        self.startButton = QPushButton("Start", self)
-        self.startButton.setObjectName("StartButton")
-        self.startButton.setFixedWidth(64)
-        self.stopButton = QPushButton("Stop", self)
-        self.stopButton.setObjectName("StopButton")
-        self.stopButton.setFixedWidth(64)
-        self.layout.addWidget(self.startButton)
-        self.layout.addWidget(self.stopButton)
-
-        # Create a timer label
-        self.timerLabel = QLabel("00:00:00", self)
-        self.timerLabel.setObjectName("TimerLabel")
-
-        # Create export dropdown
-        self.exportMenu = QComboBox(self)
-        self.exportMenu.setObjectName("ExportMenu")
-        self.exportMenu.addItem("Export Screenshot")
-        self.exportMenu.addItem("Export Annotations") 
-
-        # Calculate width of timer label and export menu
-        timerWidth = self.timerLabel.sizeHint().width() + 16  # 16 is padding
-        exportWidth = self.exportMenu.sizeHint().width() + 16
-        buttonsWidth = self.startButton.width() + self.stopButton.width() + 32
-        seekbarWidth = self.width() - timerWidth - exportWidth - buttonsWidth - 16
-        self.timerLabel.setFixedWidth(timerWidth)
-        self.exportMenu.setFixedWidth(exportWidth)
-
-        # Create a seekbar (use a scroll bar for now)
-        self.seekBar = QScrollBar(self)
-        self.seekBar.setObjectName("SeekBar")
-        self.seekBar.setOrientation(1)
-        self.seekBar.setFixedWidth(seekbarWidth)
-        self.seekBar.setRange(0, 100)
-        self.seekBar.setPageStep(1)
-        self.seekBar.setValue(0)
-        self.seekBar.setEnabled(False)
-
-        # Add items to layout
-        self.layout.addWidget(self.seekBar)
-        self.layout.addWidget(self.timerLabel)
-        self.layout.addWidget(self.exportMenu)
-        self.layout.addStretch()
-
-        # Initialize the control panel
-        self.setStartCallback(self.onStart)
-        self.setStopCallback(self.onStop)
-        self.setExportCallback(self.onExport)
-        self.onStop()
-
-    def setTime(self, time):
-        self.timerLabel.setText(time)
-
-    def setStartCallback(self, callback):
-        self.startButton.clicked.connect(callback)
-
-    def setStopCallback(self, callback):
-        self.stopButton.clicked.connect(callback)
-
-    def setExportCallback(self, callback):
-        self.exportMenu.currentIndexChanged.connect(callback)
-
-    def onStart(self):
-        self.camera.toggle_start()
-        if self.camera._is_started:
-            self.statusBar.showMessage("Webcam started")
-            self.startButton.setText("Pause")
-        else:
-            self.statusBar.showMessage("Webcam paused")
-            self.startButton.setText("Start")
-    
-        self.stopButton.setEnabled(True)
-
-    def onStop(self):
-        self.statusBar.showMessage("Webcam stopped")
-        self.camera.release()
-        self.startButton.setText("Start")
-        self.stopButton.setEnabled(False)
-
-    def onExport(self, index):
-        self.statusBar.showMessage("Exporting screenshot...")
-        path = self.camera.screenshot()
-        self.statusBar.showMessage(f"Screenshot saved to {path}")
+from .control_panel import ControlPanel
 
 
 class WebcamLayout(QFrame):
@@ -215,8 +70,9 @@ class WebcamLayout(QFrame):
         # Connect signals
         self.runtimeParams = RuntimeParams()
         self.runtimeParams.fpsUpdated.connect(self.update_fps_label)
-        self.runtimeParams.inferenceSpeedUpdated.connect(self.update_inference_label)
-        
+        self.runtimeParams.inferenceSpeedUpdated.connect(
+            self.update_inference_label)
+
         # Labels for stats
         self.status_bar.addWidget(self.modelName)
         self.status_bar.addWidget(self.modelRuntime)
@@ -296,7 +152,7 @@ class Content(QFrame):
         self.current_model = model_name
         self.inferencer = PoseInferencer(self.current_model)
         self.visualizer = VISUALIZERS.build(
-            "PoseVisualizer", 
+            "PoseVisualizer",
             self.inferencer.model.keypoints_type
         )
         self.frame_count = 0
