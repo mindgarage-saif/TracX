@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QPushButton, QLabel, QComboBox, QScrollBar
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QPushButton, QLabel, QComboBox, QScrollBar, QFileDialog
 
 
 class ControlPanel(QFrame):
@@ -110,7 +110,8 @@ class ControlPanel(QFrame):
         inputSourceLabel = QLabel("Input Source:")
         self.layout1.addWidget(inputSourceLabel)
         self.layout1.addSpacing(8)
-        buttonWidth = (self.width() - inputSourceLabel.sizeHint().width() - 16) // 3
+        buttonWidth = (
+            self.width() - inputSourceLabel.sizeHint().width() - 16) // 3
         self.webcamButton = QPushButton("Webcam", self)
         self.webcamButton.setObjectName("WebcamButton")
         self.webcamButton.setFixedWidth(buttonWidth)
@@ -174,11 +175,33 @@ class ControlPanel(QFrame):
         self.layout2.addWidget(self.exportMenu)
         self.layout2.addStretch()
 
+        self.startButton.setEnabled(False)
+        self.stopButton.setEnabled(False)
+        self.webcamButton.clicked.connect(self.enableWebcam)
+        self.videoButton.clicked.connect(self.pickVideo)
+
         # Initialize the control panel
         self.setStartCallback(self.onStart)
         self.setStopCallback(self.onStop)
         self.setExportCallback(self.onExport)
         self.onStop()
+
+    def enableWebcam(self):
+        # Get available cameras
+        available_cameras = self.camera.get_available_cameras()
+        if len(available_cameras) > 0:
+            self.camera.change_camera(available_cameras[0])
+            self.onStart()
+
+    def pickVideo(self):
+        file_dialog = QFileDialog(self)
+        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        file_dialog.setNameFilter("Video Files (*.mp4 *.avi *.mov)")
+        file_dialog.setViewMode(QFileDialog.Detail)
+        if file_dialog.exec_():
+            file_path = file_dialog.selectedFiles()[0]
+            self.camera.change_camera(file_path)
+            self.onStart()
 
     def setTime(self, time):
         self.timerLabel.setText(time)
@@ -204,9 +227,19 @@ class ControlPanel(QFrame):
         self.stopButton.setEnabled(True)
 
     def onStop(self):
-        self.statusBar.showMessage("Webcam stopped")
-        self.camera.release()
+        current_source = self.camera._camera_id
+        if current_source is None:
+            self.statusBar.showMessage("Select an input source to start")
+        elif isinstance(current_source, int):
+            self.statusBar.showMessage(f"Using webcam {current_source}")
+        elif isinstance(current_source, str):
+            self.statusBar.showMessage(f"Using video {current_source}")
+        else:
+            self.statusBar.showMessage("Invalid input source")
+
+        self.startButton.setEnabled(True)
         self.startButton.setText("Start")
+        self.camera.release()
         self.stopButton.setEnabled(False)
 
     def onExport(self, index):

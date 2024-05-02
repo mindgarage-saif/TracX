@@ -14,7 +14,7 @@ from .control_panel import ControlPanel
 
 
 class WebcamLayout(QFrame):
-    def __init__(self, parent, on_frame_fn, refresh_rate=30, camera_id=0):
+    def __init__(self, parent, on_frame_fn, refresh_rate=30):
         super().__init__(parent)
         self.statusBar = parent.statusBar
         aspect_ratio = 4 / 3
@@ -84,7 +84,7 @@ class WebcamLayout(QFrame):
         self.status_bar.addStretch()
 
         # Create the camera
-        self.camera = Camera(size, camera_id)
+        self.camera = Camera(size)
         self.innerLayout.addWidget(self.camera._view)
         self.innerLayout.addStretch()
 
@@ -135,7 +135,6 @@ class Content(QFrame):
         self.webcam_layout = WebcamLayout(
             self,
             self.update_frame,
-            camera_id=0
         )
         self.webcam_layout.setFixedHeight(self.height() - 52)
         self.innerLayout.addWidget(self.webcam_layout)
