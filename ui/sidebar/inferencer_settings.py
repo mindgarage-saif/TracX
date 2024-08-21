@@ -1,10 +1,16 @@
-from PyQt5.QtWidgets import (
-    QFrame, QLabel, QComboBox, QLabel, QHBoxLayout,
-    QVBoxLayout, QRadioButton, QButtonGroup, QScrollArea,
-)
-from PyQt5.QtCore import Qt
-
 from pocketpose.apis import list_models
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QButtonGroup,
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QRadioButton,
+    QScrollArea,
+    QVBoxLayout,
+)
+
 from .model_browser import ModelBrowser
 
 
@@ -14,7 +20,8 @@ class InferencerSettings(QFrame):
         self.setFixedWidth(parent.width())
         self.setFixedHeight(height)
         self.setObjectName("InferencerSettings")
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             #InferencerSettings {
                 background-color: rgba(255, 255, 255, 100);
                 border-radius: 8px;
@@ -51,7 +58,8 @@ class InferencerSettings(QFrame):
             QComboBox::drop-down {
                 border-radius: 8px;
             }
-        """)
+        """
+        )
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
@@ -116,7 +124,9 @@ class InferencerSettings(QFrame):
 
         # Instantiate ModelBrowser
         self.modelBrowser = ModelBrowser(self)
-        available_models = list_models()  # Ensure this is a function that returns model names
+        available_models = (
+            list_models()
+        )  # Ensure this is a function that returns model names
         self.modelBrowser.setModels(available_models)
 
         # Dropdown for model selection
@@ -128,20 +138,24 @@ class InferencerSettings(QFrame):
 
         # Create a QScrollArea
         self.scroll_area = QScrollArea()
-        self.scroll_area.setStyleSheet("""
+        self.scroll_area.setStyleSheet(
+            """
             QScrollArea {
                 background: #091a40;
                 color: white;
                 border-radius: 8px;
                 padding: 0px;
             }
-        """)
+        """
+        )
         # Important to make the scroll area adapt to the content
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.modelBrowser)
 
         # Compute height of the scroll area
-        self.scroll_area_height = self.height() - self.innerLayout.sizeHint().height() - 48
+        self.scroll_area_height = (
+            self.height() - self.innerLayout.sizeHint().height() - 48
+        )
         self.scroll_area.setFixedHeight(self.scroll_area_height)
         self.innerLayout.addWidget(self.scroll_area)
         self.innerLayout.addWidget(self.model_selector)

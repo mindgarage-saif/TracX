@@ -1,4 +1,5 @@
 import os
+
 import cv2
 import ktb
 from sam2.build_sam import build_sam2_camera_predictor
@@ -13,7 +14,9 @@ class Camera:
         self._is_started = False
         self._is_video = False
         self._view = CameraView(size, flip=True)
-        self._tracker = build_sam2_camera_predictor("sam2_hiera_t.yaml", "assets/sam2_hiera_tiny.pt")
+        self._tracker = build_sam2_camera_predictor(
+            "sam2_hiera_t.yaml", "assets/sam2_hiera_tiny.pt"
+        )
         self._init_tracker = False
 
     def get_available_cameras(self):
@@ -23,7 +26,7 @@ class Camera:
             if camera.isOpened():
                 cameras.append(i)
                 camera.release()
-        
+
         # Add Kinect camera (if available)
         cameras.append("kinect")
         return cameras

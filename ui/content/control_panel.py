@@ -1,4 +1,13 @@
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QPushButton, QLabel, QComboBox, QScrollBar, QFileDialog
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollBar,
+    QVBoxLayout,
+)
 
 
 class ControlPanel(QFrame):
@@ -7,7 +16,8 @@ class ControlPanel(QFrame):
         self.camera = camera
         self.statusBar = parent.statusBar
         self.setObjectName("ControlPanel")
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             #ControlPanel QLabel {
                 color: white;
             }
@@ -92,7 +102,8 @@ class ControlPanel(QFrame):
             #ControlPanel #SeekBar::add-line, #ControlPanel #SeekBar::sub-line {
                 background-color: transparent;
             }
-        """)
+        """
+        )
         self.setFixedHeight(96)
         self.setFixedWidth(parent.width() - 16)
         self.innerLayout = QVBoxLayout(self)
@@ -110,8 +121,7 @@ class ControlPanel(QFrame):
         inputSourceLabel = QLabel("Input Source:")
         self.layout1.addWidget(inputSourceLabel)
         self.layout1.addSpacing(8)
-        buttonWidth = (
-            self.width() - inputSourceLabel.sizeHint().width() - 16) // 3
+        buttonWidth = (self.width() - inputSourceLabel.sizeHint().width() - 16) // 3
         self.webcamButton = QPushButton("Webcam", self)
         self.webcamButton.setObjectName("WebcamButton")
         self.webcamButton.setFixedWidth(buttonWidth)

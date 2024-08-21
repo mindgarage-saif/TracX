@@ -1,12 +1,13 @@
-from PyQt5.QtWidgets import QFrame, QLabel, QLabel, QVBoxLayout, QSlider, QCheckBox
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QCheckBox, QFrame, QLabel, QSlider, QVBoxLayout
 
 
 class VisualizerSettings(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setFixedWidth(parent.width())
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QFrame {
                 background-color: rgba(255, 255, 255, 100);
                 border-radius: 8px;
@@ -24,7 +25,8 @@ class VisualizerSettings(QFrame):
                 background-color: transparent;
                 color: black;
             }
-        """)
+        """
+        )
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)

@@ -2,9 +2,16 @@ import time
 import traceback
 
 import numpy as np
-from pylibfreenect2.libfreenect2 import Freenect2, Freenect2Device, Frame, FrameMap, FrameType
-from pylibfreenect2.libfreenect2 import Registration, SyncMultiFrameListener
-from utils import segment, dmap2norm
+from pylibfreenect2.libfreenect2 import (
+    Frame,
+    FrameMap,
+    FrameType,
+    Freenect2,
+    Freenect2Device,
+    Registration,
+    SyncMultiFrameListener,
+)
+from utils import dmap2norm, segment
 
 
 class Config:
@@ -38,9 +45,15 @@ class Filters:
 class Viewport:
     """Camera viewport."""
 
-    def __init__(self, left: int = 0, right: int = 0,
-                 top: int = 0, bottom: int = 0,
-                 near: float = 500.0, far: float = 4500.0):
+    def __init__(
+        self,
+        left: int = 0,
+        right: int = 0,
+        top: int = 0,
+        bottom: int = 0,
+        near: float = 500.0,
+        far: float = 4500.0,
+    ):
         """Initializer.
 
         :param left: Number of pixels to crop on the left side. Default is 0.
@@ -59,10 +72,7 @@ class Viewport:
 
 
 # noinspection PyArgumentList,PyBroadException
-def record(callback,
-           config: Config,
-           filters: Filters,
-           viewport: Viewport):
+def record(callback, config: Config, filters: Filters, viewport: Viewport):
     """Records a sequence of RGB-D images.
 
     Each datapoint in the sequence is a set of four values, i.e. an RGB image, a depth map,
@@ -85,14 +95,16 @@ def record(callback,
     device.setColorFrameListener(listener)
     device.setIrAndDepthFrameListener(listener)
 
-    print(f"Configuration:"
-          f"\n  Filters: "
-          f"Skin={filters.skin}, "
-          f"Noise={filters.noise}"
-          f"\n  Viewport: "
-          f"x=({viewport.left},W-{viewport.right}), "
-          f"y=({viewport.top},H-{viewport.bottom}), "
-          f"z=({viewport.near},{viewport.far})")
+    print(
+        f"Configuration:"
+        f"\n  Filters: "
+        f"Skin={filters.skin}, "
+        f"Noise={filters.noise}"
+        f"\n  Viewport: "
+        f"x=({viewport.left},W-{viewport.right}), "
+        f"y=({viewport.top},H-{viewport.bottom}), "
+        f"z=({viewport.near},{viewport.far})"
+    )
 
     # Wait specified number of seconds before starting image capture
     print(f"Starting in {config.delay} seconds")
@@ -100,15 +112,23 @@ def record(callback,
         time.sleep(config.delay)
 
     device.start()
-    print("Recording", f"for {config.duration} seconds" if config.duration > 0 else "until interrupted",
-          f"at <={config.rate} fps" if config.rate > 0 else "")
+    print(
+        "Recording",
+        (
+            f"for {config.duration} seconds"
+            if config.duration > 0
+            else "until interrupted"
+        ),
+        f"at <={config.rate} fps" if config.rate > 0 else "",
+    )
 
     start_time = time.time()
     last_time = start_time + 0.0001
 
     # must be called after device.start()
-    registration = Registration(device.getIrCameraParams(),
-                                device.getColorCameraParams())
+    registration = Registration(
+        device.getIrCameraParams(), device.getColorCameraParams()
+    )
 
     count = 0
     while True:
@@ -116,44 +136,55 @@ def record(callback,
             frames = FrameMap()
             listener.waitForNewFrame(frames)
 
-            color = frames[FrameType.Color]  # Dimensions: 1920 x 1080, FoV: 84.1° x 53.8°
+            color = frames[
+                FrameType.Color
+            ]  # Dimensions: 1920 x 1080, FoV: 84.1° x 53.8°
             depth = frames[FrameType.Depth]  # Dimensions: 512 x 424, FoV: 70.6° x 60°
             undistorted = Frame(512, 424, 4)
             registered = Frame(512, 424, 4)
 
             # Combine frames of depth and color camera
-            registration.apply(color, depth, undistorted, registered, enable_filter=False)
+            registration.apply(
+                color, depth, undistorted, registered, enable_filter=False
+            )
 
             color = registered.asarray(dtype=np.uint8)[:, :, :3]
             depth = undistorted.asarray(dtype=np.float32)
 
             # Crop viewport along x and y axes
             if viewport.left > 0:
-                color = color[:, viewport.left:, :]
-                depth = depth[:, viewport.left:]
+                color = color[:, viewport.left :, :]
+                depth = depth[:, viewport.left :]
 
             if viewport.right > 0:
-                color = color[:, :-viewport.right, :]
-                depth = depth[:, :-viewport.right]
+                color = color[:, : -viewport.right, :]
+                depth = depth[:, : -viewport.right]
 
             if viewport.top > 0:
-                color = color[viewport.top:, :, :]
-                depth = depth[viewport.top:, :]
+                color = color[viewport.top :, :, :]
+                depth = depth[viewport.top :, :]
 
             if viewport.bottom > 0:
-                color = color[:-viewport.bottom, :, :]
-                depth = depth[:-viewport.bottom, :]
+                color = color[: -viewport.bottom, :, :]
+                depth = depth[: -viewport.bottom, :]
 
             # Remove undesired surfaces
-            color, depth, mask = segment(color, depth,
-                                         min_depth=viewport.near, max_depth=viewport.far,
-                                         skin=filters.skin, artefacts=filters.noise)
+            color, depth, mask = segment(
+                color,
+                depth,
+                min_depth=viewport.near,
+                max_depth=viewport.far,
+                skin=filters.skin,
+                artefacts=filters.noise,
+            )
 
             # Compute surface normals from depth map
             norms = dmap2norm(depth)
             norms[mask] = 0
 
-            callback((color, depth, norms, mask))  # RGB-D+Normals data + Foreground mask
+            callback(
+                (color, depth, norms, mask)
+            )  # RGB-D+Normals data + Foreground mask
             listener.release(frames)
             count += 1
 
@@ -168,7 +199,7 @@ def record(callback,
             # Limit by frame rate (only capture a maximum of `fps` images per second)
             now = time.time()
             if config.rate > 0:
-                time_between_frames = 1. / config.rate
+                time_between_frames = 1.0 / config.rate
                 time_since_prev_frame = now - last_time
                 wait = time_between_frames - time_since_prev_frame
                 if wait > 0:
@@ -184,7 +215,8 @@ def record(callback,
             break
 
     print(
-        f"Processed {count} frames in {(last_time - start_time):.2f}s at {(count / (last_time - start_time)):.1f} fps.")
+        f"Processed {count} frames in {(last_time - start_time):.2f}s at {(count / (last_time - start_time)):.1f} fps."
+    )
     print("Closing device")
     device.stop()
     device.close()

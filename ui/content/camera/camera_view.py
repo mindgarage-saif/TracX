@@ -2,8 +2,8 @@ from typing import Tuple
 
 import cv2
 import numpy as np
-from PyQt5.QtWidgets import (QLabel, QLabel)
 from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtWidgets import QLabel
 
 
 def resize_with_padding(image: np.ndarray, target_size: Tuple[int, int]) -> np.ndarray:
@@ -24,8 +24,7 @@ def resize_with_padding(image: np.ndarray, target_size: Tuple[int, int]) -> np.n
     left = (target_w - new_w) // 2
     right = target_w - new_w - left
 
-    image = cv2.copyMakeBorder(
-        image, top, bottom, left, right, cv2.BORDER_CONSTANT)
+    image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT)
 
     return image
 
@@ -46,7 +45,8 @@ class CameraView(QLabel):
             h, w, ch = frame.shape
             bytes_per_line = ch * w
             convert_to_Qt_format = QImage(
-                frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+                frame.data, w, h, bytes_per_line, QImage.Format_RGB888
+            )
             pixmap = QPixmap(convert_to_Qt_format)
             self.setPixmap(pixmap)
         except Exception as e:

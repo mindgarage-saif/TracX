@@ -1,10 +1,16 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QSplashScreen
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QMainWindow,
+    QSplashScreen,
+    QWidget,
+)
 
-from .sidebar import Sidebar
 from .content import Content
+from .sidebar import Sidebar
 
 
 class StudioWindow(QMainWindow):
@@ -39,7 +45,8 @@ class StudioWindow(QMainWindow):
         position_y = (screen_height - height) // 2
         self.move(position_x, position_y)
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             #CentralWidget {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                                         stop:0 #091a40, stop:1 #6A004E);
@@ -50,7 +57,8 @@ class StudioWindow(QMainWindow):
                 background: black;
                 color: white;
             }
-        """)
+        """
+        )
 
         # Central widget
         central_widget = QWidget(self)
@@ -78,15 +86,19 @@ class StudioWindow(QMainWindow):
         window.setSpacing(0)
         self.content = Content(self)
         self.sidebar = Sidebar(self)
-        self.sidebar.inferencerSettings.setModelSelectedCallback(self.content.change_model)
-        self.sidebar.visualizerSettings.setCallback(self.content.update_visualizer_params)
+        self.sidebar.inferencerSettings.setModelSelectedCallback(
+            self.content.change_model
+        )
+        self.sidebar.visualizerSettings.setCallback(
+            self.content.update_visualizer_params
+        )
 
         print("Sidebar size:", self.sidebar.width(), self.sidebar.height())
         print("Content size:", self.content.width(), self.content.height())
 
         window.addWidget(self.sidebar)
         window.addWidget(self.content)
-            
+
     def closeEvent(self, event):
         self.content.webcam_layout.controlPanel.onStop()
 
