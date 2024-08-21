@@ -1,6 +1,7 @@
 import os
 import cv2
 import ktb
+from sam2.build_sam import build_sam2_camera_predictor
 
 from .camera_view import CameraView
 
@@ -10,7 +11,10 @@ class Camera:
         self._camera = None
         self._camera_id = None
         self._is_started = False
+        self._is_video = False
         self._view = CameraView(size, flip=True)
+        self._tracker = build_sam2_camera_predictor("sam2_hiera_t.yaml", "assets/sam2_hiera_tiny.pt")
+        self._init_tracker = False
 
     def get_available_cameras(self):
         cameras = []
@@ -33,6 +37,8 @@ class Camera:
 
     def change_camera(self, camera_id):
         print(f"Changing camera to {camera_id}")
+        self._is_video = False
+        self._init_tracker = False
         if camera_id == "kinect":
             self.release()
             self._camera_id = camera_id
@@ -45,6 +51,7 @@ class Camera:
             if not os.path.exists(camera_id):
                 raise Exception("Invalid video file path")
             self._camera_id = camera_id
+            self._is_video = True
 
         self.release()
 
