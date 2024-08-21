@@ -64,11 +64,11 @@ class WebcamLayout(QFrame):
         self.innerLayout.addSpacing(32)
 
         # Set up the labels
-        self.modelName = Chip("MobileNetV2")  # TODO: Show current model
-        self.modelRuntime = Chip("ONNX")  # TODO: Show current runtime
-        self.modelQuant = Chip("FP32")  # TODO: Show current quantization
-        self.modelFLOPs = Chip("0.0 GFLOPs")
-        self.modelParams = Chip("0.0 M")
+        self.modelName = Chip("Model Name")
+        self.modelRuntime = Chip("Runner Name")
+        self.modelSkeleton = Chip("Skeleton Type")
+        self.modelLicense = Chip("License")
+        self.modelInput = Chip("Input Size")
         self.fpsLabel = Chip("FPS: 0")
         self.inferenceLabel = Chip("Latency: 0.0 ms")
 
@@ -80,9 +80,9 @@ class WebcamLayout(QFrame):
         # Labels for stats
         self.status_bar.addWidget(self.modelName)
         self.status_bar.addWidget(self.modelRuntime)
-        self.status_bar.addWidget(self.modelQuant)
-        self.status_bar.addWidget(self.modelFLOPs)
-        self.status_bar.addWidget(self.modelParams)
+        self.status_bar.addWidget(self.modelSkeleton)
+        self.status_bar.addWidget(self.modelLicense)
+        self.status_bar.addWidget(self.modelInput)
         self.status_bar.addWidget(self.fpsLabel)
         self.status_bar.addWidget(self.inferenceLabel)
         self.status_bar.addStretch()
@@ -100,6 +100,13 @@ class WebcamLayout(QFrame):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update)
         self.timer.start(refresh_rate)
+
+    def show_model_info(self, model_name, runtime, quant, flops, params):
+        self.modelName.setText(model_name)
+        self.modelRuntime.setText(runtime)
+        self.modelSkeleton.setText(quant)
+        self.modelLicense.setText(flops)
+        self.modelInput.setText(str(params))
 
     def update_fps_label(self, fps):
         self.fpsLabel.setText(f"FPS: {fps:.0f}")
@@ -238,6 +245,15 @@ class Content(QFrame):
         )
         self.frame_count = 0
         self.start_time = time.time()
+
+        info = self.inferencer.model.cfg.as_dict()
+        self.webcam_layout.show_model_info(
+            info["pretty_name"],
+            info["runner"],
+            info["skeleton"].upper(),
+            info["license"],
+            info["input_size"],
+        )
 
     def update_visualizer_params(self, radius, thickness, kpt_thr, draw_bbox):
         self.visualizer.radius = radius
