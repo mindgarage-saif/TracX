@@ -163,12 +163,19 @@ class Content(QFrame):
         self.visualizer.kpt_thr = kpt_thr
         self.visualizer.draw_bbox = draw_bbox
 
-    def update_frame(self, frame):
+        depth = None
+        if isinstance(frame, tuple):
+            frame, depth = frame
+
         # Perform pose inference
         keypoints = self.inferencer.infer(frame)
 
         # Process frame for display (resize, convert color, draw keypoints)
-        frame = self.visualizer.visualize(frame, keypoints)
+
+        if depth is not None:
+            # Mask all pixels where depth is outside 1000-3000 mm
+            depth = cv2.inRange(depth, 500, 1500)
+            frame[depth == 0] = 255
 
         # Update frame count and calculate FPS
         self.frame_count += 1

@@ -1,5 +1,6 @@
 import os
 import cv2
+import ktb
 
 from .camera_view import CameraView
 
@@ -18,6 +19,9 @@ class Camera:
             if camera.isOpened():
                 cameras.append(i)
                 camera.release()
+        
+        # Add Kinect camera (if available)
+        cameras.append("kinect")
         return cameras
 
     def select_default_camera(self):
@@ -29,6 +33,11 @@ class Camera:
 
     def change_camera(self, camera_id):
         print(f"Changing camera to {camera_id}")
+        if camera_id == "kinect":
+            self.release()
+            self._camera_id = camera_id
+            return
+
         if isinstance(camera_id, int) or camera_id.isdigit():
             self._camera_id = int(camera_id)
         else:
@@ -61,7 +70,10 @@ class Camera:
 
         if self._camera is None:
             self._view.clear()
-            self._camera = cv2.VideoCapture(self._camera_id)
+            if self._camera_id == "kinect":
+                self._camera = ktb.Kinect()
+            else:
+                self._camera = cv2.VideoCapture(self._camera_id)
 
         self._is_started = True
 
@@ -75,11 +87,20 @@ class Camera:
         if not self._is_started or self._camera is None:
             return False, None
 
+        if self._camera_id == "kinect":
+            color = self._camera.get_frame(ktb.COLOR)
+            depth = self._camera.get_frame(ktb.RAW_DEPTH)
+            return True, (color, depth)
+
         return self._camera.read()
 
     def release(self):
         if self._camera is not None:
-            self._camera.release()
-            self._camera = None
+            if self._camera_id == "kinect":
+                self._camera = None
+            else:
+                self._camera.release()
+                self._camera = None
+
             self._is_started = False
             self._view.clear()
