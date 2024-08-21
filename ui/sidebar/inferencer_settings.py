@@ -126,15 +126,8 @@ class InferencerSettings(QFrame):
         self.modelBrowser = ModelBrowser(self)
         available_models = (
             list_models()
-        )  # Ensure this is a function that returns model names
+        )
         self.modelBrowser.setModels(available_models)
-
-        # Dropdown for model selection
-        self.model_selector = QComboBox(self)
-        self.model_selector.setEditable(True)
-        self.model_selector.lineEdit().setAlignment(Qt.AlignCenter)
-        self.model_selector.setEditable(False)
-        self.model_selector.addItems(available_models)
 
         # Create a QScrollArea
         self.scroll_area = QScrollArea()
@@ -158,10 +151,9 @@ class InferencerSettings(QFrame):
         )
         self.scroll_area.setFixedHeight(self.scroll_area_height)
         self.innerLayout.addWidget(self.scroll_area)
-        self.innerLayout.addWidget(self.model_selector)
 
     def setModelSelectedCallback(self, callback):
-        self.model_selector.currentTextChanged.connect(callback)
+        self.modelBrowser.callback = callback
 
     def setKeypointThresholdChangedCallback(self, callback):
         self.filter.valueChanged.connect(callback)
