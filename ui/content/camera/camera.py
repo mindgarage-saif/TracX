@@ -1,9 +1,35 @@
 import os
 import cv2
-import ktb
+import logging
+
+try:
+    import ktb  # https://github.com/nikwl/kinect-toolbox/
+    from pylibfreenect2 import Freenect2  # dependency of ktb
+except ImportError:
+    logging.warning("kinect-toolbox not found, Kinect camera will not work")
+    logging.warning("see https://github.com/nikwl/kinect-toolbox/?tab=readme-ov-file#installation")
+    ktb = None
+
 from sam2.build_sam import build_sam2_camera_predictor
 
 from .camera_view import CameraView
+
+
+# Maximum number of cameras supported
+# -------------------------------------
+# This flag controls how many cameras can be used at the same time. It is arbitrary
+# and can be increased if needed. The app looks for up to MAX_CAMERAS cameras and 
+# makes them available to the user to select from a dropdown menu.
+MAX_CAMERAS = 5
+
+
+def discover_kinects():
+    if ktb is None:
+        return []
+
+    fn = Freenect2()
+    num_devices = fn.enumerateDevices()
+    return [f"Kinect {i}" for i in range(num_devices)]
 
 
 class Camera:
@@ -16,16 +42,33 @@ class Camera:
         self._tracker = build_sam2_camera_predictor("sam2_hiera_t.yaml", "assets/sam2_hiera_tiny.pt")
         self._init_tracker = False
 
+    def check_camera(self, camera_id):
+        if isinstance(camera_id, int) or camera_id.isdigit():
+            camera = cv2.VideoCapture(int(camera_id))
+            if not camera.isOpened():
+                return False
+            camera.release()
+            return True
+
+        if camera_id == "kinect":
+            # FIXME: Check if Kinect is connected
+            return ktb is not None
+
+        if isinstance(camera_id, str):
+            return os.path.exists(camera_id)
+
+        logging.warning(f"Invalid camera id: {camera_id}")
+        return False
+
     def get_available_cameras(self):
-        cameras = []
-        for i in range(5):
-            camera = cv2.VideoCapture(i)
-            if camera.isOpened():
-                cameras.append(i)
-                camera.release()
-        
-        # Add Kinect camera (if available)
-        cameras.append("kinect")
+        # Add regular cameras
+        cameras = [i for i in range(MAX_CAMERAS)
+                   if self.check_camera(i)]
+
+        # Add kinect cameras
+        kinects = discover_kinects()
+        cameras.extend(kinects)
+
         return cameras
 
     def select_default_camera(self):
@@ -77,8 +120,9 @@ class Camera:
 
         if self._camera is None:
             self._view.clear()
-            if self._camera_id == "kinect":
-                self._camera = ktb.Kinect()
+            if isinstance(self._camera_id, str) and self._camera_id.startswith("Kinect"):
+                kinect_id = int(self._camera_id.split(" ")[1])
+                self._camera = ktb.Kinect(kinect_id)
             else:
                 self._camera = cv2.VideoCapture(self._camera_id)
 
