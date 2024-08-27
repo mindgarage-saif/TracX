@@ -173,6 +173,7 @@ class ControlPanel(QFrame):
         self.stopButton.setEnabled(False)
         self.webcamButton.clicked.connect(self.enableWebcam)
         self.videoButton.clicked.connect(self.pickVideo)
+        self.imageButton.clicked.connect(self.pickImage)
 
         # Initialize the control panel
         self.setStartCallback(self.onStart)
@@ -190,7 +191,17 @@ class ControlPanel(QFrame):
     def pickVideo(self):
         file_dialog = QFileDialog(self)
         file_dialog.setFileMode(QFileDialog.ExistingFile)
-        file_dialog.setNameFilter("Video Files (*.mp4 *.avi *.mov)")
+        file_dialog.setNameFilter("Video Files (*.mp4 *.avi *.mov *.webm)")
+        file_dialog.setViewMode(QFileDialog.Detail)
+        if file_dialog.exec_():
+            file_path = file_dialog.selectedFiles()[0]
+            self.camera.change_camera(file_path)
+            self.onStart()
+
+    def pickImage(self):
+        file_dialog = QFileDialog(self)
+        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        file_dialog.setNameFilter("Image Files (*.jpg *.jpeg *.png)")
         file_dialog.setViewMode(QFileDialog.Detail)
         if file_dialog.exec_():
             file_path = file_dialog.selectedFiles()[0]

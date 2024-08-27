@@ -83,6 +83,7 @@ class Camera:
     def change_camera(self, camera_id):
         logger.info(f"Changing camera to {camera_id}")
         self._is_video = False
+        self._view.flip = True
         self._tracker.reset()
         if camera_id == "kinect":
             self.release()
@@ -97,6 +98,7 @@ class Camera:
                 raise Exception("Invalid video file path")
             self._camera_id = camera_id
             self._is_video = True
+            self._view.flip = False
 
         self.release()
 
