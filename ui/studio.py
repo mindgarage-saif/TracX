@@ -1,10 +1,14 @@
+import logging
+import signal
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QSplashScreen
+from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QSplashScreen, QMessageBox
 from PyQt5.QtGui import QPixmap
 
 from .sidebar import Sidebar
 from .content import Content
+
+logger = logging.getLogger(__name__)
 
 
 class StudioWindow(QMainWindow):
@@ -58,15 +62,6 @@ class StudioWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         central_widget.setFixedSize(width, height)
 
-        # # Create a toolbar with menu items
-        # toolbar = QToolBar(self)
-        # toolbar.setStyleSheet("color: black;")
-        # toolbar.addAction("File")
-        # toolbar.addAction("Edit")
-        # toolbar.addAction("View")
-        # toolbar.addAction("Help")
-        # self.addToolBar(toolbar)
-
         # Layout
         window = QHBoxLayout(central_widget)
         window.setContentsMargins(16, 16, 16, 16)
@@ -78,15 +73,37 @@ class StudioWindow(QMainWindow):
 
         window.addWidget(self.sidebar)
         window.addWidget(self.content)
-            
+
+    def confirmExit(self):
+        if QMessageBox.question(
+            self,
+            'PocketPose Studio',
+            "Are you sure you want to quit?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        ) == QMessageBox.Yes:
+            self.content.webcam_layout.controlPanel.onStop()
+            return True
+        else:
+            return False
+
     def closeEvent(self, event):
-        self.content.webcam_layout.controlPanel.onStop()
+        if self.confirmExit():
+            event.accept()
+        else:
+            event.ignore()
 
 
 class Studio(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
         self.title = "PocketPose Studio"
+
+    def sigint_handler(self, *args):
+        """Handler for the SIGINT signal."""
+        sys.stderr.write('\r')
+        if self.window.confirmExit():
+            self.quit()
 
     def run(self):
         # Show splash screen
@@ -99,4 +116,5 @@ class Studio(QApplication):
         self.window = StudioWindow(title=self.title)
         self.window.show()
         splash.finish(self.window)
+        signal.signal(signal.SIGINT, self.sigint_handler)
         sys.exit(self.exec_())
