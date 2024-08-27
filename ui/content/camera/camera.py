@@ -2,17 +2,18 @@ import os
 import cv2
 import logging
 
+logger = logging.getLogger(__name__)
+
 try:
     import ktb  # https://github.com/nikwl/kinect-toolbox/
     from pylibfreenect2 import Freenect2  # dependency of ktb
 except ImportError:
-    logging.warning("kinect-toolbox not found, Kinect camera will not work")
-    logging.warning("see https://github.com/nikwl/kinect-toolbox/?tab=readme-ov-file#installation")
+    logger.warning("kinect-toolbox not found, Kinect camera will not work")
+    logger.warning("see https://github.com/nikwl/kinect-toolbox/?tab=readme-ov-file#installation")
     ktb = None
 
-from sam2.build_sam import build_sam2_camera_predictor
-
 from .camera_view import CameraView
+from .trackers import SAM2LiveTracker
 
 
 # Maximum number of cameras supported
@@ -39,8 +40,7 @@ class Camera:
         self._is_started = False
         self._is_video = False
         self._view = CameraView(size, flip=True)
-        self._tracker = build_sam2_camera_predictor("sam2_hiera_t.yaml", "assets/sam2_hiera_tiny.pt")
-        self._init_tracker = False
+        self._tracker = SAM2LiveTracker()
 
     def check_camera(self, camera_id):
         if isinstance(camera_id, int) or camera_id.isdigit():
@@ -51,19 +51,21 @@ class Camera:
             return True
 
         if camera_id == "kinect":
-            # FIXME: Check if Kinect is connected
             return ktb is not None
 
         if isinstance(camera_id, str):
             return os.path.exists(camera_id)
 
-        logging.warning(f"Invalid camera id: {camera_id}")
+        logger.warning(f"Invalid camera id: {camera_id}")
         return False
 
     def get_available_cameras(self):
         # Add regular cameras
-        cameras = [i for i in range(MAX_CAMERAS)
-                   if self.check_camera(i)]
+        cameras = []
+        for i in range(MAX_CAMERAS):
+            if not self.check_camera(i):
+                break
+            cameras.append(i)
 
         # Add kinect cameras
         kinects = discover_kinects()
@@ -79,9 +81,9 @@ class Camera:
             raise Exception("No cameras available")
 
     def change_camera(self, camera_id):
-        print(f"Changing camera to {camera_id}")
+        logger.info(f"Changing camera to {camera_id}")
         self._is_video = False
-        self._init_tracker = False
+        self._tracker.reset()
         if camera_id == "kinect":
             self.release()
             self._camera_id = camera_id
@@ -155,3 +157,6 @@ class Camera:
 
             self._is_started = False
             self._view.clear()
+
+    def preview(self, frame):
+        self._view.show(frame)

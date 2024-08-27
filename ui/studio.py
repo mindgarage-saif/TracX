@@ -57,10 +57,6 @@ class StudioWindow(QMainWindow):
         central_widget.setObjectName("CentralWidget")
         self.setCentralWidget(central_widget)
         central_widget.setFixedSize(width, height)
-        print("Window size:", width, height)
-        print("Screen size:", screen_width, screen_height)
-        print("Position:", position_x, position_y)
-        print("Central widget size:", central_widget.width(), central_widget.height())
 
         # # Create a toolbar with menu items
         # toolbar = QToolBar(self)
@@ -79,9 +75,6 @@ class StudioWindow(QMainWindow):
         self.sidebar = Sidebar(self)
         self.sidebar.inferencerSettings.setModelSelectedCallback(self.content.change_model)
         self.sidebar.visualizerSettings.setCallback(self.content.update_visualizer_params)
-
-        print("Sidebar size:", self.sidebar.width(), self.sidebar.height())
-        print("Content size:", self.content.width(), self.content.height())
 
         window.addWidget(self.sidebar)
         window.addWidget(self.content)
