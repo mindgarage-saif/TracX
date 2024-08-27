@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QPushButton, QLabel, QComboBox, QScrollBar, QFileDialog
 
+from .styles import pauseButtonStyle, startButtonStyle, stopButtonStyle
+
 
 class ControlPanel(QFrame):
     def __init__(self, camera, parent=None):
@@ -48,16 +50,6 @@ class ControlPanel(QFrame):
                 background-color: rgba(255, 255, 255, 0.1);
             }
 
-            #ControlPanel #StartButton {
-                background-color: rgb(0, 139, 0);
-                color: white;
-            }
-                           
-            #ControlPanel #StopButton {
-                background-color: rgb(139, 0, 0);
-                color: white;
-            }
-            
             #ControlPanel #ExportMenu {
                 padding: 4px;
                 border-radius: 8px;
@@ -134,9 +126,11 @@ class ControlPanel(QFrame):
         # Add start/stop buttons
         self.startButton = QPushButton("Start", self)
         self.startButton.setObjectName("StartButton")
+        self.startButton.setStyleSheet(startButtonStyle)
         self.startButton.setFixedWidth(64)
         self.stopButton = QPushButton("Stop", self)
         self.stopButton.setObjectName("StopButton")
+        self.stopButton.setStyleSheet(stopButtonStyle)
         self.stopButton.setFixedWidth(64)
         self.layout2.addWidget(self.startButton)
         self.layout2.addWidget(self.stopButton)
@@ -220,9 +214,11 @@ class ControlPanel(QFrame):
         if self.camera._is_started:
             self.statusBar.showMessage("Webcam started")
             self.startButton.setText("Pause")
+            self.startButton.setStyleSheet(pauseButtonStyle)
         else:
             self.statusBar.showMessage("Webcam paused")
             self.startButton.setText("Start")
+            self.startButton.setStyleSheet(startButtonStyle)
 
         self.stopButton.setEnabled(True)
 
@@ -239,6 +235,7 @@ class ControlPanel(QFrame):
 
         self.startButton.setEnabled(True)
         self.startButton.setText("Start")
+        self.startButton.setStyleSheet(startButtonStyle)
         self.camera.release()
         self.stopButton.setEnabled(False)
 
