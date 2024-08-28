@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 
 try:
     from sam2.build_sam import build_sam2_camera_predictor
@@ -35,15 +36,23 @@ class SAM2LiveTracker:
         if self._predictor is None:
             return -1, None
 
-        self._predictor.load_first_frame(frame)
-        _, out_obj_ids, out_mask_logits = self._predictor.add_new_prompt(
-            frame_idx=frame_idx,
-            obj_id=obj_id,
-            points=np.array(prompt, dtype=np.float32),
-            labels=np.array([1] * len(prompt), np.int32),
-        )
-        self._is_init = True
-        return out_obj_ids[0], out_mask_logits[0]
+        try:
+            with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
+                self._predictor.load_first_frame(frame)
+                _, out_obj_ids, out_mask_logits = self._predictor.add_new_prompt(
+                    frame_idx=frame_idx,
+                    obj_id=obj_id,
+                    points=np.array(prompt, dtype=np.float32),
+                    labels=np.array([1] * len(prompt), np.int32),
+                )
+                if len(out_obj_ids) == 0:
+                    return -1, None
+            self._is_init = True
+            return out_obj_ids[0], out_mask_logits[0]
+        except Exception as e:
+            logger.error(f"Failed to initialize tracker: {e}")
+            self.reset()
+            return -1, None
 
     def reset(self):
         if self._is_init:
@@ -55,8 +64,14 @@ class SAM2LiveTracker:
         if not self._is_init or self._predictor is None:
             return -1, None
 
-        out_obj_ids, out_mask_logits = self._predictor.track(frame)
-        return out_obj_ids[0], out_mask_logits[0]
+        with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
+            try:
+                out_obj_ids, out_mask_logits = self._predictor.track(frame)
+                if len(out_obj_ids) == 0:
+                    return -1, None
+                return out_obj_ids[0], out_mask_logits[0]
+            except Exception as e:
+                return -1, None
 
     def mask2bbox(self, mask):
         if mask is None:
