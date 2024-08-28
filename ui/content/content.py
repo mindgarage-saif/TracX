@@ -1,9 +1,7 @@
 import time
 
 import cv2
-import numpy as np
 import torch
-from matplotlib import pyplot as plt
 from pocketpose import PoseInferencer
 from pocketpose.apis import list_models
 from pocketpose.registry import VISUALIZERS
@@ -117,91 +115,20 @@ class WebcamLayout(QFrame):
     def height(self):
         return self.size[0] + self.button_layout.sizeHint().height()
 
-    def show_mask(self, mask, frame, obj_id=None, random_color=False):
-        if random_color:
-            color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-        else:
-            cmap = plt.get_cmap("tab10")
-            cmap_idx = 0 if obj_id is None else obj_id
-            color = np.array([*cmap(cmap_idx)[:3], 0.6])
-        h, w = mask.shape[-2:]
-        mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)  # in [0, 1]
-
-        # add alpha channel in frame
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)  # in [0, 255]
-
-        frame = frame.astype(np.float32) / 255.0
-        frame = frame * (1 - mask_image) + mask_image
-        frame = (frame * 255).astype(np.uint8)
-
-        # remove alpha channel, merge with original frame
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-
-        return frame
-
     def update(self):
         with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-            ret, frame = self.camera.read()
+            ret, frame, vis = self.camera.read()
             if not ret or frame is None:
                 return
 
-            # Resize frame to max 640px on the longest side
-            max_size = 640
-            h, w = frame.shape[:2]
-            if h > w:
-                small_frame = cv2.resize(frame, (max_size, int(h / w * max_size)))
-            else:
-                small_frame = cv2.resize(frame, (int(w / h * max_size), max_size))
-
-            if not self.camera._init_tracker:
-                self.camera._tracker.load_first_frame(small_frame)
-                point = [1600, 2000]
-                scaled_point = [
-                    int(point[0] * small_frame.shape[1] / w),
-                    int(point[1] * small_frame.shape[0] / h),
-                ]
-                self.camera._init_tracker = True
-                _, out_obj_ids, out_mask_logits = self.camera._tracker.add_new_prompt(
-                    frame_idx=0,
-                    obj_id=0,
-                    points=np.array([scaled_point], dtype=np.float32),
-                    labels=np.array([1], np.int32),
-                )
-
-            else:
-                out_obj_ids, out_mask_logits = self.camera._tracker.track(small_frame)
-
-            masked_frame = self.show_mask(
-                (out_mask_logits[0] > 0.0).cpu().numpy(),
-                small_frame.copy(),
-                obj_id=out_obj_ids[0],
-            )
-
-            # Upscale the masked frame to the original size
-            masked_frame = cv2.resize(masked_frame, (w, h))
-
-            # Get bounding box from mask
-            mask = out_mask_logits[0] > 0.0
-            mask = mask.cpu().numpy().astype(np.uint8)[0]
-            mask = cv2.resize(mask, (w, h))
-
-            contours, _ = cv2.findContours(
-                mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-            )
-            if len(contours) > 0:
-                bboxes = [cv2.boundingRect(c) for c in contours]
-                x = min([bbox[0] for bbox in bboxes])
-                y = min([bbox[1] for bbox in bboxes])
-                w = max([bbox[0] + bbox[2] for bbox in bboxes]) - x
-                h = max([bbox[1] + bbox[3] for bbox in bboxes]) - y
-                bbox = (x, y, w, h)
-            else:
-                bbox = None
+            if vis is None:
+                bbox = 0, 0, frame.shape[1], frame.shape[0]
+                vis = frame.copy(), bbox
 
             if self.on_frame_fn is not None:
-                frame = self.on_frame_fn(frame, masked_frame, bbox)
+                frame = self.on_frame_fn(frame, vis)
 
-            self.camera._view.show(frame)
+            self.camera.preview(frame)
 
 
 class Content(QFrame):
@@ -262,8 +189,10 @@ class Content(QFrame):
         self.visualizer.draw_bbox = draw_bbox
 
     def update_frame(
-        self, frame, masked_frame=None, bbox=None, first_frame=False, is_video=False
+        self, frame, vis, first_frame=False, is_video=False
     ):
+        masked_frame, bbox = vis
+
         depth = None
         if isinstance(frame, tuple):
             frame, depth = frame
