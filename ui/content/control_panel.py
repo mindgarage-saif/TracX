@@ -5,9 +5,9 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollBar,
     QVBoxLayout,
 )
+from ..widgets import QTimeLine
 
 
 class ControlPanel(QFrame):
@@ -151,10 +151,6 @@ class ControlPanel(QFrame):
         self.layout2.addWidget(self.startButton)
         self.layout2.addWidget(self.stopButton)
 
-        # Create a timer label
-        self.timerLabel = QLabel("00:00:00", self)
-        self.timerLabel.setObjectName("TimerLabel")
-
         # Create export dropdown
         self.exportMenu = QComboBox(self)
         self.exportMenu.setObjectName("ExportMenu")
@@ -162,26 +158,20 @@ class ControlPanel(QFrame):
         self.exportMenu.addItem("Export Annotations")
 
         # Calculate width of timer label and export menu
-        timerWidth = self.timerLabel.sizeHint().width() + 16  # 16 is padding
         exportWidth = self.exportMenu.sizeHint().width() + 16
         buttonsWidth = self.startButton.width() + self.stopButton.width() + 32
-        seekbarWidth = self.width() - timerWidth - exportWidth - buttonsWidth - 16
-        self.timerLabel.setFixedWidth(timerWidth)
+        seekbarWidth = self.width() - exportWidth - buttonsWidth - 16
         self.exportMenu.setFixedWidth(exportWidth)
 
         # Create a seekbar (use a scroll bar for now)
-        self.seekBar = QScrollBar(self)
+        self.seekBar = QTimeLine(0, 0, self)
         self.seekBar.setObjectName("SeekBar")
-        self.seekBar.setOrientation(1)
         self.seekBar.setFixedWidth(seekbarWidth)
-        self.seekBar.setRange(0, 100)
-        self.seekBar.setPageStep(1)
-        self.seekBar.setValue(0)
-        self.seekBar.setEnabled(False)
+        self.seekBar.startChanged.connect(self.camera.set_start_frame)
+        self.seekBar.endChanged.connect(self.camera.set_end_frame)
 
         # Add items to layout
         self.layout2.addWidget(self.seekBar)
-        self.layout2.addWidget(self.timerLabel)
         self.layout2.addWidget(self.exportMenu)
         self.layout2.addStretch()
 
@@ -211,10 +201,13 @@ class ControlPanel(QFrame):
         if file_dialog.exec_():
             file_path = file_dialog.selectedFiles()[0]
             self.camera.change_camera(file_path)
-            self.onStart()
 
-    def setTime(self, time):
-        self.timerLabel.setText(time)
+            if self.camera._is_video:
+                duration = self.camera.get_duration()
+                self.seekBar.setDuration(duration)
+
+            else:
+                self.onStart()
 
     def setStartCallback(self, callback):
         self.startButton.clicked.connect(callback)
