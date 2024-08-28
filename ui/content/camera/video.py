@@ -53,7 +53,7 @@ class VideoCapture:
         n = self.frame_rate / self.sample_rate  # Read every n-th frame
         if self.current_frame % n != 0:
             if self._frame_captured_handler:
-                self._frame_captured_handler(frame, self.current_frame)
+                self._frame_captured_handler(ret, frame, self.current_frame)
 
             return ret, frame
 

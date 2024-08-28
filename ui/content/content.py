@@ -51,7 +51,6 @@ class WebcamLayout(QFrame):
         self.innerLayout.setSpacing(0)
 
         self.size = size
-        self.on_frame_fn = on_frame_fn
         self.refresh_rate = refresh_rate
 
         # Status bar
@@ -87,17 +86,13 @@ class WebcamLayout(QFrame):
 
         # Create the camera
         self.camera = Camera(size)
+        self.camera.on_frame_fn = on_frame_fn
         self.innerLayout.addWidget(self.camera._view)
         self.innerLayout.addStretch()
 
         # Create the control panel
         self.controlPanel = ControlPanel(self.camera, parent=self)
         self.innerLayout.addWidget(self.controlPanel)
-
-        # Create a timer to update the webcam feed
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update)
-        self.timer.start(refresh_rate)
 
     def show_model_info(self, model_name, runtime, quant, flops, params):
         self.modelName.setText(model_name)
@@ -114,17 +109,6 @@ class WebcamLayout(QFrame):
 
     def height(self):
         return self.size[0] + self.button_layout.sizeHint().height()
-
-    def update(self):
-        with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-            ret, frame, vis = self.camera.read()
-            if not ret or frame is None:
-                return
-
-            if self.on_frame_fn is not None:
-                frame = self.on_frame_fn(frame, vis)
-
-            self.camera.preview(frame)
 
 
 class Content(QFrame):

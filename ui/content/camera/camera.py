@@ -1,9 +1,10 @@
 import os
 import logging
+import threading
 
 import cv2
-import numpy as np
-from matplotlib import pyplot as plt
+
+from .video import VideoCapture
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ class Camera:
         self.end_frame = -1  # -1 means end of video
         self.current_frame = 0
         self.on_camera_changed = lambda: None
+        self.on_frame_fn = lambda frame, vis: None
 
         # Listen to camera view mouse press event
         self._view.mousePressed.connect(self.on_mouse_press)
@@ -203,7 +205,9 @@ class Camera:
                 kinect_id = int(self._camera_id.split(" ")[1])
                 self._camera = ktb.Kinect(kinect_id)
             else:
-                self._camera = cv2.VideoCapture(self._camera_id)
+                self._camera = VideoCapture(self._camera_id)
+                self._camera.on_frame_captured(self.process)
+                self._camera.start()
 
         self._is_started = True
 
@@ -213,28 +217,30 @@ class Camera:
 
         self._is_started = False
 
-    def read(self):
+    def process(self, ret, frame, frame_idx=0):
+        # Run this on a worker thread
+        threading.Thread(target=self._process, args=(ret, frame, frame_idx)).start()
+
+    def _process(self, ret, frame, frame_idx=0):
         if not self._is_started or self._camera is None:
-            return False, None, None
+            return
 
         if self._camera_id == "kinect":
             color = self._camera.get_frame(ktb.COLOR)
             depth = self._camera.get_frame(ktb.RAW_DEPTH)
-            return True, (color, depth), None
+            ret, frame, vis = True, (color, depth), None
+        else:
+            if self._is_video:
+                self.current_frame += 1
+                if self.end_frame != -1 and self.current_frame > self.end_frame:
+                    self.pause()
+                    return
 
-        if self._is_video:
-            self.current_frame += 1
-            if self.end_frame != -1 and self.current_frame > self.end_frame:
-                self.pause()
-                return False, None, None
-
-        ret, frame = self._camera.read()
         if not ret:
             self.pause()
-            return False, None, None
+            return
 
         # Resize frame to max 640px on the longest side
-        # if self._is_video:
         max_size = 640
         h, w = frame.shape[:2]
         if h > w:
@@ -268,11 +274,14 @@ class Camera:
                 int(bbox[2] * w / small_frame.shape[1]),
                 int(bbox[3] * h / small_frame.shape[0]),
             )
-        # else:
-        #     vis = frame
-        #     bbox = None
 
-        return True, frame, (vis, bbox)
+        if not ret or frame is None:
+            return
+
+        if self.on_frame_fn is not None:
+            frame = self.on_frame_fn(frame, (vis, bbox))
+
+        self.preview(frame)
 
     def release(self):
         if self._camera is not None:
