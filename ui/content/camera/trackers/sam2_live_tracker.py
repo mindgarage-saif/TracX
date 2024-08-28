@@ -18,6 +18,7 @@ except ImportError:
 class SAM2LiveTracker:
     def __init__(self):
         self._predictor = None
+        self._tracked_object = []
         self._is_init = False
         if build_sam2_camera_predictor is not None:
             checkpoint = "assets/sam2_hiera_tiny.pt"
@@ -31,12 +32,25 @@ class SAM2LiveTracker:
     @property
     def is_init(self):
         return self._is_init
-    
-    def init(self, frame, prompt, frame_idx=0, obj_id=0):
-        if self._predictor is None:
+
+    def set_point(self, point):
+        self._tracked_object = [point]
+
+    def add_point(self, point):
+        self._tracked_object.append(point)
+
+    def can_init(self):
+        return self._predictor is not None and len(self._tracked_object) > 0
+
+    def init(self, frame, scale_fn=None, frame_idx=0, obj_id=0):
+        if self._predictor is None or self._is_init:
             return -1, None
 
         try:
+            if scale_fn is None:
+                prompt = [scale_fn(p) for p in self._tracked_object]
+            else:
+                prompt = self._tracked_object
             with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
                 self._predictor.load_first_frame(frame)
                 _, out_obj_ids, out_mask_logits = self._predictor.add_new_prompt(
