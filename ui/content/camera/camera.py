@@ -5,6 +5,7 @@ import threading
 import cv2
 
 from .video import VideoCapture
+from .stereo_capture import StereoCapture
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,6 @@ class Camera:
         self._is_video = False
         self._view = CameraView(size, flip=True)
         self._tracker = SAM2LiveTracker()
-        self._tracked_object = []
         self.start_frame = 0
         self.end_frame = -1  # -1 means end of video
         self.current_frame = 0
@@ -74,18 +74,17 @@ class Camera:
 
     def on_mouse_press(self, x, y, replace=True):
         if replace:
-            self._tracked_object = [[x, y]]
+            self._tracker.set_point([x, y])
         else:
-            self._tracked_object.append([x, y])
+            self._tracker.add_point([x, y])
         self._tracker.reset()
 
     def get_available_cameras(self):
         # Add regular cameras
         cameras = []
         for i in range(MAX_CAMERAS):
-            if not self.check_camera(i):
-                break
-            cameras.append(i)
+            if self.check_camera(i):
+                cameras.append(i)
 
         # Add kinect cameras
         kinects = discover_kinects()
@@ -95,6 +94,7 @@ class Camera:
 
     def select_default_camera(self):
         cameras = self.get_available_cameras()
+        logger.info(f"Available cameras: {cameras}")
         if len(cameras) > 0:
             self.change_camera(cameras[0])
         else:
@@ -110,7 +110,10 @@ class Camera:
             self._camera_id = camera_id
             return
 
-        if isinstance(camera_id, int) or camera_id.isdigit():
+        if isinstance(camera_id, tuple) and len(camera_id) == 2:
+            assert isinstance(camera_id[0], int) and isinstance(camera_id[1], int)
+            self._camera_id = camera_id
+        elif isinstance(camera_id, int) or camera_id.isdigit():
             self._camera_id = int(camera_id)
         else:
             # Must be path to a video file
@@ -199,11 +202,17 @@ class Camera:
         if self._is_started and self._camera is not None:
             return
 
-        if self._camera is None:
+        if self._camera is None and self._camera_id is not None:
             self._view.clear()
             if isinstance(self._camera_id, str) and self._camera_id.startswith("Kinect"):
                 kinect_id = int(self._camera_id.split(" ")[1])
                 self._camera = ktb.Kinect(kinect_id)
+            elif isinstance(self._camera_id, tuple) and len(self._camera_id) == 2:
+                self._is_started = True
+                self._camera = StereoCapture(*self._camera_id, sample_rate=24, max_frames=-1)
+                self._camera.on_frame_captured(self.process_stereo)
+                self._is_started = True
+                self._camera.start()
             else:
                 self._camera = VideoCapture(self._camera_id)
                 self._camera.on_frame_captured(self.process)
@@ -216,6 +225,13 @@ class Camera:
             return
 
         self._is_started = False
+
+    def process_stereo(self, frame1, frame2):
+        # Put both images side by side
+        h, w = frame1.shape[:2]
+        frame = cv2.hconcat([frame1, frame2])
+
+        self.process(True, frame)
 
     def process(self, ret, frame, frame_idx=0):
         # Run this on a worker thread
@@ -248,14 +264,13 @@ class Camera:
         else:
             small_frame = cv2.resize(frame, (int(w / h * max_size), max_size))
 
-        if not self._tracker.is_init and self._tracked_object:
-            def scale(point, w, h):
+        if not self._tracker.is_init and self._tracker.can_init():
+            def scale(point):
                 return [
                     int(point[0] * small_frame.shape[1] / w),
                     int(point[1] * small_frame.shape[0] / h),
                 ]
-            scaled_points = [scale(p, w, h) for p in self._tracked_object]
-            track_results = self._tracker.init(small_frame, prompt=scaled_points)
+            track_results = self._tracker.init(small_frame, scale_fn=scale)
             
         else:
             track_results = self._tracker.track(small_frame)

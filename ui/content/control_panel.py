@@ -182,11 +182,18 @@ class ControlPanel(QFrame):
         self.onStop()
 
     def enableWebcam(self):
-        # Get available cameras
-        available_cameras = self.camera.get_available_cameras()
-        if len(available_cameras) > 0:
-            self.camera.change_camera(available_cameras[0])
-            self.onStart()
+        cameras = self.camera.get_available_cameras()
+        if len(cameras) == 0:
+            self.statusBar.showMessage("No cameras available")
+            return
+        elif len(cameras) == 1:
+            self.statusBar.showMessage("Using webcam 0")
+            self.camera.change_camera(cameras[0])
+        else:
+            self.statusBar.showMessage("Using stereo cameras")
+            self.camera.change_camera((cameras[0], cameras[1]))
+
+        self.onStart()
 
     def pickVideo(self):
         file_dialog = QFileDialog(self)
