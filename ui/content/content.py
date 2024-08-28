@@ -1,15 +1,12 @@
 import time
 
 import cv2
-import numpy as np
 import torch
-from matplotlib import pyplot as plt
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFrame, QWidget
-from PyQt5.QtCore import QTimer
-
 from pocketpose import PoseInferencer
-from pocketpose.registry import VISUALIZERS
 from pocketpose.apis import list_models
+from pocketpose.registry import VISUALIZERS
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..data import RuntimeParams
 from ..widgets import Chip
@@ -28,7 +25,8 @@ class WebcamLayout(QFrame):
 
         self.setObjectName("WebcamLayout")
         self.setFixedWidth(size[1])
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             #WebcamLayout {
                 background-color: rgba(0, 0, 0, 0.5);
                 border: 1px solid whitesmoke;
@@ -44,7 +42,8 @@ class WebcamLayout(QFrame):
                 padding: 4px;
                 color: black;
             }
-        """)
+        """
+        )
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
@@ -63,26 +62,25 @@ class WebcamLayout(QFrame):
         self.innerLayout.addSpacing(32)
 
         # Set up the labels
-        self.modelName = Chip("MobileNetV2")  # TODO: Show current model
-        self.modelRuntime = Chip("ONNX")  # TODO: Show current runtime
-        self.modelQuant = Chip("FP32")  # TODO: Show current quantization
-        self.modelFLOPs = Chip("0.0 GFLOPs")
-        self.modelParams = Chip("0.0 M")
+        self.modelName = Chip("Model Name")
+        self.modelRuntime = Chip("Runner Name")
+        self.modelSkeleton = Chip("Skeleton Type")
+        self.modelLicense = Chip("License")
+        self.modelInput = Chip("Input Size")
         self.fpsLabel = Chip("FPS: 0")
         self.inferenceLabel = Chip("Latency: 0.0 ms")
 
         # Connect signals
         self.runtimeParams = RuntimeParams()
         self.runtimeParams.fpsUpdated.connect(self.update_fps_label)
-        self.runtimeParams.inferenceSpeedUpdated.connect(
-            self.update_inference_label)
+        self.runtimeParams.inferenceSpeedUpdated.connect(self.update_inference_label)
 
         # Labels for stats
         self.status_bar.addWidget(self.modelName)
         self.status_bar.addWidget(self.modelRuntime)
-        self.status_bar.addWidget(self.modelQuant)
-        self.status_bar.addWidget(self.modelFLOPs)
-        self.status_bar.addWidget(self.modelParams)
+        self.status_bar.addWidget(self.modelSkeleton)
+        self.status_bar.addWidget(self.modelLicense)
+        self.status_bar.addWidget(self.modelInput)
         self.status_bar.addWidget(self.fpsLabel)
         self.status_bar.addWidget(self.inferenceLabel)
         self.status_bar.addStretch()
@@ -101,6 +99,13 @@ class WebcamLayout(QFrame):
         self.timer.timeout.connect(self.update)
         self.timer.start(refresh_rate)
 
+    def show_model_info(self, model_name, runtime, quant, flops, params):
+        self.modelName.setText(model_name)
+        self.modelRuntime.setText(runtime)
+        self.modelSkeleton.setText(quant)
+        self.modelLicense.setText(flops)
+        self.modelInput.setText(str(params))
+
     def update_fps_label(self, fps):
         self.fpsLabel.setText(f"FPS: {fps:.0f}")
 
@@ -112,37 +117,14 @@ class WebcamLayout(QFrame):
 
     def update(self):
         with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-            ret, frame = self.camera.read()
+            ret, frame, vis = self.camera.read()
             if not ret or frame is None:
                 return
 
-            # Resize frame to max 640px on the longest side
-            max_size = 640
-            h, w = frame.shape[:2]
-            if h > w:
-                small_frame = cv2.resize(frame, (max_size, int(h / w * max_size)))
-            else:
-                small_frame = cv2.resize(frame, (int(w / h * max_size), max_size))
-
-            if not self.camera._tracker.is_init:
-                point = [1600, 2000]
-                scaled_point = [int(point[0] * small_frame.shape[1] / w), int(point[1] * small_frame.shape[0] / h)]
-                track_results = self.camera._tracker.init(small_frame, prompt=scaled_point)
-                
-
-            else:
-                track_results = self.camera._tracker.track(small_frame)
-
-            vis, bbox = self.camera._tracker.visualize(
-                small_frame.copy(),
-                track_results,
-            )
-            vis = cv2.resize(vis, (w, h))
-
             if self.on_frame_fn is not None:
-                frame = self.on_frame_fn(frame, vis, bbox)
+                frame = self.on_frame_fn(frame, vis)
 
-            self.camera._view.show(frame)
+            self.camera.preview(frame)
 
 
 class Content(QFrame):
@@ -151,8 +133,10 @@ class Content(QFrame):
         self.statusBar = parent.statusBar()
         self.setFixedWidth(int(parent.width() * 0.7))
         self.setFixedHeight(parent.height() - 20)
-        self.setStyleSheet("""
-        """)
+        self.setStyleSheet(
+            """
+        """
+        )
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
@@ -180,11 +164,19 @@ class Content(QFrame):
         self.inferencer = PoseInferencer(self.current_model)
         # self.detector = DETECTORS.build("RTMDetNano")
         self.visualizer = VISUALIZERS.build(
-            "PoseVisualizer",
-            self.inferencer.model.keypoints_type
+            "PoseVisualizer", self.inferencer.model.keypoints_type
         )
         self.frame_count = 0
         self.start_time = time.time()
+
+        info = self.inferencer.model.cfg.as_dict()
+        self.webcam_layout.show_model_info(
+            info["pretty_name"],
+            info["runner"],
+            info["skeleton"].upper(),
+            info["license"],
+            info["input_size"],
+        )
 
     def update_visualizer_params(self, radius, thickness, kpt_thr, draw_bbox):
         self.visualizer.radius = radius
@@ -192,7 +184,11 @@ class Content(QFrame):
         self.visualizer.kpt_thr = kpt_thr
         self.visualizer.draw_bbox = draw_bbox
 
-    def update_frame(self, frame, masked_frame=None, bbox=None, first_frame=False, is_video=False):
+    def update_frame(
+        self, frame, vis, first_frame=False, is_video=False
+    ):
+        masked_frame, bbox = vis
+
         depth = None
         if isinstance(frame, tuple):
             frame, depth = frame
@@ -201,7 +197,7 @@ class Content(QFrame):
         cropped_frame = frame
         if bbox:
             x, y, w, h = bbox
-            cropped_frame = frame[y:y+h, x:x+w]
+            cropped_frame = frame[y : y + h, x : x + w]
 
         # Perform pose inference
         keypoints = self.inferencer.infer(cropped_frame)
@@ -211,7 +207,7 @@ class Content(QFrame):
         if bbox:
             for i, (x, y, score) in enumerate(keypoints):
                 keypoints[i] = (x + bbox[0], y + bbox[1], score)
-        
+
         # Process frame for display (resize, convert color, draw keypoints)
         frame = self.visualizer.visualize(masked_frame, keypoints)
 

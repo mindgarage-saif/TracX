@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QFrame, QLabel, QLabel, QVBoxLayout
-from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QFrame, QLabel, QVBoxLayout
 
 from .inferencer_settings import InferencerSettings
 from .visualizer_settings import VisualizerSettings
@@ -12,10 +12,12 @@ class Sidebar(QFrame):
         self.statusBar = parent.statusBar()
         self.setFixedWidth(int(parent.width() * 0.3))
         self.setFixedHeight(parent.height() - 20)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QFrame {
             }
-        """)
+        """
+        )
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
@@ -27,16 +29,21 @@ class Sidebar(QFrame):
         logo_w = self.width() - 32
         logo_h = int(logo_w / 2)
         logo = QLabel(self)
-        logo.setPixmap(logo_p.scaled(logo_w, logo_h,
-                                     Qt.KeepAspectRatio,
-                                     Qt.SmoothTransformation))
+        logo.setPixmap(
+            logo_p.scaled(logo_w, logo_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        )
         logo.setAlignment(Qt.AlignCenter)
         self.innerLayout.addWidget(logo)
         self.innerLayout.addSpacing(16)
 
         # Inferencer and visualizer settings
         self.visualizerSettings = VisualizerSettings(self)
-        inferencer_height = self.height() - logo_h - self.visualizerSettings.innerLayout.sizeHint().height() + 20
+        inferencer_height = (
+            self.height()
+            - logo_h
+            - self.visualizerSettings.innerLayout.sizeHint().height()
+            + 20
+        )
         self.inferencerSettings = InferencerSettings(self, height=inferencer_height)
 
         # Add to inner layout

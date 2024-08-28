@@ -1,6 +1,9 @@
 import os
-import cv2
 import logging
+
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +44,14 @@ class Camera:
         self._is_video = False
         self._view = CameraView(size, flip=True)
         self._tracker = SAM2LiveTracker()
+        self._tracked_object = None
+        self.start_frame = 0
+        self.end_frame = -1  # -1 means end of video
+        self.current_frame = 0
+        self.on_camera_changed = lambda: None
+
+        # Listen to camera view mouse press event
+        self._view.mousePressed.connect(self.on_mouse_press)
 
     def check_camera(self, camera_id):
         if isinstance(camera_id, int) or camera_id.isdigit():
@@ -58,6 +69,10 @@ class Camera:
 
         logger.warning(f"Invalid camera id: {camera_id}")
         return False
+
+    def on_mouse_press(self, x, y):
+        self._tracked_object = [x, y]
+        self._tracker.reset()
 
     def get_available_cameras(self):
         # Add regular cameras
@@ -101,6 +116,63 @@ class Camera:
             self._view.flip = False
 
         self.release()
+        self.start_frame = 0
+        self.end_frame = -1
+        self.current_frame = 0
+        self.on_camera_changed()
+
+    def get_duration(self):
+        if not self._is_video:
+            return 0
+
+        video = cv2.VideoCapture(self._camera_id)
+        fps = video.get(cv2.CAP_PROP_FPS)
+        frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
+        video.release()
+        return int(frames / fps)
+
+    def get_fps(self):
+        if not self._is_video:
+            return 0
+
+        video = cv2.VideoCapture(self._camera_id)
+        fps = video.get(cv2.CAP_PROP_FPS)
+        video.release()
+        return fps
+
+    def set_start_frame(self, start):
+        if not self._is_video:
+            return
+
+        fps = self.get_fps()
+        start_frame = int(start * fps)
+        if start_frame != self.start_frame:
+            self.start_frame = start_frame
+            self.current_frame = start_frame
+            # make sure only these frames are read
+            self._camera = cv2.VideoCapture(self._camera_id)
+            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.start_frame)
+
+            # preview the frame
+            ret, frame = self._camera.read()
+            self.preview(frame)
+
+            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.start_frame)
+
+    def set_end_frame(self, end):
+        if not self._is_video:
+            return
+
+        end_frame = int(end * self.get_fps())
+        if end_frame != self.end_frame:
+            self.end_frame = end_frame
+          
+            # preview the frame
+            self._camera = cv2.VideoCapture(self._camera_id)
+            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.end_frame)
+            ret, frame = self._camera.read()
+            self.preview(frame)
+            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.start_frame)
 
     def toggle_start(self):
         if self._is_started:
@@ -140,14 +212,54 @@ class Camera:
 
     def read(self):
         if not self._is_started or self._camera is None:
-            return False, None
+            return False, None, None
 
         if self._camera_id == "kinect":
             color = self._camera.get_frame(ktb.COLOR)
             depth = self._camera.get_frame(ktb.RAW_DEPTH)
-            return True, (color, depth)
+            return True, (color, depth), None
 
-        return self._camera.read()
+        if self._is_video:
+            self.current_frame += 1
+            if self.end_frame != -1 and self.current_frame > self.end_frame:
+                self.pause()
+                return False, None, None
+
+        ret, frame = self._camera.read()
+        if not ret:
+            self.pause()
+            return False, None, None
+
+        # Resize frame to max 640px on the longest side
+        if self._is_video:
+            max_size = 640
+            h, w = frame.shape[:2]
+            if h > w:
+                small_frame = cv2.resize(frame, (max_size, int(h / w * max_size)))
+            else:
+                small_frame = cv2.resize(frame, (int(w / h * max_size), max_size))
+
+            if not self._tracker.is_init and self._tracked_object is not None:
+                point = self._tracked_object
+                scaled_point = [
+                    int(point[0] * small_frame.shape[1] / w),
+                    int(point[1] * small_frame.shape[0] / h),
+                ]
+                track_results = self._tracker.init(small_frame, prompt=scaled_point)
+                
+            else:
+                track_results = self._tracker.track(small_frame)
+
+            vis, bbox = self._tracker.visualize(
+                small_frame,
+                track_results
+            )
+            vis = cv2.resize(vis, (w, h))
+        else:
+            vis = frame
+            bbox = None
+
+        return True, frame, (vis, bbox)
 
     def release(self):
         if self._camera is not None:

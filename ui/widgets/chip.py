@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import QFrame, QLabel, QHBoxLayout
 from PyQt5.QtGui import QPixmap
-
+from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel
 
 
 class Chip(QFrame):
@@ -10,13 +9,15 @@ class Chip(QFrame):
         self.icon = icon
 
         # Set the style of the chip
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             Chip {
                 border-radius: 16px;
                 background-color: white;
                 padding: 8px;
             }
-        """)
+        """
+        )
 
         # Layout for the content and close button
         layout = QHBoxLayout(self)

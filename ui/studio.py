@@ -2,11 +2,18 @@ import logging
 import signal
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QSplashScreen, QMessageBox
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QMainWindow,
+    QMessageBox,
+    QSplashScreen,
+    QWidget,
+)
 
-from .sidebar import Sidebar
 from .content import Content
+from .sidebar import Sidebar
 
 logger = logging.getLogger(__name__)
 
@@ -22,16 +29,17 @@ class StudioWindow(QMainWindow):
         screen_width, screen_height = screen.width(), screen.height()
 
         # Correct aspect ratio of window size (4:3) and ensure it does not exceed screen size
+        aspect = 1.33  # 4:3
         if screen_width * 3 > screen_height * 4:  # Wide screen
-            width = screen_height * 4 // 3
+            width = int(screen_height * aspect)
             height = screen_height
         else:  # Tall screen
             width = screen_width
-            height = screen_width * 3 // 4
+            height = screen_width // aspect
 
-        # Scale the window size to 90% of the screen size
-        width = int(width * 0.9)
-        height = int(height * 0.9)
+        # Scale the window size to 92% of the screen size
+        width = int(width * 0.92)
+        height = int(height * 0.92)
 
         # Create a status bar
         self.statusBar().showMessage("Ready")
@@ -42,7 +50,8 @@ class StudioWindow(QMainWindow):
         position_y = (screen_height - height) // 2
         self.move(position_x, position_y)
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             #CentralWidget {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                                         stop:0 #091a40, stop:1 #6A004E);
@@ -53,7 +62,8 @@ class StudioWindow(QMainWindow):
                 background: black;
                 color: white;
             }
-        """)
+        """
+        )
 
         # Central widget
         central_widget = QWidget(self)
@@ -68,8 +78,12 @@ class StudioWindow(QMainWindow):
         window.setSpacing(0)
         self.content = Content(self)
         self.sidebar = Sidebar(self)
-        self.sidebar.inferencerSettings.setModelSelectedCallback(self.content.change_model)
-        self.sidebar.visualizerSettings.setCallback(self.content.update_visualizer_params)
+        self.sidebar.inferencerSettings.setModelSelectedCallback(
+            self.content.change_model
+        )
+        self.sidebar.visualizerSettings.setCallback(
+            self.content.update_visualizer_params
+        )
 
         window.addWidget(self.sidebar)
         window.addWidget(self.content)
