@@ -196,7 +196,12 @@ class ControlPanel(QFrame):
         if file_dialog.exec_():
             file_path = file_dialog.selectedFiles()[0]
             self.camera.change_camera(file_path)
-            self.onStart()
+
+            if self.camera._is_video:
+                duration = self.camera.get_duration()
+                self.seekBar.setDuration(duration)
+            else:
+                self.onStart()
 
     def pickImage(self):
         file_dialog = QFileDialog(self)
@@ -210,7 +215,6 @@ class ControlPanel(QFrame):
             if self.camera._is_video:
                 duration = self.camera.get_duration()
                 self.seekBar.setDuration(duration)
-
             else:
                 self.onStart()
 
