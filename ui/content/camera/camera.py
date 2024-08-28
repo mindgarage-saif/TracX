@@ -44,7 +44,7 @@ class Camera:
         self._is_video = False
         self._view = CameraView(size, flip=True)
         self._tracker = SAM2LiveTracker()
-        self._tracked_object = None
+        self._tracked_object = []
         self.start_frame = 0
         self.end_frame = -1  # -1 means end of video
         self.current_frame = 0
@@ -70,8 +70,11 @@ class Camera:
         logger.warning(f"Invalid camera id: {camera_id}")
         return False
 
-    def on_mouse_press(self, x, y):
-        self._tracked_object = [x, y]
+    def on_mouse_press(self, x, y, replace=True):
+        if replace:
+            self._tracked_object = [[x, y]]
+        else:
+            self._tracked_object.append([x, y])
         self._tracker.reset()
 
     def get_available_cameras(self):
@@ -231,33 +234,43 @@ class Camera:
             return False, None, None
 
         # Resize frame to max 640px on the longest side
-        if self._is_video:
-            max_size = 640
-            h, w = frame.shape[:2]
-            if h > w:
-                small_frame = cv2.resize(frame, (max_size, int(h / w * max_size)))
-            else:
-                small_frame = cv2.resize(frame, (int(w / h * max_size), max_size))
+        # if self._is_video:
+        max_size = 640
+        h, w = frame.shape[:2]
+        if h > w:
+            small_frame = cv2.resize(frame, (max_size, int(h / w * max_size)))
+        else:
+            small_frame = cv2.resize(frame, (int(w / h * max_size), max_size))
 
-            if not self._tracker.is_init and self._tracked_object is not None:
-                point = self._tracked_object
-                scaled_point = [
+        if not self._tracker.is_init and self._tracked_object:
+            def scale(point, w, h):
+                return [
                     int(point[0] * small_frame.shape[1] / w),
                     int(point[1] * small_frame.shape[0] / h),
                 ]
-                track_results = self._tracker.init(small_frame, prompt=scaled_point)
-                
-            else:
-                track_results = self._tracker.track(small_frame)
-
-            vis, bbox = self._tracker.visualize(
-                small_frame,
-                track_results
-            )
-            vis = cv2.resize(vis, (w, h))
+            scaled_points = [scale(p, w, h) for p in self._tracked_object]
+            track_results = self._tracker.init(small_frame, prompt=scaled_points)
+            
         else:
-            vis = frame
-            bbox = None
+            track_results = self._tracker.track(small_frame)
+
+        vis, bbox = self._tracker.visualize(
+            small_frame,
+            track_results
+        )
+        vis = cv2.resize(vis, (w, h))
+        
+        # scale bbox to original frame size
+        if bbox is not None:
+            bbox = (
+                int(bbox[0] * w / small_frame.shape[1]),
+                int(bbox[1] * h / small_frame.shape[0]),
+                int(bbox[2] * w / small_frame.shape[1]),
+                int(bbox[3] * h / small_frame.shape[0]),
+            )
+        # else:
+        #     vis = frame
+        #     bbox = None
 
         return True, frame, (vis, bbox)
 

@@ -39,8 +39,8 @@ class SAM2LiveTracker:
         _, out_obj_ids, out_mask_logits = self._predictor.add_new_prompt(
             frame_idx=frame_idx,
             obj_id=obj_id,
-            points=np.array([prompt], dtype=np.float32),
-            labels=np.array([1], np.int32),
+            points=np.array(prompt, dtype=np.float32),
+            labels=np.array([1] * len(prompt), np.int32),
         )
         self._is_init = True
         return out_obj_ids[0], out_mask_logits[0]
@@ -55,14 +55,14 @@ class SAM2LiveTracker:
         if not self._is_init or self._predictor is None:
             return -1, None
 
-        return self._predictor.track(frame)
+        out_obj_ids, out_mask_logits = self._predictor.track(frame)
+        return out_obj_ids[0], out_mask_logits[0]
 
     def mask2bbox(self, mask):
         if mask is None:
             return None
 
         # find contours
-        mask = mask.astype(np.uint8)[0]
         contours, _ = cv2.findContours(
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
@@ -85,26 +85,27 @@ class SAM2LiveTracker:
 
         # set mask color
         if random_color:
-            color = np.random.rand(3).tolist() + [0.6]
+            color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
         else:
             cmap = plt.get_cmap("tab10")
-            cmap_idx = 0 if obj_id is None else obj_id
-            color = list(cmap(cmap_idx)[:3]) + [0.6]
+            cmap_idx = 0 if obj_id is None else obj_id % 10
+            color = np.array([*cmap(cmap_idx)[:3], 0.6])
 
-        # create mask
         mask = (mask_logits > 0.0).cpu().numpy()
         h, w = mask.shape[-2:]
-        mask = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)  # in [0, 1]
+        mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)  # in [0, 1]
 
         # overlay mask on frame
         vis = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)  # in [0, 255]
         vis = vis.astype(np.float32) / 255.0
-        vis *= (1 - mask)
-        vis += mask
+        vis *= (1 - mask_image)
+        vis += mask_image
         vis = (vis * 255).astype(np.uint8)
         vis = cv2.cvtColor(vis, cv2.COLOR_BGRA2BGR)
 
         # draw bounding box
-        bbox = self.mask2bbox(mask_logits)
+        mask = mask.astype(np.uint8)[0]
+        mask = cv2.resize(mask, (w, h))
+        bbox = self.mask2bbox(mask)
 
         return vis, bbox

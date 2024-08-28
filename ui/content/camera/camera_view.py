@@ -36,7 +36,7 @@ def resize_with_padding(image: np.ndarray, target_size: Tuple[int, int]) -> np.n
 
 class CameraView(QLabel):
 
-    mousePressed = pyqtSignal(int, int)
+    mousePressed = pyqtSignal(int, int, bool)
 
     def __init__(self, size, flip=True):
         super().__init__()
@@ -51,7 +51,13 @@ class CameraView(QLabel):
         self.frame_pad = (0, 0, 0, 0)
 
     def mousePressEvent(self, event):
+        replace = event.button() == 1
+
         x, y = event.x(), event.y()
+
+        # Flip coordinates if the image is flipped
+        if self.flip:
+            x = self.size[1] - x
 
         # Adjust coordinates by the frame padding
         x -= self.frame_pad[2]  # left
@@ -61,7 +67,7 @@ class CameraView(QLabel):
         x = int(x * self.frame_size[1] / self.size[1])
         y = int(y * self.frame_size[0] / self.size[0])
 
-        self.mousePressed.emit(x, y)
+        self.mousePressed.emit(x, y, replace)
 
     def show(self, frame: np.ndarray):
         try:
