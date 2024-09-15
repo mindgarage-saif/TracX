@@ -5,13 +5,17 @@ Cotains many util functions that are not needed directly in the main code, but c
 ## Installation
 Follow the instruction to install Pose2Sim in https://github.com/perfanalytics/pose2sim/tree/main?tab=readme-ov-file#2d-pose-estimation
 Also install the opensim library(detailed in the above link)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 What files do you need?
 1. Video file
-2. The camera paramters file. LIHS has it in a similiar/eqaul format to QCA camera parameters format.Code Assume this format.
+2. The camera paramters file. LIHS has it in a similiar/eqaul format to QCA camera parameters format.
+    !!!!!!!Code assumes this format.!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Attention!:
-In the Lihs data set the view of the videos are Rotated to have better 2d detection use util/rotator.py to rotate the videos.
+In the Lihs data set the view of the videos are Rotated, to have better 2d detection use util/rotator.py to rotate the videos.
 After the 2d detection is done, doesnt matter external or internal, the 2d keypoints need to be rotated back to the original view. Use util/jsonMMPOSE_CMU.py for that.
 ## How to run the code?
 ### With new Pose2Sim code which inculeds the RTMPose 2d Detection
@@ -34,3 +38,10 @@ On sime linux machine the visulaization might not work. In that case set the fie
 5. Copy a config.toml file from Pose2Sim git or some from other experiments and modify it according to your needs.
 6. Go into the Expirement folder e.g cd data/experiments/your_experiment and run Pose2SimP.py with apropriate arguments.
 7. look at point 6-8 from the above section.
+
+
+## Blender Visualization
+1. Go to https://github.com/davidpagnon/Pose2Sim_Blender?tab=readme-ov-file
+and follow instructions
+2. If you did not do a full installation of the plugin or there are some error in importing the .mot file
+see section "opensim-imports -> Import Motion" in https://github.com/davidpagnon/Pose2Sim_Blender?tab=readme-ov-file#opensim-imports
