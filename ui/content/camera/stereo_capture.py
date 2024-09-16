@@ -17,7 +17,7 @@ class StereoCapture:
         self.cam1 = VideoCapture(camera1_source, sample_rate)
         self.cam2 = VideoCapture(camera2_source, sample_rate)
 
-        # Store the frames captured from both cameras
+        # Store the frames captured from both cameras with timestamps
         self.buffer1 = []
         self.buffer2 = []
 
@@ -28,8 +28,9 @@ class StereoCapture:
         self.capture_frames = True
         self.frame_count = 0
 
-        # Synchronization lock
+        # Synchronization lock and condition
         self.lock = threading.Lock()
+        self.sync_condition = threading.Condition(self.lock)
 
         # Signal handlers
         self._video_started_handler = None
@@ -72,36 +73,52 @@ class StereoCapture:
         if self._video_stopped_handler:
             self._video_stopped_handler()
 
-    def _on_captured_frame1(self, ret, frame, idx):
-        with self.lock:
+        # Call the video finished handler
+        if self._video_finished_handler:
+            self._video_finished_handler()
+
+    def _on_captured_frame1(self, ret, frame, timestamp):
+        with self.sync_condition:
             if self.capture_frames:
-                self.buffer1.append(frame)
+                self.buffer1.append((timestamp, frame))
                 self._check_sync()
 
-    def _on_captured_frame2(self, ret, frame, idx):
-        with self.lock:
+    def _on_captured_frame2(self, ret, frame, timestamp):
+        with self.sync_condition:
             if self.capture_frames:
-                self.buffer2.append(frame)
+                self.buffer2.append((timestamp, frame))
                 self._check_sync()
 
     def _check_sync(self):
         # Ensure both frames are captured before saving
         if len(self.buffer1) > 0 and len(self.buffer2) > 0:
-            # Get synchronized frames
-            frame1 = self.buffer1.pop(0)
-            frame2 = self.buffer2.pop(0)
+            # Get the earliest frames by timestamp
+            time1, frame1 = self.buffer1[0]
+            time2, frame2 = self.buffer2[0]
 
-            # Call the frame captured handler
-            if self._frame_captured_handler:
-                self._frame_captured_handler(frame1, frame2)
+            # Check for closest matching timestamps
+            if abs(time1 - time2) <= 1 / self.cam1.sample_rate:  # Allow a small delta
+                self.buffer1.pop(0)
+                self.buffer2.pop(0)
+                # Call the frame captured handler
+                if self._frame_captured_handler:
+                    self._frame_captured_handler(frame1, frame2)
+                # Increment frame count and save the synchronized frames
+                self.frame_count += 1
 
-            # Increment frame count and save the synchronized frames
-            self.frame_count += 1
+                # Check if max frames limit is reached
+                if self.max_frames != -1 and self.frame_count >= self.max_frames:
+                    self.capture_frames = False
+                    self.stop_capture()
+            elif time1 < time2:
+                # Camera 1 is ahead; remove its frame
+                self.buffer1.pop(0)
+            else:
+                # Camera 2 is ahead; remove its frame
+                self.buffer2.pop(0)
 
-            # Check if max frames limit is reached
-            if self.max_frames != -1 and self.frame_count >= self.max_frames:
-                self.capture_frames = False
-                self.stop_capture()
+            # Notify all threads waiting on this condition
+            self.sync_condition.notify_all()
 
     def start(self):
         self.running = True
@@ -111,7 +128,8 @@ class StereoCapture:
     def _worker(self):
         self.start_capture()
         while self.capture_frames:
-            time.sleep(1)  # Keep the main thread running while capturing
+            with self.sync_condition:
+                self.sync_condition.wait()  # Wait for synchronized frame capture
         self.stop_capture()
 
     def release(self):

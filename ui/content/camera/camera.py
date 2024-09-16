@@ -227,11 +227,74 @@ class Camera:
         self._is_started = False
 
     def process_stereo(self, frame1, frame2):
-        # Put both images side by side
-        h, w = frame1.shape[:2]
-        frame = cv2.hconcat([frame1, frame2])
+        """
+        Processes two video frames by resizing them to the same resolution,
+        applying center cropping if their aspect ratios differ, and concatenating them side by side.
 
-        self.process(True, frame)
+        Args:
+            frame1 (numpy.ndarray): The first video frame.
+            frame2 (numpy.ndarray): The second video frame.
+        """
+        
+        def center_crop(frame, target_aspect_ratio):
+            """
+            Crops the input frame to the target aspect ratio centered.
+
+            Args:
+                frame (numpy.ndarray): The input image frame.
+                target_aspect_ratio (float): The desired aspect ratio (width / height).
+
+            Returns:
+                numpy.ndarray: The center-cropped frame.
+            """
+            height, width = frame.shape[:2]
+            current_aspect_ratio = width / height
+
+            if current_aspect_ratio > target_aspect_ratio:
+                # Crop width
+                new_width = int(height * target_aspect_ratio)
+                start_x = (width - new_width) // 2
+                cropped_frame = frame[:, start_x:start_x + new_width]
+            else:
+                # Crop height
+                new_height = int(width / target_aspect_ratio)
+                start_y = (height - new_height) // 2
+                cropped_frame = frame[start_y:start_y + new_height, :]
+
+            return cropped_frame
+
+        # Get original dimensions
+        h1, w1 = frame1.shape[:2]
+        h2, w2 = frame2.shape[:2]
+
+        # Calculate aspect ratios
+        aspect1 = w1 / h1
+        aspect2 = w2 / h2
+
+        # Determine the common aspect ratio (use the smaller one to ensure both frames fit)
+        common_aspect_ratio = min(aspect1, aspect2)
+
+        # Apply center cropping to both frames to match the common aspect ratio
+        frame1_cropped = center_crop(frame1, common_aspect_ratio)
+        frame2_cropped = center_crop(frame2, common_aspect_ratio)
+
+        # After cropping, get the new dimensions
+        h1_cropped, w1_cropped = frame1_cropped.shape[:2]
+        h2_cropped, w2_cropped = frame2_cropped.shape[:2]
+
+        # Determine the target size (use the smallest height and width to maintain consistency)
+        target_height = min(h1_cropped, h2_cropped)
+        target_width = min(w1_cropped, w2_cropped)
+
+        # Resize both frames to the target size
+        frame1_resized = cv2.resize(frame1_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA)
+        frame2_resized = cv2.resize(frame2_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA)
+
+        # Concatenate the frames horizontally (side by side)
+        concatenated_frame = cv2.hconcat([frame1_resized, frame2_resized])
+
+        # Send the concatenated frame for processing
+        self.process(True, concatenated_frame)
 
     def process(self, ret, frame, frame_idx=0):
         # Run this on a worker thread
