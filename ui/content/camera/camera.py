@@ -9,16 +9,8 @@ from .stereo_capture import StereoCapture
 
 logger = logging.getLogger(__name__)
 
-try:
-    import ktb  # https://github.com/nikwl/kinect-toolbox/
-    from pylibfreenect2 import Freenect2  # dependency of ktb
-except ImportError:
-    logger.warning("kinect-toolbox not found, Kinect camera will not work")
-    logger.warning("see https://github.com/nikwl/kinect-toolbox/?tab=readme-ov-file#installation")
-    ktb = None
-
+from .calibration import Calibration
 from .camera_view import CameraView
-from .trackers import SAM2LiveTracker
 
 
 # Maximum number of cameras supported
@@ -29,15 +21,6 @@ from .trackers import SAM2LiveTracker
 MAX_CAMERAS = 5
 
 
-def discover_kinects():
-    if ktb is None:
-        return []
-
-    fn = Freenect2()
-    num_devices = fn.enumerateDevices()
-    return [f"Kinect {i}" for i in range(num_devices)]
-
-
 class Camera:
     def __init__(self, size):
         self._camera = None
@@ -45,15 +28,14 @@ class Camera:
         self._is_started = False
         self._is_video = False
         self._view = CameraView(size, flip=True)
-        self._tracker = SAM2LiveTracker()
         self.start_frame = 0
         self.end_frame = -1  # -1 means end of video
         self.current_frame = 0
         self.on_camera_changed = lambda: None
         self.on_frame_fn = lambda frame, vis: None
-
-        # Listen to camera view mouse press event
-        self._view.mousePressed.connect(self.on_mouse_press)
+        self.calibration_mode = False
+        self.calibration_frames = []
+        self.max_calibration_frames = 100
 
     def check_camera(self, camera_id):
         if isinstance(camera_id, int) or camera_id.isdigit():
@@ -63,21 +45,11 @@ class Camera:
             camera.release()
             return True
 
-        if camera_id == "kinect":
-            return ktb is not None
-
         if isinstance(camera_id, str):
             return os.path.exists(camera_id)
 
         logger.warning(f"Invalid camera id: {camera_id}")
         return False
-
-    def on_mouse_press(self, x, y, replace=True):
-        if replace:
-            self._tracker.set_point([x, y])
-        else:
-            self._tracker.add_point([x, y])
-        self._tracker.reset()
 
     def get_available_cameras(self):
         # Add regular cameras
@@ -85,10 +57,6 @@ class Camera:
         for i in range(MAX_CAMERAS):
             if self.check_camera(i):
                 cameras.append(i)
-
-        # Add kinect cameras
-        kinects = discover_kinects()
-        cameras.extend(kinects)
 
         return cameras
 
@@ -104,11 +72,6 @@ class Camera:
         logger.info(f"Changing camera to {camera_id}")
         self._is_video = False
         self._view.flip = True
-        self._tracker.reset()
-        if camera_id == "kinect":
-            self.release()
-            self._camera_id = camera_id
-            return
 
         if isinstance(camera_id, tuple) and len(camera_id) == 2:
             assert isinstance(camera_id[0], int) and isinstance(camera_id[1], int)
@@ -204,10 +167,7 @@ class Camera:
 
         if self._camera is None and self._camera_id is not None:
             self._view.clear()
-            if isinstance(self._camera_id, str) and self._camera_id.startswith("Kinect"):
-                kinect_id = int(self._camera_id.split(" ")[1])
-                self._camera = ktb.Kinect(kinect_id)
-            elif isinstance(self._camera_id, tuple) and len(self._camera_id) == 2:
+            if isinstance(self._camera_id, tuple) and len(self._camera_id) == 2:
                 self._is_started = True
                 self._camera = StereoCapture(*self._camera_id, sample_rate=24, max_frames=-1)
                 self._camera.on_frame_captured(self.process_stereo)
@@ -290,11 +250,38 @@ class Camera:
         frame1_resized = cv2.resize(frame1_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA)
         frame2_resized = cv2.resize(frame2_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA)
 
+        # Save calibration frames if in calibration mode
+        if self.calibration_mode:
+            if len(self.calibration_frames) < self.max_calibration_frames:
+                self.calibration_frames.append((frame1_resized, frame2_resized))
+            else:
+                self.calibration_mode = False
+                try:
+                    calibration = Calibration()
+                    calibration.calibrate(self.calibration_frames)
+                except Exception as e:
+                    logger.error(f"Calibration failed: {e}")
+                logger.info("Calibration frames saved")
+                return
+
         # Concatenate the frames horizontally (side by side)
         concatenated_frame = cv2.hconcat([frame1_resized, frame2_resized])
 
         # Send the concatenated frame for processing
         self.process(True, concatenated_frame)
+
+    def calibrate(self, delay=5, max_frames=100):
+        self.calibration_frames = []
+        self.max_calibration_frames = max_frames
+
+        # Enable calibration mode after the specified delay (non-blocking)
+        def enable_calibration():
+            import time
+            time.sleep(delay)
+            self.calibration_mode = True
+            logger.info("Calibration mode enabled")
+
+        threading.Thread(target=enable_calibration).start()
 
     def process(self, ret, frame, frame_idx=0):
         # Run this on a worker thread
@@ -303,17 +290,12 @@ class Camera:
     def _process(self, ret, frame, frame_idx=0):
         if not self._is_started or self._camera is None:
             return
-
-        if self._camera_id == "kinect":
-            color = self._camera.get_frame(ktb.COLOR)
-            depth = self._camera.get_frame(ktb.RAW_DEPTH)
-            ret, frame, vis = True, (color, depth), None
-        else:
-            if self._is_video:
-                self.current_frame += 1
-                if self.end_frame != -1 and self.current_frame > self.end_frame:
-                    self.pause()
-                    return
+        
+        if self._is_video:
+            self.current_frame += 1
+            if self.end_frame != -1 and self.current_frame > self.end_frame:
+                self.pause()
+                return
 
         if not ret:
             self.pause()
@@ -327,47 +309,18 @@ class Camera:
         else:
             small_frame = cv2.resize(frame, (int(w / h * max_size), max_size))
 
-        if not self._tracker.is_init and self._tracker.can_init():
-            def scale(point):
-                return [
-                    int(point[0] * small_frame.shape[1] / w),
-                    int(point[1] * small_frame.shape[0] / h),
-                ]
-            track_results = self._tracker.init(small_frame, scale_fn=scale)
-            
-        else:
-            track_results = self._tracker.track(small_frame)
-
-        vis, bbox = self._tracker.visualize(
-            small_frame,
-            track_results
-        )
-        vis = cv2.resize(vis, (w, h))
-        
-        # scale bbox to original frame size
-        if bbox is not None:
-            bbox = (
-                int(bbox[0] * w / small_frame.shape[1]),
-                int(bbox[1] * h / small_frame.shape[0]),
-                int(bbox[2] * w / small_frame.shape[1]),
-                int(bbox[3] * h / small_frame.shape[0]),
-            )
-
         if not ret or frame is None:
             return
 
         if self.on_frame_fn is not None:
-            frame = self.on_frame_fn(frame, (vis, bbox))
+            frame = self.on_frame_fn(frame, (frame, None))
 
         self.preview(frame)
 
     def release(self):
         if self._camera is not None:
-            if self._camera_id == "kinect":
-                self._camera = None
-            else:
-                self._camera.release()
-                self._camera = None
+            self._camera.release()
+            self._camera = None
 
             self._is_started = False
             self._view.clear()

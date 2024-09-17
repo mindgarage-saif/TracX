@@ -1,5 +1,3 @@
-ktb
 numpy
 opencv-python-headless
 PyQt5
-git+https://github.com/Gy920/segment-anything-2-real-time.git

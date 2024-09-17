@@ -109,29 +109,3 @@ class VideoCapture:
             "End Frame": self.end_frame
         }
         return str(info)
-
-
-if __name__ == "__main__":
-    def on_frame_captured(frame, idx):
-        print("Frame captured", idx)
-
-    def on_video_started():
-        print("Video started")
-
-    def on_video_stopped():
-        print("Video stopped")
-
-    def on_video_finished():
-        print("Video finished")
-
-    video_capture = VideoCapture("/home/skhan/Downloads/DSV Demo Videos/SAM2 Skateboard.webm", sample_rate=24)
-    video_capture.set_start_frame(100)  # Start at frame 100
-    video_capture.set_end_frame(300)    # End at frame 300
-    print(video_capture)
-
-    video_capture.on_frame_captured(on_frame_captured)
-    video_capture.on_video_started(on_video_started)
-    video_capture.on_video_stopped(on_video_stopped)
-    video_capture.on_video_finished(on_video_finished)
-
-    video_capture.start()
