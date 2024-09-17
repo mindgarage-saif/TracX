@@ -1,11 +1,5 @@
 import time
 
-import cv2
-import torch
-from pocketpose import PoseInferencer
-from pocketpose.apis import list_models
-from pocketpose.registry import VISUALIZERS
-from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..data import RuntimeParams
@@ -136,31 +130,15 @@ class Content(QFrame):
         self.innerLayout.addWidget(self.webcam_layout)
 
         # Initialize model
-        self.available_models = list_models()
-        default_model = self.available_models[0]
-        self.change_model(default_model)
+        self.available_models = []
 
         # Add stretch to push the webcam feed to the top
         self.innerLayout.addStretch()
 
     def change_model(self, model_name):
         self.current_model = model_name
-        self.inferencer = PoseInferencer(self.current_model)
-        # self.detector = DETECTORS.build("RTMDetNano")
-        self.visualizer = VISUALIZERS.build(
-            "PoseVisualizer", self.inferencer.model.keypoints_type
-        )
         self.frame_count = 0
         self.start_time = time.time()
-
-        info = self.inferencer.model.cfg.as_dict()
-        self.webcam_layout.show_model_info(
-            info["pretty_name"],
-            info["runner"],
-            info["skeleton"].upper(),
-            info["license"],
-            info["input_size"],
-        )
 
     def update_visualizer_params(self, radius, thickness, kpt_thr, draw_bbox):
         self.visualizer.radius = radius
@@ -171,49 +149,4 @@ class Content(QFrame):
     def update_frame(
         self, frame, vis, first_frame=False, is_video=False
     ):
-        masked_frame, bbox = vis
-
-        depth = None
-        if isinstance(frame, tuple):
-            frame, depth = frame
-
-        # Crop the frame to the last detected person
-        cropped_frame = frame
-        if bbox:
-            x, y, w, h = bbox
-            cropped_frame = frame[y : y + h, x : x + w]
-
-        # Perform pose inference
-        keypoints = self.inferencer.infer(cropped_frame)
-
-        # Translate keypoints to the original frame coordinates
-        # keypoints are list of (x, y, score) tuples
-        if bbox:
-            for i, (x, y, score) in enumerate(keypoints):
-                keypoints[i] = (x + bbox[0], y + bbox[1], score)
-
-        # Process frame for display (resize, convert color, draw keypoints)
-        frame = self.visualizer.visualize(masked_frame, keypoints)
-
-        # Draw bounding box
-        if bbox:
-            x, y, w, h = bbox
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-        if depth is not None:
-            # Mask all pixels where depth is outside 1000-3000 mm
-            depth = cv2.inRange(depth, 500, 1500)
-            frame[depth == 0] = 255
-
-        # Update frame count and calculate FPS
-        self.frame_count += 1
-        elapsed_time = time.time() - self.start_time
-        if elapsed_time > 0:
-            fps = self.frame_count / elapsed_time
-            self.webcam_layout.runtimeParams.set_fps(fps)
-
-        # Update inference speed
-        inference_speed = self.inferencer.last_inference_duration_ms
-        self.webcam_layout.runtimeParams.set_inference_speed(inference_speed)
-
         return frame
