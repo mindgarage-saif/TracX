@@ -12,9 +12,9 @@ from ..config.styles import pauseButtonStyle, startButtonStyle, stopButtonStyle
 
 
 class ControlPanel(QFrame):
-    def __init__(self, camera, parent=None):
+    def __init__(self, cameras, parent=None):
         super().__init__(parent)
-        self.camera = camera
+        self.cameras = cameras
         self.statusBar = parent.statusBar
         self.setObjectName("ControlPanel")
         self.setStyleSheet(
@@ -151,36 +151,20 @@ class ControlPanel(QFrame):
         self.onStop()
 
     def enableWebcam(self):
-        cameras = self.camera.get_available_cameras()
-        if len(cameras) == 0:
-            self.statusBar.showMessage("No cameras available")
-            return
-        elif len(cameras) == 1:
-            self.statusBar.showMessage("Using webcam 0")
-            self.camera.change_camera(cameras[0])
-        else:
-            self.statusBar.showMessage("Using stereo cameras")
-            self.camera.change_camera((cameras[0], cameras[1]))
-
         self.onStart()
 
     def pickVideo(self):
         file_dialog = QFileDialog(self)
-        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         file_dialog.setNameFilter("Video Files (*.mp4 *.avi *.mov *.webm)")
-        file_dialog.setViewMode(QFileDialog.Detail)
-        if file_dialog.exec_():
+        file_dialog.setViewMode(QFileDialog.ViewMode.Detail)
+        if file_dialog.exec():
             file_path = file_dialog.selectedFiles()[0]
-            self.camera.change_camera(file_path)
-
-            if self.camera._is_video:
-                pass
-            else:
-                self.onStart()
+            self.cameras[0].change_camera(file_path)
 
     def startCalibration(self):
         # Set camera to calibration mode
-        self.camera.calibrate(delay=5, max_frames=100)
+        self.cameras[0].calibrate(delay=5, max_frames=100)
 
     def setStartCallback(self, callback):
         self.startButton.clicked.connect(callback)
@@ -192,36 +176,27 @@ class ControlPanel(QFrame):
         self.exportMenu.currentIndexChanged.connect(callback)
 
     def onStart(self):
-        self.camera.toggle_start()
-        if self.camera._is_started:
-            self.statusBar.showMessage("Webcam started")
-            self.startButton.setText("Pause")
-            self.startButton.setStyleSheet(pauseButtonStyle)
-        else:
-            self.statusBar.showMessage("Webcam paused")
-            self.startButton.setText("Start")
-            self.startButton.setStyleSheet(startButtonStyle)
+        for cam in self.cameras:
+            cam.toggle_start()
+            if cam._is_started:
+                self.statusBar.showMessage("Webcam started")
+                self.startButton.setText("Pause")
+                self.startButton.setStyleSheet(pauseButtonStyle)
+            else:
+                self.statusBar.showMessage("Webcam paused")
+                self.startButton.setText("Start")
+                self.startButton.setStyleSheet(startButtonStyle)
 
         self.stopButton.setEnabled(True)
 
     def onStop(self):
-        current_source = self.camera._camera_id
-        if current_source is None:
-            self.statusBar.showMessage("Select an input source to start")
-        elif isinstance(current_source, int):
-            self.statusBar.showMessage(f"Using webcam {current_source}")
-        elif isinstance(current_source, str):
-            self.statusBar.showMessage(f"Using video {current_source}")
-        else:
-            self.statusBar.showMessage("Invalid input source")
-
         self.startButton.setEnabled(True)
         self.startButton.setText("Start")
         self.startButton.setStyleSheet(startButtonStyle)
-        self.camera.release()
+        [cam.release() for cam in self.cameras]
         self.stopButton.setEnabled(False)
 
     def onExport(self, index):
         self.statusBar.showMessage("Exporting screenshot...")
-        path = self.camera.screenshot()
+        path = self.cameras[0].screenshot()
         self.statusBar.showMessage(f"Screenshot saved to {path}")

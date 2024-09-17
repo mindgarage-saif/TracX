@@ -13,21 +13,14 @@ from .video import VideoCapture
 
 logger = logging.getLogger(__name__)
 
-# Maximum number of cameras supported
-# -------------------------------------
-# This flag controls how many cameras can be used at the same time. It is arbitrary
-# and can be increased if needed. The app looks for up to MAX_CAMERAS cameras and
-# makes them available to the user to select from a dropdown menu.
-MAX_CAMERAS = 5
-
 
 class Camera:
-    def __init__(self, size):
+    def __init__(self, view, source=None):
         self._camera = None
         self._camera_id = None
         self._is_started = False
         self._is_video = False
-        self._view = CameraView(size, flip=True)
+        self._view = view
         self.start_frame = 0
         self.end_frame = -1  # -1 means end of video
         self.current_frame = 0
@@ -36,37 +29,8 @@ class Camera:
         self.calibration_mode = False
         self.calibration_frames = []
         self.max_calibration_frames = 100
-
-    def check_camera(self, camera_id):
-        if isinstance(camera_id, int) or camera_id.isdigit():
-            camera = cv2.VideoCapture(int(camera_id))
-            if not camera.isOpened():
-                return False
-            camera.release()
-            return True
-
-        if isinstance(camera_id, str):
-            return os.path.exists(camera_id)
-
-        logger.warning(f"Invalid camera id: {camera_id}")
-        return False
-
-    def get_available_cameras(self):
-        # Add regular cameras
-        cameras = []
-        for i in range(MAX_CAMERAS):
-            if self.check_camera(i):
-                cameras.append(i)
-
-        return cameras
-
-    def select_default_camera(self):
-        cameras = self.get_available_cameras()
-        logger.info(f"Available cameras: {cameras}")
-        if len(cameras) > 0:
-            self.change_camera(cameras[0])
-        else:
-            raise Exception("No cameras available")
+        if source is not None:
+            self.change_camera(source)
 
     def change_camera(self, camera_id):
         logger.info(f"Changing camera to {camera_id}")
