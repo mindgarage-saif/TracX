@@ -67,15 +67,15 @@ class InferencerSettings(QFrame):
         self.innerLayout.setSpacing(8)
 
         # Section heading (centered, bold, larger font, white text)
-        heading = QLabel("Inference Settings", self)
+        heading = QLabel("Motion Estimation Settings", self)
         heading.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.innerLayout.addWidget(heading)
 
         # Pose estimation type (2D/3D)
-        self.innerLayout.addWidget(QLabel("Pose Estimation Type", self))
-        self.radio_2d = QRadioButton("2D", self)
+        self.innerLayout.addWidget(QLabel("Backend", self))
+        self.radio_2d = QRadioButton("Baseline", self)
         self.radio_2d.setChecked(True)  # Set the default selected button
-        self.radio_3d = QRadioButton("3D", self)
+        self.radio_3d = QRadioButton("Pose2Sim", self)
         row = QHBoxLayout(self)
         row.addWidget(self.radio_2d)
         row.addWidget(self.radio_3d)

@@ -28,8 +28,7 @@ def resize_with_padding(image: np.ndarray, target_size: Tuple[int, int]) -> np.n
     left = (target_w - new_w) // 2
     right = target_w - new_w - left
 
-    image = cv2.copyMakeBorder(
-        image, top, bottom, left, right, cv2.BORDER_CONSTANT)
+    image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT)
 
     return image, (top, bottom, left, right)
 

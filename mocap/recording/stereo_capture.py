@@ -7,12 +7,12 @@ from .video import VideoCapture
 
 class StereoCapture:
     def __init__(
-            self,
-            camera1_source: dict = 0,
-            camera2_source: dict = 1,
-            sample_rate=24,
-            max_frames=100
-        ):
+        self,
+        camera1_source: dict = 0,
+        camera2_source: dict = 1,
+        sample_rate=24,
+        max_frames=100,
+    ):
         # Initialize video capture for both cameras
         self.cam1 = VideoCapture(camera1_source, sample_rate)
         self.cam2 = VideoCapture(camera2_source, sample_rate)

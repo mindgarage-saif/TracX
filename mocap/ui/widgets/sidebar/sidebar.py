@@ -30,7 +30,12 @@ class Sidebar(QFrame):
         logo_h = int(logo_w / 2)
         logo = QLabel(self)
         logo.setPixmap(
-            logo_p.scaled(logo_w, logo_h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            logo_p.scaled(
+                logo_w,
+                logo_h,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
         )
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.innerLayout.addWidget(logo)

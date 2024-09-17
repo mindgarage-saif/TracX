@@ -1,7 +1,8 @@
-import cv2
 import threading
 import time
-from typing import Callable, Any
+from typing import Any, Callable
+
+import cv2
 
 
 class VideoCapture:
@@ -9,7 +10,7 @@ class VideoCapture:
         self.video = cv2.VideoCapture(video_source)
         if not self.video.isOpened():
             raise ValueError("Unable to open video source", video_source)
-        
+
         self.frame_rate = int(self.video.get(cv2.CAP_PROP_FPS))
         self.sample_rate = sample_rate or self.frame_rate
         self.duration = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT) / self.frame_rate)
@@ -41,7 +42,7 @@ class VideoCapture:
             if self._video_finished_handler:
                 self._video_finished_handler()
             return False, None, None
-        
+
         self.current_frame += 1
 
         # Capture timestamp
@@ -60,14 +61,14 @@ class VideoCapture:
             self._frame_captured_handler(ret, frame, timestamp)
 
         return ret, frame, timestamp
-    
+
     def release(self):
         self.video.release()
 
     def start(self):
         if self._video_started_handler:
             self._video_started_handler()
-        
+
         self.running = True
         self.worker_thread = threading.Thread(target=self._worker)
         self.worker_thread.start()
@@ -84,7 +85,9 @@ class VideoCapture:
             ret, frame, timestamp = self.read()
             if not ret:
                 break
-            time.sleep(max(0, (1 / self.sample_rate) - (time.time() - self._last_capture_time)))
+            time.sleep(
+                max(0, (1 / self.sample_rate) - (time.time() - self._last_capture_time))
+            )
         self.release()
 
     # Signal connection methods
@@ -106,6 +109,6 @@ class VideoCapture:
             "Frame Rate": self.frame_rate,
             "Sample Rate": self.sample_rate,
             "Start Frame": self.start_frame,
-            "End Frame": self.end_frame
+            "End Frame": self.end_frame,
         }
         return str(info)

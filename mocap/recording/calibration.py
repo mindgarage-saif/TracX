@@ -1,6 +1,6 @@
-import cv2
 import os
 
+import cv2
 import numpy as np
 
 
@@ -16,24 +16,23 @@ class Calibration:
         self.world_scaling = world_scaling  # Checkerboard square size in mm
 
         # Criteria used by checkerboard pattern detector.
-        self.criteria = (cv2.TERM_CRITERIA_EPS +
-                         cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+        self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
         self.calibration_params = None
 
     def calibrate_single(
-            self,
-            images,
-            name="camera",
-            conv_size=(11, 11),  # Convolution size for corner detection
-        ):
+        self,
+        images,
+        name="camera",
+        conv_size=(11, 11),  # Convolution size for corner detection
+    ):
         rows = self.rows
         columns = self.columns
         world_scaling = self.world_scaling
         criteria = self.criteria
 
         # Create a 3D grid of points in real-world space
-        objp = np.zeros((rows*columns, 3), np.float32)
+        objp = np.zeros((rows * columns, 3), np.float32)
         objp[:, :2] = np.mgrid[0:rows, 0:columns].T.reshape(-1, 2)
         objp = world_scaling * objp
 
@@ -66,11 +65,7 @@ class Calibration:
 
         # Calibrate the camera
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
-            objpoints,
-            imgpoints,
-            (width, height),
-            None,
-            None
+            objpoints, imgpoints, (width, height), None, None
         )
 
         # Print calibration results
@@ -95,7 +90,8 @@ class Calibration:
         ret, mtx1, dist1, mtx2, dist2, R, T, E, F = stereo_calibration
         rectify_scale = 1  # 0 for crop, 1 for full image
         R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
-            mtx1, dist1, mtx2, dist2, shape, R, T, alpha=rectify_scale)
+            mtx1, dist1, mtx2, dist2, shape, R, T, alpha=rectify_scale
+        )
         return R1, R2, P1, P2, Q, roi1, roi2
 
     def calibrate(self, images):
@@ -118,7 +114,7 @@ class Calibration:
         objpoints2, imgpoints2, (_, mtx2, dist2, _, _), _ = calibration2
         flags = cv2.CALIB_FIX_INTRINSIC
         stereo_calibration = cv2.stereoCalibrate(
-            objpoints1, 
+            objpoints1,
             imgpoints1,
             imgpoints2,
             mtx1,
@@ -127,7 +123,7 @@ class Calibration:
             dist2,
             shape,
             criteria=self.criteria,
-            flags=flags
+            flags=flags,
         )
 
         # Stereo rectification
@@ -143,9 +139,11 @@ class Calibration:
         }
 
     def triangulate(self, keypoints1, keypoints2):
-        if self.calibration_params is None or "rectification" not in self.calibration_params:
-            raise ValueError(
-                "Stereo rectification parameters are not available.")
+        if (
+            self.calibration_params is None
+            or "rectification" not in self.calibration_params
+        ):
+            raise ValueError("Stereo rectification parameters are not available.")
 
         # Convert keypoints to numpy arrays
         keypoints1 = np.array(keypoints1, dtype=np.float32)  # (N, 3)

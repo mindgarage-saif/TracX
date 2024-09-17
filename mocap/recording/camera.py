@@ -1,22 +1,22 @@
-import os
 import logging
+import os
 import threading
 
 import cv2
 
-from .video import VideoCapture
+from ..ui.widgets.camera_view import (
+    CameraView,
+)  # FIXME: UI module should not be imported in recording module
+from .calibration import Calibration
 from .stereo_capture import StereoCapture
+from .video import VideoCapture
 
 logger = logging.getLogger(__name__)
-
-from .calibration import Calibration
-from .camera_view import CameraView
-
 
 # Maximum number of cameras supported
 # -------------------------------------
 # This flag controls how many cameras can be used at the same time. It is arbitrary
-# and can be increased if needed. The app looks for up to MAX_CAMERAS cameras and 
+# and can be increased if needed. The app looks for up to MAX_CAMERAS cameras and
 # makes them available to the user to select from a dropdown menu.
 MAX_CAMERAS = 5
 
@@ -111,40 +111,6 @@ class Camera:
         video.release()
         return fps
 
-    def set_start_frame(self, start):
-        if not self._is_video:
-            return
-
-        fps = self.get_fps()
-        start_frame = int(start * fps)
-        if start_frame != self.start_frame:
-            self.start_frame = start_frame
-            self.current_frame = start_frame
-            # make sure only these frames are read
-            self._camera = cv2.VideoCapture(self._camera_id)
-            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.start_frame)
-
-            # preview the frame
-            ret, frame = self._camera.read()
-            self.preview(frame)
-
-            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.start_frame)
-
-    def set_end_frame(self, end):
-        if not self._is_video:
-            return
-
-        end_frame = int(end * self.get_fps())
-        if end_frame != self.end_frame:
-            self.end_frame = end_frame
-          
-            # preview the frame
-            self._camera = cv2.VideoCapture(self._camera_id)
-            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.end_frame)
-            ret, frame = self._camera.read()
-            self.preview(frame)
-            self._camera.set(cv2.CAP_PROP_POS_FRAMES, self.start_frame)
-
     def toggle_start(self):
         if self._is_started:
             self.pause()
@@ -169,7 +135,9 @@ class Camera:
             self._view.clear()
             if isinstance(self._camera_id, tuple) and len(self._camera_id) == 2:
                 self._is_started = True
-                self._camera = StereoCapture(*self._camera_id, sample_rate=24, max_frames=-1)
+                self._camera = StereoCapture(
+                    *self._camera_id, sample_rate=24, max_frames=-1
+                )
                 self._camera.on_frame_captured(self.process_stereo)
                 self._is_started = True
                 self._camera.start()
@@ -195,7 +163,7 @@ class Camera:
             frame1 (numpy.ndarray): The first video frame.
             frame2 (numpy.ndarray): The second video frame.
         """
-        
+
         def center_crop(frame, target_aspect_ratio):
             """
             Crops the input frame to the target aspect ratio centered.
@@ -214,12 +182,12 @@ class Camera:
                 # Crop width
                 new_width = int(height * target_aspect_ratio)
                 start_x = (width - new_width) // 2
-                cropped_frame = frame[:, start_x:start_x + new_width]
+                cropped_frame = frame[:, start_x : start_x + new_width]
             else:
                 # Crop height
                 new_height = int(width / target_aspect_ratio)
                 start_y = (height - new_height) // 2
-                cropped_frame = frame[start_y:start_y + new_height, :]
+                cropped_frame = frame[start_y : start_y + new_height, :]
 
             return cropped_frame
 
@@ -247,8 +215,12 @@ class Camera:
         target_width = min(w1_cropped, w2_cropped)
 
         # Resize both frames to the target size
-        frame1_resized = cv2.resize(frame1_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA)
-        frame2_resized = cv2.resize(frame2_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA)
+        frame1_resized = cv2.resize(
+            frame1_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA
+        )
+        frame2_resized = cv2.resize(
+            frame2_cropped, (target_width, target_height), interpolation=cv2.INTER_AREA
+        )
 
         # Save calibration frames if in calibration mode
         if self.calibration_mode:
@@ -277,6 +249,7 @@ class Camera:
         # Enable calibration mode after the specified delay (non-blocking)
         def enable_calibration():
             import time
+
             time.sleep(delay)
             self.calibration_mode = True
             logger.info("Calibration mode enabled")
@@ -290,7 +263,7 @@ class Camera:
     def _process(self, ret, frame, frame_idx=0):
         if not self._is_started or self._camera is None:
             return
-        
+
         if self._is_video:
             self.current_frame += 1
             if self.end_frame != -1 and self.current_frame > self.end_frame:

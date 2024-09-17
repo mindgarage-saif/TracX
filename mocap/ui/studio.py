@@ -1,21 +1,64 @@
 import logging
-import signal
-import sys
+import time
 
-from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
-    QSplashScreen,
+    QVBoxLayout,
     QWidget,
 )
 
-from .content import Content
-from .sidebar import Sidebar
+from .widgets import Sidebar, WebcamLayout
 
 logger = logging.getLogger(__name__)
+
+
+class Content(QFrame):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.statusBar = parent.statusBar()
+        self.setFixedWidth(int(parent.width() * 0.7))
+        self.setFixedHeight(parent.height() - 20)
+        self.setStyleSheet(
+            """
+        """
+        )
+
+        # Create an inner layout for the frame
+        self.innerLayout = QVBoxLayout(self)
+        self.innerLayout.setContentsMargins(16, 16, 16, 16)
+        self.innerLayout.setSpacing(8)
+
+        # Create the webcam view
+        self.webcam_layout = WebcamLayout(
+            self,
+            self.update_frame,
+        )
+        self.webcam_layout.setFixedHeight(self.height() - 52)
+        self.innerLayout.addWidget(self.webcam_layout)
+
+        # Initialize model
+        self.available_models = []
+
+        # Add stretch to push the webcam feed to the top
+        self.innerLayout.addStretch()
+
+    def change_model(self, model_name):
+        self.current_model = model_name
+        self.frame_count = 0
+        self.start_time = time.time()
+
+    def update_visualizer_params(self, radius, thickness, kpt_thr, draw_bbox):
+        self.visualizer.radius = radius
+        self.visualizer.thickness = thickness
+        self.visualizer.kpt_thr = kpt_thr
+        self.visualizer.draw_bbox = draw_bbox
+
+    def update_frame(self, frame, vis, first_frame=False, is_video=False):
+        return frame
 
 
 class StudioWindow(QMainWindow):
@@ -89,13 +132,16 @@ class StudioWindow(QMainWindow):
         window.addWidget(self.content)
 
     def confirmExit(self):
-        if QMessageBox.question(
-            self,
-            'PocketPose Studio',
-            "Are you sure you want to quit?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        ) == QMessageBox.StandardButton.Yes:
+        if (
+            QMessageBox.question(
+                self,
+                "PocketPose Studio",
+                "Are you sure you want to quit?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
             self.content.webcam_layout.controlPanel.onStop()
             return True
         else:
@@ -106,29 +152,3 @@ class StudioWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
-
-
-class Studio(QApplication):
-    def __init__(self):
-        super().__init__(sys.argv)
-        self.title = "PocketPose Studio"
-
-    def sigint_handler(self, *args):
-        """Handler for the SIGINT signal."""
-        sys.stderr.write('\r')
-        if self.window.confirmExit():
-            self.quit()
-
-    def run(self):
-        # Show splash screen
-        pixmap = QPixmap("assets/splash.png")
-        splash = QSplashScreen(pixmap)
-        splash.show()
-        self.processEvents()
-
-        # Show the main window
-        self.window = StudioWindow(title=self.title)
-        self.window.show()
-        splash.finish(self.window)
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        sys.exit(self.exec())

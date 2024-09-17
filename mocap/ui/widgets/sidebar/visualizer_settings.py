@@ -34,7 +34,7 @@ class VisualizerSettings(QFrame):
         self.innerLayout.setSpacing(8)
 
         # Section heading (centered, bold, larger font, white text)
-        heading = QLabel("Visualizer Parameters", self)
+        heading = QLabel("Visualization Settings", self)
         heading.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.innerLayout.addWidget(heading)
 

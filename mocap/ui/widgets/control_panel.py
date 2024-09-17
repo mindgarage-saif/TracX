@@ -7,9 +7,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
-from ..widgets import QTimeLine
 
-from .styles import pauseButtonStyle, startButtonStyle, stopButtonStyle
+from ..config.styles import pauseButtonStyle, startButtonStyle, stopButtonStyle
 
 
 class ControlPanel(QFrame):
@@ -74,26 +73,6 @@ class ControlPanel(QFrame):
                 font-size: 16px;
                 color: white;
             }
-            
-            #ControlPanel #SeekBar {
-                background-color: transparent;
-                border: 1px solid white;
-                border-radius: 8px;
-            }
-                           
-            #ControlPanel #SeekBar::handle {
-                background-color: white;
-                border: 1px solid black;
-                border-radius: 8px;
-            }
-                           
-            #ControlPanel #SeekBar::add-page, #ControlPanel #SeekBar::sub-page {
-                background-color: transparent;
-            }
-                           
-            #ControlPanel #SeekBar::add-line, #ControlPanel #SeekBar::sub-line {
-                background-color: transparent;
-            }
         """
         )
         self.setFixedHeight(96)
@@ -153,19 +132,9 @@ class ControlPanel(QFrame):
 
         # Calculate width of timer label and export menu
         exportWidth = self.exportMenu.sizeHint().width() + 16
-        buttonsWidth = self.startButton.width() + self.stopButton.width() + 32
-        seekbarWidth = self.width() - exportWidth - buttonsWidth - 16
         self.exportMenu.setFixedWidth(exportWidth)
 
-        # Create a seekbar (use a scroll bar for now)
-        self.seekBar = QTimeLine(0, 0, self)
-        self.seekBar.setObjectName("SeekBar")
-        self.seekBar.setFixedWidth(seekbarWidth)
-        self.seekBar.startChanged.connect(self.camera.set_start_frame)
-        self.seekBar.endChanged.connect(self.camera.set_end_frame)
-
         # Add items to layout
-        self.layout2.addWidget(self.seekBar)
         self.layout2.addWidget(self.exportMenu)
         self.layout2.addStretch()
 
@@ -205,8 +174,7 @@ class ControlPanel(QFrame):
             self.camera.change_camera(file_path)
 
             if self.camera._is_video:
-                duration = self.camera.get_duration()
-                self.seekBar.setDuration(duration)
+                pass
             else:
                 self.onStart()
 
