@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QFrame,
@@ -40,7 +40,7 @@ class ControlPanel(QFrame):
                 padding: 4px;
             }
 
-            #ControlPanel #ImageButton {
+            #ControlPanel #CalibrateButton {
                 border-radius: 0px;
                 border: 1px solid white;
                 background-color: transparent;
@@ -56,7 +56,7 @@ class ControlPanel(QFrame):
                 background-color: rgba(255, 255, 255, 0.1);
             }
             
-            #ControlPanel #ImageButton:hover {
+            #ControlPanel #CalibrateButton:hover {
                 background-color: rgba(255, 255, 255, 0.1);
             }
 
@@ -120,12 +120,12 @@ class ControlPanel(QFrame):
         self.videoButton = QPushButton("Video", self)
         self.videoButton.setObjectName("VideoButton")
         self.videoButton.setFixedWidth(buttonWidth)
-        self.imageButton = QPushButton("Image", self)
-        self.imageButton.setObjectName("ImageButton")
-        self.imageButton.setFixedWidth(buttonWidth)
+        self.calibrationButton = QPushButton("Calibrate", self)
+        self.calibrationButton.setObjectName("CalibrateButton")
+        self.calibrationButton.setFixedWidth(buttonWidth)
         self.layout1.addWidget(self.webcamButton)
         self.layout1.addWidget(self.videoButton)
-        self.layout1.addWidget(self.imageButton)
+        self.layout1.addWidget(self.calibrationButton)
 
         # Row 2 (Play/Stop buttons, seek bar, export menu)
         self.layout2 = QHBoxLayout(self)
@@ -173,7 +173,7 @@ class ControlPanel(QFrame):
         self.stopButton.setEnabled(False)
         self.webcamButton.clicked.connect(self.enableWebcam)
         self.videoButton.clicked.connect(self.pickVideo)
-        self.imageButton.clicked.connect(self.pickImage)
+        self.calibrationButton.clicked.connect(self.startCalibration)
 
         # Initialize the control panel
         self.setStartCallback(self.onStart)
@@ -210,20 +210,9 @@ class ControlPanel(QFrame):
             else:
                 self.onStart()
 
-    def pickImage(self):
-        file_dialog = QFileDialog(self)
-        file_dialog.setFileMode(QFileDialog.ExistingFile)
-        file_dialog.setNameFilter("Image Files (*.jpg *.jpeg *.png)")
-        file_dialog.setViewMode(QFileDialog.Detail)
-        if file_dialog.exec_():
-            file_path = file_dialog.selectedFiles()[0]
-            self.camera.change_camera(file_path)
-
-            if self.camera._is_video:
-                duration = self.camera.get_duration()
-                self.seekBar.setDuration(duration)
-            else:
-                self.onStart()
+    def startCalibration(self):
+        # Set camera to calibration mode
+        self.camera.calibrate(delay=5, max_frames=100)
 
     def setStartCallback(self, callback):
         self.startButton.clicked.connect(callback)

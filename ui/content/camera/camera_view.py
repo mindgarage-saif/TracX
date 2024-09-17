@@ -3,9 +3,9 @@ from typing import Tuple
 
 import cv2
 import numpy as np
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QLabel
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtWidgets import QLabel
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class CameraView(QLabel):
             h, w, ch = frame.shape
             bytes_per_line = ch * w
             convert_to_Qt_format = QImage(
-                frame.data, w, h, bytes_per_line, QImage.Format_RGB888
+                frame.data, w, h, bytes_per_line, QImage.Format.Format_RGB888
             )
             pixmap = QPixmap(convert_to_Qt_format)
             self.setPixmap(pixmap)

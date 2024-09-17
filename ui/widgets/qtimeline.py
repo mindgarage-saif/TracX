@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from PyQt5.QtCore import QPoint, Qt, pyqtSignal
-from PyQt5.QtGui import (
+from PyQt6.QtCore import QPoint, Qt, pyqtSignal
+from PyQt6.QtGui import (
     QBrush,
     QColor,
+    QColorConstants,
     QFont,
     QPainter,
     QPainterPath,
@@ -11,7 +12,7 @@ from PyQt5.QtGui import (
     QPen,
     QPolygon,
 )
-from PyQt5.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget
 
 __textColor__ = QColor(187, 187, 187)
 __backgroudColor__ = QColor(100, 63, 65)
@@ -46,7 +47,7 @@ class QTimeLine(QWidget):
         self.setAutoFillBackground(True)  # background
 
         pal = QPalette()
-        pal.setColor(QPalette.Background, self.backgroundColor)
+        # pal.setColor(QPalette.Background, self.backgroundColor)
         self.setPalette(pal)
 
     def paintEvent(self, event):
@@ -54,17 +55,17 @@ class QTimeLine(QWidget):
         qp.begin(self)
         qp.setPen(self.textColor)
         qp.setFont(self.font)
-        qp.setRenderHint(QPainter.Antialiasing)
+        qp.setRenderHint(QPainter.RenderHint.Antialiasing)
         w = 0
         # Draw time
         scale = self.getScale()
         while w <= self.width():
             qp.drawText(
-                w - 50, 0, 100, 100, Qt.AlignHCenter, self.getTimeString(w * scale)
+                w - 50, 0, 100, 100, Qt.AlignmentFlag.AlignHCenter, self.getTimeString(w * scale)
             )
             w += 100
         # Draw down line
-        qp.setPen(QPen(Qt.darkCyan, 5, Qt.SolidLine))
+        qp.setPen(QPen(QColorConstants.DarkCyan, 5, Qt.PenStyle.SolidLine))
         qp.drawLine(0, 40, self.width(), 40)
 
         # Draw dash lines
@@ -93,15 +94,15 @@ class QTimeLine(QWidget):
 
     def drawPointers(self, qp):
         # Draw the region between pointers
-        qp.setBrush(QBrush(Qt.lightGray, Qt.Dense4Pattern))
+        qp.setBrush(QBrush(QColorConstants.LightGray, Qt.BrushStyle.Dense4Pattern))
         qp.drawRect(
             self.pointerStartPos, 20, self.pointerEndPos - self.pointerStartPos, 20
         )
 
         # Draw pointers
         for pos in [self.pointerStartPos, self.pointerEndPos]:
-            qp.setPen(Qt.darkCyan)
-            qp.setBrush(QBrush(Qt.darkCyan))
+            qp.setPen(QColorConstants.DarkCyan)
+            qp.setBrush(QBrush(QColorConstants.DarkCyan))
             poly = QPolygon(
                 [QPoint(pos - 10, 20), QPoint(pos + 10, 20), QPoint(pos, 40)]
             )

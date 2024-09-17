@@ -2,8 +2,8 @@ import logging
 import signal
 import sys
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
@@ -25,7 +25,7 @@ class StudioWindow(QMainWindow):
         self.setUnifiedTitleAndToolBarOnMac(True)
 
         # Compute initial screen size and window position
-        screen = QApplication.desktop().screenGeometry()
+        screen = QApplication.primaryScreen().geometry()
         screen_width, screen_height = screen.width(), screen.height()
 
         # Correct aspect ratio of window size (4:3) and ensure it does not exceed screen size
@@ -78,12 +78,12 @@ class StudioWindow(QMainWindow):
         window.setSpacing(0)
         self.content = Content(self)
         self.sidebar = Sidebar(self)
-        self.sidebar.inferencerSettings.setModelSelectedCallback(
-            self.content.change_model
-        )
-        self.sidebar.visualizerSettings.setCallback(
-            self.content.update_visualizer_params
-        )
+        # self.sidebar.inferencerSettings.setModelSelectedCallback(
+        #     self.content.change_model
+        # )
+        # self.sidebar.visualizerSettings.setCallback(
+        #     self.content.update_visualizer_params
+        # )
 
         window.addWidget(self.sidebar)
         window.addWidget(self.content)
@@ -93,9 +93,9 @@ class StudioWindow(QMainWindow):
             self,
             'PocketPose Studio',
             "Are you sure you want to quit?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        ) == QMessageBox.Yes:
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        ) == QMessageBox.StandardButton.Yes:
             self.content.webcam_layout.controlPanel.onStop()
             return True
         else:
@@ -131,4 +131,4 @@ class Studio(QApplication):
         self.window.show()
         splash.finish(self.window)
         signal.signal(signal.SIGINT, self.sigint_handler)
-        sys.exit(self.exec_())
+        sys.exit(self.exec())

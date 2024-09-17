@@ -1,5 +1,5 @@
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel
 
 
 class Chip(QFrame):

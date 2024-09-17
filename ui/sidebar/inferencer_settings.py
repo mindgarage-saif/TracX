@@ -1,6 +1,6 @@
-from pocketpose.apis import list_models
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
+# from pocketpose.apis import list_models
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (
     QButtonGroup,
     QComboBox,
     QFrame,
@@ -124,10 +124,10 @@ class InferencerSettings(QFrame):
 
         # Instantiate ModelBrowser
         self.modelBrowser = ModelBrowser(self)
-        available_models = (
-            list_models()
-        )
-        self.modelBrowser.setModels(available_models)
+        # available_models = (
+        #     list_models()
+        # )
+        # self.modelBrowser.setModels(available_models)
 
         # Create a QScrollArea
         self.scroll_area = QScrollArea()

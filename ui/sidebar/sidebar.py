@@ -1,6 +1,6 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QFrame, QLabel, QVBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout
 
 from .inferencer_settings import InferencerSettings
 from .visualizer_settings import VisualizerSettings
@@ -30,9 +30,9 @@ class Sidebar(QFrame):
         logo_h = int(logo_w / 2)
         logo = QLabel(self)
         logo.setPixmap(
-            logo_p.scaled(logo_w, logo_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            logo_p.scaled(logo_w, logo_h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         )
-        logo.setAlignment(Qt.AlignCenter)
+        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.innerLayout.addWidget(logo)
         self.innerLayout.addSpacing(16)
 

@@ -1,6 +1,6 @@
 import time
 
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..data import RuntimeParams
 from ..widgets import Chip

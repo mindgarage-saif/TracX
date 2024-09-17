@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QCheckBox, QFrame, QLabel, QSlider, QVBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QCheckBox, QFrame, QLabel, QSlider, QVBoxLayout
 
 
 class VisualizerSettings(QFrame):
@@ -40,7 +40,7 @@ class VisualizerSettings(QFrame):
 
         # Keypoint threshold slider
         self.innerLayout.addWidget(QLabel("Keypoint Threshold: ", self))
-        self.threshold = QSlider(Qt.Horizontal, self)
+        self.threshold = QSlider(Qt.Orientation.Horizontal, self)
         self.threshold.setMinimum(0)
         self.threshold.setMaximum(100)
         self.threshold.setValue(50)
@@ -48,7 +48,7 @@ class VisualizerSettings(QFrame):
 
         # Keypoint radius slider
         self.innerLayout.addWidget(QLabel("Keypoint Radius: ", self))
-        self.radius = QSlider(Qt.Horizontal, self)
+        self.radius = QSlider(Qt.Orientation.Horizontal, self)
         self.radius.setMinimum(1)
         self.radius.setMaximum(20)
         self.radius.setValue(5)
@@ -56,7 +56,7 @@ class VisualizerSettings(QFrame):
 
         # Line thickness slider
         self.innerLayout.addWidget(QLabel("Line Thickness: ", self))
-        self.thickness = QSlider(Qt.Horizontal, self)
+        self.thickness = QSlider(Qt.Orientation.Horizontal, self)
         self.thickness.setMinimum(1)
         self.thickness.setMaximum(10)
         self.thickness.setValue(3)
