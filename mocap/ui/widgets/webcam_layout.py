@@ -1,8 +1,6 @@
 import logging
-import os
 
-import cv2
-from PyQt6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QFrame, QGridLayout, QVBoxLayout
 
 from ...recording import CameraController
 from .camera_view import CameraView
@@ -10,19 +8,20 @@ from .control_panel import ControlPanel
 
 logger = logging.getLogger(__name__)
 
-# Maximum number of cameras supported
-MAX_CAMERAS = 10
-
 
 class WebcamLayout(QFrame):
     def __init__(
         self,
         parent,
         parentWidth,
+        camera_ids,
         on_frame_fn,
     ):
         super().__init__(parent)
         self.statusBar = parent.statusBar
+
+        num_cameras = min(len(camera_ids), 10)
+        camera_ids = camera_ids[:num_cameras]
 
         max_cam_w = parentWidth
         max_cam_h = parent.height() - 48
@@ -78,8 +77,6 @@ class WebcamLayout(QFrame):
         self.gridLayout.setSpacing(16)
 
         # Detect available cameras and dynamically adjust the grid size
-        camera_ids = self.get_available_cameras()
-        num_cameras = min(len(camera_ids), MAX_CAMERAS)
         self.cam_views = []
 
         # Determine the grid size dynamically
@@ -115,23 +112,5 @@ class WebcamLayout(QFrame):
         self.controlPanel = ControlPanel(self.camera, parent=parent)
         self.innerLayout.addWidget(self.controlPanel)
 
-    def check_camera(self, camera_id):
-        if isinstance(camera_id, int) or camera_id.isdigit():
-            camera = cv2.VideoCapture(int(camera_id))
-            if not camera.isOpened():
-                return False
-            camera.release()
-            return True
-
-        if isinstance(camera_id, str):
-            return os.path.exists(camera_id)
-
-        return False
-
-    def get_available_cameras(self):
-        cameras = []
-        for i in range(MAX_CAMERAS):
-            if self.check_camera(i):
-                cameras.append(i)
-
-        return cameras
+    def onStop(self):
+        self.controlPanel.onStop()

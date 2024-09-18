@@ -8,7 +8,7 @@ from ..widgets import WebcamLayout
 
 
 class RecordPage(BasePage):
-    def __init__(self, context: QWidget, parent: QWidget) -> None:
+    def __init__(self, context: QWidget, parent: QWidget, cameras) -> None:
         super().__init__(context, parent)
 
         self.innerLayout.setContentsMargins(8, 0, 8, 0)
@@ -18,16 +18,17 @@ class RecordPage(BasePage):
         self.webcam_layout = WebcamLayout(
             self,
             webcam_width,
+            [camera["id"] for camera in cameras],
             self.update_frame,
         )
         self.webcam_layout.setFixedHeight(parent.pageHeight())
         self.innerLayout.addWidget(self.webcam_layout)
-
-        # Initialize model
-        self.available_models = []
 
         # Add stretch to push the webcam feed to the top
         self.innerLayout.addStretch()
 
     def update_frame(self, frame):
         return frame
+
+    def onStop(self):
+        self.webcam_layout.onStop()

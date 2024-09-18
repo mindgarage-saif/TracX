@@ -24,7 +24,7 @@ class MenuPage(BasePage):
         self.innerLayout.addStretch()
 
     def record(self):
-        self.context.changePage("record")
+        self.context.changePage("camera_selection")
 
     def upload(self):
         self.context.changePage("upload")

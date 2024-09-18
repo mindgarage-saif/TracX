@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .config.constants import PAD_Y
-from .pages import MenuPage, RecordPage, UploadPage
+from .pages import CameraSelectionPage, MenuPage, RecordPage, UploadPage
 from .widgets import AppBar
 
 logger = logging.getLogger(__name__)
@@ -97,6 +97,7 @@ class StudioWindow(QMainWindow):
             "record": RecordPage,
             "menu": MenuPage,
             "upload": UploadPage,
+            "camera_selection": CameraSelectionPage,
         }
         self.pageFrame = QFrame(self)
         self.pageFrame.setObjectName("PageFrame")
@@ -111,15 +112,16 @@ class StudioWindow(QMainWindow):
         self.pageHistory = []
         self.changePage("menu")
 
-    def changePage(self, page):
+    def changePage(self, page, *args, **kwagrs):
         # Remove existing page
         if self.page is not None:
+            self.page.onStop()
             self.pageFrame.layout.removeWidget(self.page)
             self.page.deleteLater()
             self.page = None
 
         # Add page inside the frame
-        self.page = self.pages[page](self, self)
+        self.page = self.pages[page](self, self, *args, **kwagrs)
         self.pageFrame.layout.addWidget(self.page)
         
         # Add to history

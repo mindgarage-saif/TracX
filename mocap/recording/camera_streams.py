@@ -9,7 +9,7 @@ class CameraStreams:
         self,
         sources: Union[int, List[int], Tuple[int]] = 0,
         sample_rate: float = 24.0,
-        sync_delta: float = 0.01,  # Maximum allowed time difference in seconds
+        sync_delta: float = 0.05,  # Maximum allowed time difference in seconds
     ):
         """
         Initialize synchronized capture for multiple cameras.
@@ -71,6 +71,12 @@ class CameraStreams:
             handler (Callable[[Dict[int, Any]], None]): Function to handle synchronized frames.
         """
         self._frame_captured_handler = handler
+
+    def resolution(self, cam_id):
+        for idx, cam in self.cams.items():
+            if idx == cam_id:
+                return cam.resolution
+        return (640, 480)
 
     def start_capture(self):
         # Register event handlers for each camera

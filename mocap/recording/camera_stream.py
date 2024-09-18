@@ -17,6 +17,10 @@ class CameraStream:
         self.frame_rate = int(self.video.get(cv2.CAP_PROP_FPS))
         self.sample_rate = sample_rate or self.frame_rate
         self.duration = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT) / self.frame_rate)
+        self.resolution = (
+            int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(self.video.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
         self.running = False
         self.worker_thread = None
         self._last_capture_time = time.time()

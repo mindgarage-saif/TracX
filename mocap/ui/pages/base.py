@@ -30,3 +30,6 @@ class BasePage(QFrame):
         """
         logger.info(message)
         self.statusBar.showMessage(message)
+
+    def onStop(self):
+        pass
