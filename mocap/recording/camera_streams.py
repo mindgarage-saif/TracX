@@ -1,15 +1,48 @@
 import threading
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union, Optional
 
 from .camera_stream import CameraStream
+
+
+def get_recommended_fps(frame_rates):
+    """
+    Returns the maximum even number less than or equal to the smallest frame rate in the list.
+
+    Args:
+        frame_rates (List[int]): A list of frame rates from different cameras.
+
+    Returns:
+        int: The recommended frame rate.
+    
+    Raises:
+        ValueError: If the input list is empty or contains non-integer values.
+    """
+    if not frame_rates:
+        raise ValueError("The frame_rates list is empty.")
+
+    if not all(isinstance(fps, int) for fps in frame_rates):
+        raise ValueError("All frame rates must be integers.")
+
+    smallest_fps = min(frame_rates)
+    
+    # Find the maximum even number <= smallest_fps
+    if smallest_fps % 2 == 0:
+        recommended_fps = smallest_fps
+    else:
+        recommended_fps = smallest_fps - 1
+
+    if recommended_fps < 1:
+        raise ValueError("No valid even frame rate found.")
+
+    return recommended_fps
 
 
 class CameraStreams:
     def __init__(
         self,
         sources: Union[int, List[int], Tuple[int]] = 0,
-        sample_rate: float = 24.0,
-        sync_delta: float = 0.05,  # Maximum allowed time difference in seconds
+        sample_rate: Optional[float] = None,
+        sync_delta: Optional[float] = None,
     ):
         """
         Initialize synchronized capture for multiple cameras.
@@ -27,9 +60,21 @@ class CameraStreams:
         elif not isinstance(sources, list):
             raise ValueError("Sources must be an int, list, or tuple of ints.")
 
+        if sample_rate is None:
+            sample_rate = get_recommended_fps(
+                [CameraStream(s).frame_rate for s in sources]
+            )
+
         self.sources = sources
         self.sample_rate = sample_rate
-        self.sync_delta = sync_delta
+
+        # Determine sync_delta if not provided
+        if sync_delta is None:
+            # Define sync_delta as half of the frame period
+            frame_period = 1.0 / self.sample_rate
+            self.sync_delta = frame_period / 2
+        else:
+            self.sync_delta = sync_delta
 
         # Initialize VideoCapture instances for each source
         self.cams: Dict[int, CameraStream] = {

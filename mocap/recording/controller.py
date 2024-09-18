@@ -63,7 +63,8 @@ class CameraController:
         if self._camera is None and self._camera_id is not None:
             self._camera = CameraStreams(
                 self._camera_id,
-                sample_rate=24
+                sample_rate=None,
+                sync_delta=None,
             )
 
             for cam_id, view in self._sources:

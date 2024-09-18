@@ -6,16 +6,16 @@ import cv2
 
 
 class CameraStream:
-    def __init__(self, video_source, sample_rate=24):
+    def __init__(self, video_source, sample_rate=None):
         self.source = video_source
         self.video = cv2.VideoCapture(video_source)
         self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        self.video.set(cv2.CAP_PROP_FPS, sample_rate)
         if not self.video.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
         self.frame_rate = int(self.video.get(cv2.CAP_PROP_FPS))
         self.sample_rate = sample_rate or self.frame_rate
+        self.video.set(cv2.CAP_PROP_FPS, self.sample_rate)
         self.duration = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT) / self.frame_rate)
         self.resolution = (
             int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH)),
