@@ -31,7 +31,7 @@ class VisualizerSettings(QFrame):
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
         self.innerLayout.setContentsMargins(16, 16, 16, 16)
-        self.innerLayout.setSpacing(8)
+        self.innerLayout.setSpacing(16)
 
         # Section heading (centered, bold, larger font, white text)
         heading = QLabel("Visualization Settings", self)

@@ -1,64 +1,20 @@
 import logging
-import time
 
 from PyQt6.QtWidgets import (
     QApplication,
-    QFrame,
     QHBoxLayout,
+    QVBoxLayout,
     QMainWindow,
     QMessageBox,
-    QVBoxLayout,
     QWidget,
+    QFrame,
 )
 
-from .widgets import Sidebar, WebcamLayout
+from .config.constants import PAD_Y
+from .pages import MenuPage, RecordPage, UploadPage
+from .widgets import AppBar
 
 logger = logging.getLogger(__name__)
-
-
-class Content(QFrame):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.statusBar = parent.statusBar()
-        self.setFixedWidth(int(parent.width() * 0.7))
-        self.setFixedHeight(parent.height() - 20)
-        self.setStyleSheet(
-            """
-        """
-        )
-
-        # Create an inner layout for the frame
-        self.innerLayout = QVBoxLayout(self)
-        self.innerLayout.setContentsMargins(16, 16, 16, 16)
-        self.innerLayout.setSpacing(8)
-
-        # Create the webcam view
-        self.webcam_layout = WebcamLayout(
-            self,
-            self.update_frame,
-        )
-        self.webcam_layout.setFixedHeight(self.height() - 52)
-        self.innerLayout.addWidget(self.webcam_layout)
-
-        # Initialize model
-        self.available_models = []
-
-        # Add stretch to push the webcam feed to the top
-        self.innerLayout.addStretch()
-
-    def change_model(self, model_name):
-        self.current_model = model_name
-        self.frame_count = 0
-        self.start_time = time.time()
-
-    def update_visualizer_params(self, radius, thickness, kpt_thr, draw_bbox):
-        self.visualizer.radius = radius
-        self.visualizer.thickness = thickness
-        self.visualizer.kpt_thr = kpt_thr
-        self.visualizer.draw_bbox = draw_bbox
-
-    def update_frame(self, frame):
-        return frame
 
 
 class StudioWindow(QMainWindow):
@@ -95,15 +51,25 @@ class StudioWindow(QMainWindow):
 
         self.setStyleSheet(
             """
-            #CentralWidget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                                        stop:0 #091a40, stop:1 #6A004E);
-                color: white;
-            }
             QStatusBar {
                 width: 100%;
-                background: black;
-                color: white;
+                background: #0D47A1;
+                color: #E3F2FD;
+            }
+
+            #AppBar {
+                background: #1976D2;
+                color: #0D47A1;
+            }
+
+            #PageFrame {
+                background: #E3F2FD;
+                color: #0D47A1;
+            }
+
+            #CentralWidget {
+                background: #0D47A1;
+                color: #E3F2FD;
             }
         """
         )
@@ -114,22 +80,58 @@ class StudioWindow(QMainWindow):
         central_widget.setObjectName("CentralWidget")
         self.setCentralWidget(central_widget)
         central_widget.setFixedSize(width, height)
+        central_widget.setContentsMargins(0, 0, 0, 0)
 
         # Layout
-        window = QHBoxLayout(central_widget)
-        window.setContentsMargins(16, 16, 16, 16)
+        window = QVBoxLayout(central_widget)
+        window.setContentsMargins(0, 0, 0, 0)
         window.setSpacing(0)
-        self.content = Content(self)
-        self.sidebar = Sidebar(self)
-        # self.sidebar.inferencerSettings.setModelSelectedCallback(
-        #     self.content.change_model
-        # )
-        # self.sidebar.visualizerSettings.setCallback(
-        #     self.content.update_visualizer_params
-        # )
 
-        window.addWidget(self.sidebar)
-        window.addWidget(self.content)
+        # Create app bar
+        self.appbar = AppBar(self, height=32)
+        self.appbar.setObjectName("AppBar")
+        window.addWidget(self.appbar)
+
+        # Add pages
+        self.pages = {
+            "record": RecordPage,
+            "menu": MenuPage,
+            "upload": UploadPage,
+        }
+        self.pageFrame = QFrame(self)
+        self.pageFrame.setObjectName("PageFrame")
+        self.pageFrame.setFixedSize(self.width(),
+                                    self.height() - self.appbar.height() - PAD_Y * 2 + 4)
+        self.pageFrame.layout = QHBoxLayout(self.pageFrame)
+        self.pageFrame.setLayout(self.pageFrame.layout)
+        window.addWidget(self.pageFrame)
+
+        # Set the initial page
+        self.page = None
+        self.pageHistory = []
+        self.changePage("menu")
+
+    def changePage(self, page):
+        # Remove existing page
+        if self.page is not None:
+            self.pageFrame.layout.removeWidget(self.page)
+            self.page.deleteLater()
+            self.page = None
+
+        # Add page inside the frame
+        self.page = self.pages[page](self, self)
+        self.pageFrame.layout.addWidget(self.page)
+        
+        # Add to history
+        self.pageHistory.append(page)
+
+    def back(self):
+        if len(self.pageHistory) > 1:
+            self.pageHistory.pop()
+            self.changePage(self.pageHistory[-1])
+
+    def pageHeight(self):
+        return self.pageFrame.height() - PAD_Y * 2
 
     def confirmExit(self):
         if (
@@ -142,7 +144,6 @@ class StudioWindow(QMainWindow):
             )
             == QMessageBox.StandardButton.Yes
         ):
-            self.content.webcam_layout.controlPanel.onStop()
             return True
         else:
             return False

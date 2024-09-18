@@ -5,19 +5,18 @@ from typing import Any, Callable
 import cv2
 
 
-class VideoCapture:
+class CameraStream:
     def __init__(self, video_source, sample_rate=24):
         self.source = video_source
         self.video = cv2.VideoCapture(video_source)
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.video.set(cv2.CAP_PROP_FPS, sample_rate)
         if not self.video.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
         self.frame_rate = int(self.video.get(cv2.CAP_PROP_FPS))
         self.sample_rate = sample_rate or self.frame_rate
         self.duration = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT) / self.frame_rate)
-        self.current_frame = 0
-        self.start_frame = 0
-        self.end_frame = -1
         self.running = False
         self.worker_thread = None
         self._last_capture_time = time.time()
@@ -28,23 +27,13 @@ class VideoCapture:
         self._video_finished_handler = None
         self._frame_captured_handler = None
 
-    def set_start_frame(self, frame):
-        self.start_frame = frame
-        self.video.set(cv2.CAP_PROP_POS_FRAMES, frame)
-        self.current_frame = frame
-
-    def set_end_frame(self, frame):
-        self.end_frame = frame
-
     def read(self):
         ret, frame = self.video.read()
 
-        if not ret or (self.end_frame != -1 and self.current_frame > self.end_frame):
+        if not ret:
             if self._video_finished_handler:
                 self._video_finished_handler()
             return False, None, None
-
-        self.current_frame += 1
 
         # Capture timestamp
         timestamp = self.video.get(cv2.CAP_PROP_POS_MSEC) / 1000.0  # Convert to seconds
@@ -67,15 +56,12 @@ class VideoCapture:
         self.video.release()
 
     def start(self):
-        print("Starting video capture for", self.source)
         if self._video_started_handler:
             self._video_started_handler()
 
         self.running = True
         self.worker_thread = threading.Thread(target=self._worker)
         self.worker_thread.start()
-
-        print("Video capture started for", self.source)
 
     def stop(self):
         self.running = False
@@ -94,17 +80,16 @@ class VideoCapture:
             )
         self.release()
 
-    # Signal connection methods
-    def on_video_started(self, handler: Callable[[], None]):
+    def on_start(self, handler: Callable[[], None]):
         self._video_started_handler = handler
 
-    def on_video_stopped(self, handler: Callable[[], None]):
+    def on_stop(self, handler: Callable[[], None]):
         self._video_stopped_handler = handler
 
-    def on_video_finished(self, handler: Callable[[], None]):
+    def on_finish(self, handler: Callable[[], None]):
         self._video_finished_handler = handler
 
-    def on_frame_captured(self, handler: Callable[[Any, Any], None]):
+    def on_frame(self, handler: Callable[[Any, Any], None]):
         self._frame_captured_handler = handler
 
     def __str__(self):
@@ -112,7 +97,8 @@ class VideoCapture:
             "Duration": f"{self.duration} seconds",
             "Frame Rate": self.frame_rate,
             "Sample Rate": self.sample_rate,
-            "Start Frame": self.start_frame,
-            "End Frame": self.end_frame,
         }
         return str(info)
+
+    def _del__(self):
+        self.release()

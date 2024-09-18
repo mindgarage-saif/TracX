@@ -1,1 +1,1 @@
-from .camera import Camera
+from .controller import CameraController

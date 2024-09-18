@@ -1,11 +1,7 @@
 from PyQt6.QtWidgets import (
-    QComboBox,
-    QFileDialog,
     QFrame,
     QHBoxLayout,
-    QLabel,
     QPushButton,
-    QVBoxLayout,
 )
 
 from ..config.styles import pauseButtonStyle, startButtonStyle, stopButtonStyle
@@ -19,161 +15,43 @@ class ControlPanel(QFrame):
         self.setObjectName("ControlPanel")
         self.setStyleSheet(
             """
-            #ControlPanel QLabel {
-                color: white;
-            }
-
-            #ControlPanel #WebcamButton {
-                border-radius: 0px;
-                border: 1px solid white;
-                background-color: transparent;
-                color: white;
-                padding: 4px;
-            }
-
-            #ControlPanel #VideoButton {
-                border-radius: 0px;
-                border: 1px solid white;
-                background-color: transparent;
-                color: white;
-                padding: 4px;
-            }
-
-            #ControlPanel #CalibrateButton {
-                border-radius: 0px;
-                border: 1px solid white;
-                background-color: transparent;
-                color: white;
-                padding: 4px;
-            }
-            
-            #ControlPanel #WebcamButton:hover {
-                background-color: rgba(255, 255, 255, 0.1);
-            }
-            
-            #ControlPanel #VideoButton:hover {
-                background-color: rgba(255, 255, 255, 0.1);
-            }
-            
-            #ControlPanel #CalibrateButton:hover {
-                background-color: rgba(255, 255, 255, 0.1);
-            }
-
-            #ControlPanel #ExportMenu {
-                padding: 4px;
-                border-radius: 8px;
-                padding: 8px;
-            }
-                           
-            #ControlPanel #ExportMenu::drop-down {
-                border-radius: 8px;
-            }
-                           
-            #ControlPanel #TimerLabel {
-                font-size: 16px;
-                color: white;
+            #ControlPanel {
+                background-color: rgba(13, 71, 161, 200);
             }
         """
         )
-        self.setFixedHeight(96)
-        self.setFixedWidth(parent.width() - 16)
-        self.innerLayout = QVBoxLayout(self)
+        self.setFixedHeight(48)
+        self.setFixedWidth(parent.width() - 16 * 2 - 10)
+        self.innerLayout = QHBoxLayout(self)
         self.innerLayout.setContentsMargins(0, 0, 0, 0)
-        self.innerLayout.setSpacing(0)
+        self.innerLayout.setSpacing(16)
         self.setLayout(self.innerLayout)
-
-        # Row 1 (Input source selection: webcam, video upload, image upload)
-        self.layout1 = QHBoxLayout(self)
-        self.layout1.setContentsMargins(8, 8, 8, 8)
-        self.layout1.setSpacing(0)
-        self.innerLayout.addLayout(self.layout1)
-
-        # Add input source buttons
-        inputSourceLabel = QLabel("Input Source:")
-        self.layout1.addWidget(inputSourceLabel)
-        self.layout1.addSpacing(8)
-        buttonWidth = (self.width() - inputSourceLabel.sizeHint().width() - 16) // 3
-        self.webcamButton = QPushButton("Webcam", self)
-        self.webcamButton.setObjectName("WebcamButton")
-        self.webcamButton.setFixedWidth(buttonWidth)
-        self.videoButton = QPushButton("Video", self)
-        self.videoButton.setObjectName("VideoButton")
-        self.videoButton.setFixedWidth(buttonWidth)
-        self.calibrationButton = QPushButton("Calibrate", self)
-        self.calibrationButton.setObjectName("CalibrateButton")
-        self.calibrationButton.setFixedWidth(buttonWidth)
-        self.layout1.addWidget(self.webcamButton)
-        self.layout1.addWidget(self.videoButton)
-        self.layout1.addWidget(self.calibrationButton)
-
-        # Row 2 (Play/Stop buttons, seek bar, export menu)
-        self.layout2 = QHBoxLayout(self)
-        self.layout2.setContentsMargins(8, 8, 8, 8)
-        self.layout2.setSpacing(8)
-        self.innerLayout.addLayout(self.layout2)
 
         # Add start/stop buttons
         self.startButton = QPushButton("Start", self)
         self.startButton.setObjectName("StartButton")
         self.startButton.setStyleSheet(startButtonStyle)
-        self.startButton.setFixedWidth(64)
+        self.startButton.setFixedWidth(96)
         self.stopButton = QPushButton("Stop", self)
         self.stopButton.setObjectName("StopButton")
         self.stopButton.setStyleSheet(stopButtonStyle)
-        self.stopButton.setFixedWidth(64)
-        self.layout2.addWidget(self.startButton)
-        self.layout2.addWidget(self.stopButton)
+        self.stopButton.setFixedWidth(96)
+        self.innerLayout.addWidget(self.startButton)
+        self.innerLayout.addWidget(self.stopButton)
 
-        # Create export dropdown
-        self.exportMenu = QComboBox(self)
-        self.exportMenu.setObjectName("ExportMenu")
-        self.exportMenu.addItem("Export Screenshot")
-        self.exportMenu.addItem("Export Annotations")
-
-        # Calculate width of timer label and export menu
-        exportWidth = self.exportMenu.sizeHint().width() + 16
-        self.exportMenu.setFixedWidth(exportWidth)
-
-        # Add items to layout
-        self.layout2.addWidget(self.exportMenu)
-        self.layout2.addStretch()
-
-        self.startButton.setEnabled(False)
+        self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
-        self.webcamButton.clicked.connect(self.enableWebcam)
-        self.videoButton.clicked.connect(self.pickVideo)
-        self.calibrationButton.clicked.connect(self.startCalibration)
 
         # Initialize the control panel
         self.setStartCallback(self.onStart)
         self.setStopCallback(self.onStop)
-        self.setExportCallback(self.onExport)
         self.onStop()
-
-    def enableWebcam(self):
-        self.onStart()
-
-    def pickVideo(self):
-        file_dialog = QFileDialog(self)
-        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        file_dialog.setNameFilter("Video Files (*.mp4 *.avi *.mov *.webm)")
-        file_dialog.setViewMode(QFileDialog.ViewMode.Detail)
-        if file_dialog.exec():
-            file_path = file_dialog.selectedFiles()[0]
-            self.camera.change_camera(file_path)
-
-    def startCalibration(self):
-        # Set camera to calibration mode
-        self.camera.calibrate(delay=5, max_frames=100)
 
     def setStartCallback(self, callback):
         self.startButton.clicked.connect(callback)
 
     def setStopCallback(self, callback):
         self.stopButton.clicked.connect(callback)
-
-    def setExportCallback(self, callback):
-        self.exportMenu.currentIndexChanged.connect(callback)
 
     def onStart(self):
         self.camera.toggle_start()
@@ -194,8 +72,3 @@ class ControlPanel(QFrame):
         self.startButton.setStyleSheet(startButtonStyle)
         self.camera.release()
         self.stopButton.setEnabled(False)
-
-    def onExport(self, index):
-        self.statusBar.showMessage("Exporting screenshot...")
-        path = self.camera.screenshot()
-        self.statusBar.showMessage(f"Screenshot saved to {path}")
