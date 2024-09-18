@@ -40,7 +40,7 @@ class CameraController:
 
     def toggle_start(self):
         if self._is_started:
-            self.pause()
+            self.release()
         else:
             self.change_camera()
             self.start()
@@ -168,6 +168,7 @@ class CameraController:
         view.show(frame)
 
     def release(self):
+        self.pause()
         if self._camera is not None:
             self._camera.release()
             self._camera = None

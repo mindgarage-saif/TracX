@@ -86,8 +86,8 @@ class WebcamLayout(QFrame):
         )  # Calculate the number of columns needed
 
         # Create and add the webcam views to the grid layout
-        self.camera = CameraController()
-        self.camera.on_frame_fn = on_frame_fn
+        self.controller = CameraController()
+        self.controller.on_frame_fn = on_frame_fn
         for i in range(num_cameras):
             row = i // cols
             col = i % cols
@@ -103,13 +103,13 @@ class WebcamLayout(QFrame):
             )  # Adjust width for grid
             self.gridLayout.addWidget(cam_view, row, col)
             self.cam_views.append(cam_view)
-            self.camera.add_source(camera_ids.pop(0), cam_view)
+            self.controller.add_source(camera_ids.pop(0), cam_view)
 
         self.innerLayout.addLayout(self.gridLayout)
         self.innerLayout.addStretch()
 
         # Create the control panel
-        self.controlPanel = ControlPanel(self.camera, parent=parent)
+        self.controlPanel = ControlPanel(self.controller, parent=parent)
         self.innerLayout.addWidget(self.controlPanel)
 
     def onStop(self):
