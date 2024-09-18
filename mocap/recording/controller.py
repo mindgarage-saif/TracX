@@ -1,5 +1,7 @@
 import logging
 import threading
+import os
+from time import strftime
 
 import cv2
 
@@ -43,19 +45,6 @@ class CameraController:
             self.change_camera()
             self.start()
 
-    def record(self):
-        import os
-        import time
-
-        user_path = os.path.expanduser("~")
-        desktop = os.path.join(user_path, "Desktop")
-        path = os.path.join(desktop, f"PPStudio_{time.time()}.jpg")
-        views = [c[1] for c in self._sources]
-        for i, view in enumerate(views):
-            view_path = path.replace(".jpg", f"_{i}.jpg")
-            view.pixmap().save(view_path)
-        return path
-
     def start(self):
         if self._is_started and self._camera is not None:
             return
@@ -67,11 +56,19 @@ class CameraController:
                 sync_delta=None,
             )
 
+            user_path = os.path.expanduser("~")
+            videos_dir = os.path.join(user_path, "Videos")
+            videos_dir = os.path.join(videos_dir, "MoCapStudio")
+            timestamp = strftime('%Y%m%d_%H%M%S')
+
             for cam_id, view in self._sources:
                 view.clear()
+                camera_dir = os.path.join(videos_dir, f"Camera_{cam_id}")
+                os.makedirs(camera_dir, exist_ok=True)
+                path = os.path.join(camera_dir, f"VID_{timestamp}.mp4")
 
                 self.writers.append(cv2.VideoWriter(
-                    f"output_{cam_id}.mp4",
+                    path,
                     cv2.VideoWriter_fourcc(*"mp4v"),
                     self._camera.sample_rate,
                     self._camera.resolution(cam_id)
