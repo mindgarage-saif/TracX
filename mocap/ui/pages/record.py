@@ -14,7 +14,7 @@ class RecordPage(BasePage):
         self.innerLayout.setContentsMargins(8, 0, 8, 0)
 
         # Create the webcam view
-        webcam_width = self.width() - PAD_X * 2
+        webcam_width = self.width() - PAD_X * 4
         self.webcam_layout = WebcamLayout(
             self,
             webcam_width,

@@ -1,0 +1,18 @@
+QPushButton {{
+    color: {QTMATERIAL_SECONDARYCOLOR};
+    text-transform: none;
+    background-color: {QTMATERIAL_PRIMARYCOLOR};
+}}
+
+.secondary_button {{
+    color: {QTMATERIAL_PRIMARYCOLOR};
+    background-color: transparent
+}}
+
+.big_button {{
+    height: 256px;
+    width: 256px;
+    border-radius: 16px;
+    font-size: 48px;
+    font-weight: normal;
+}}

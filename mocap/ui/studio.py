@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QFrame,
 )
 
-from .config.constants import PAD_Y
+from .config.constants import PAD_X, PAD_Y
 from .pages import CameraSelectionPage, MenuPage, RecordPage, UploadPage
 from .widgets import AppBar
 
@@ -49,34 +49,9 @@ class StudioWindow(QMainWindow):
         position_y = (screen_height - height) // 2
         self.move(position_x, position_y)
 
-        self.setStyleSheet(
-            """
-            QStatusBar {
-                width: 100%;
-                background: #0D47A1;
-                color: #E3F2FD;
-            }
-
-            #AppBar {
-                background: #1976D2;
-                color: #0D47A1;
-            }
-
-            #PageFrame {
-                background: #E3F2FD;
-                color: #0D47A1;
-            }
-
-            #CentralWidget {
-                background: #0D47A1;
-                color: #E3F2FD;
-            }
-        """
-        )
-
         # Central widget
         central_widget = QWidget(self)
-        height -= 20
+        height -= 32
         central_widget.setObjectName("CentralWidget")
         self.setCentralWidget(central_widget)
         central_widget.setFixedSize(width, height)
@@ -84,8 +59,8 @@ class StudioWindow(QMainWindow):
 
         # Layout
         window = QVBoxLayout(central_widget)
-        window.setContentsMargins(0, 0, 0, 0)
-        window.setSpacing(0)
+        window.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
+        window.setSpacing(PAD_Y)
 
         # Create app bar
         self.appbar = AppBar(self, height=32)
@@ -101,8 +76,8 @@ class StudioWindow(QMainWindow):
         }
         self.pageFrame = QFrame(self)
         self.pageFrame.setObjectName("PageFrame")
-        self.pageFrame.setFixedSize(self.width(),
-                                    self.height() - self.appbar.height() - PAD_Y * 2 + 4)
+        self.pageFrame.setFixedSize(self.width() - PAD_X * 2,
+                                    self.height() - self.appbar.height() - PAD_Y * 4 - 8)
         self.pageFrame.layout = QHBoxLayout(self.pageFrame)
         self.pageFrame.setLayout(self.pageFrame.layout)
         window.addWidget(self.pageFrame)
@@ -139,7 +114,7 @@ class StudioWindow(QMainWindow):
         if (
             QMessageBox.question(
                 self,
-                "PocketPose Studio",
+                "MoCap Studio",
                 "Are you sure you want to quit?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,

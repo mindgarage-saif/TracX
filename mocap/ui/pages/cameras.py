@@ -6,8 +6,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QLabel,
     QHBoxLayout,
+    QVBoxLayout,
 )
-from PyQt6.QtCore import Qt
 from ...recording.utils import find_cameras
 from .base import BasePage
 
@@ -44,21 +44,51 @@ class CameraSelectionPage(BasePage):
     def __init__(self, context: QWidget, parent: QWidget) -> None:
         super().__init__(context, parent)
 
+        self.container = QWidget()
+        self.innerLayout.addWidget(self.container)
+        self.containerLayout = QVBoxLayout(self.container)
+        self.containerLayout.setContentsMargins(8, 0, 8, 0)
+        self.containerLayout.setSpacing(16)
+        self.container.setLayout(self.containerLayout)
+
+        # Add a title to the page
+        title = QLabel("Select Cameras")
+        title.setStyleSheet("font-size: 24px; font-weight: bold;")
+        self.containerLayout.addWidget(title)
+
+        # Add instructions
+        instructions = QLabel("Select one or more cameras to record from. If multiple cameras are selected, they will be synchronized.")
+        instructions.setStyleSheet("font-size: 16px;")
+        self.containerLayout.addWidget(instructions)
 
         # Show all cameras in a list with checkboxes, allowing multiple selection
         self.camera_list = QListWidget()
+        self.camera_list.setFixedWidth(parent.width() - 16 * 4 - 4)
         self.camera_items = []
-        self.innerLayout.addWidget(self.camera_list)
+        self.containerLayout.addWidget(self.camera_list)
         
+        # Add refresh instructions
+        refresh_instructions = QLabel("Don't see your camera? Unplug and replug it, then click the refresh button to search again.")
+        refresh_instructions.setStyleSheet("font-size: 14px;")
+        self.containerLayout.addWidget(refresh_instructions)
+
+        # Create a horizontal button bar
+        self.buttonBar = QWidget()
+        self.buttonBarLayout = QHBoxLayout(self.buttonBar)
+        self.buttonBarLayout.setContentsMargins(0, 0, 0, 0)
+        self.buttonBarLayout.setSpacing(16)
+        self.containerLayout.addWidget(self.buttonBar)
+
         # Add a record button to start recording
         self.recordButton = QPushButton("Start Recording")
         self.recordButton.clicked.connect(self.record)
-        self.innerLayout.addWidget(self.recordButton)
+        self.buttonBarLayout.addWidget(self.recordButton)
 
         # Refresh button
-        self.refreshButton = QPushButton("Refresh")
+        self.refreshButton = QPushButton("Refresh Cameras")
         self.refreshButton.clicked.connect(self.refresh)
-        self.innerLayout.addWidget(self.refreshButton)
+        self.refreshButton.setProperty("class", "secondary_button")
+        self.buttonBarLayout.addWidget(self.refreshButton)
 
         # Refresh the camera list
         self.createCameraList()

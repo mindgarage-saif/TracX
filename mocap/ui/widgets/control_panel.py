@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QFrame,
+    QWidget,
     QHBoxLayout,
     QPushButton,
 )
@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
 from ..config.styles import pauseButtonStyle, startButtonStyle, stopButtonStyle
 
 
-class ControlPanel(QFrame):
+class ControlPanel(QWidget):
     def __init__(self, camera, parent=None):
         super().__init__(parent)
         self.camera = camera

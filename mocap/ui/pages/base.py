@@ -1,7 +1,6 @@
 import logging
 
 from PyQt6.QtWidgets import (
-    QFrame,
     QHBoxLayout,
     QWidget,
 )
@@ -11,7 +10,7 @@ from ..config.constants import PAD_X, PAD_Y
 logger = logging.getLogger(__name__)
 
 
-class BasePage(QFrame):
+class BasePage(QWidget):
     def __init__(self, context: QWidget, parent: QWidget) -> None:
         super().__init__(parent)
         self.context = context

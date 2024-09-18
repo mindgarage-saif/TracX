@@ -3,6 +3,7 @@ import sys
 
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication, QSplashScreen
+from qt_material import apply_stylesheet
 
 from .ui.studio import StudioWindow
 
@@ -10,7 +11,7 @@ from .ui.studio import StudioWindow
 class Studio(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
-        self.title = "PocketPose Studio"
+        self.title = "MoCap Studio"
 
     def sigint_handler(self, *args):
         """Handler for the SIGINT signal."""
@@ -35,6 +36,7 @@ class Studio(QApplication):
 
 def main():
     studio = Studio()
+    apply_stylesheet(studio, theme="dark_purple.xml", css_file="assets/sytles/app.css")
     studio.run()
 
 
