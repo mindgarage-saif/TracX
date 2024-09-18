@@ -25,7 +25,7 @@ class CameraItemWidget(QWidget):
         layout.addWidget(self.checkbox)
 
         # Create labels for camera details
-        camera_label = QLabel(f"Camera {camera_info['id']}: {camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS")
+        camera_label = QLabel(f"[CAM {camera_info['id']}] {camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)")
         camera_label.setStyleSheet("font-size: 14px; font-weight: bold; padding-left: 5px;")
         
         # Add the camera label to the layout
