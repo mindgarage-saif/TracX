@@ -49,25 +49,6 @@ class CameraView(QLabel):
         self.frame_size = size
         self.frame_pad = (0, 0, 0, 0)
 
-    def mousePressEvent(self, event):
-        replace = event.button() == 1
-
-        x, y = event.x(), event.y()
-
-        # Flip coordinates if the image is flipped
-        if self.flip:
-            x = self.size[1] - x
-
-        # Adjust coordinates by the frame padding
-        x -= self.frame_pad[2]  # left
-        y -= self.frame_pad[0]  # top
-
-        # Rescale and convert to integer in one step
-        x = int(x * self.frame_size[1] / self.size[1])
-        y = int(y * self.frame_size[0] / self.size[0])
-
-        self.mousePressed.emit(x, y, replace)
-
     def show(self, frame: np.ndarray):
         try:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

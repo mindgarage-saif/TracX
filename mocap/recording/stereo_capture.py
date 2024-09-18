@@ -1,5 +1,4 @@
 import threading
-import time
 from typing import Any, Callable
 
 from .video import VideoCapture
@@ -102,7 +101,7 @@ class StereoCapture:
                 self.buffer2.pop(0)
                 # Call the frame captured handler
                 if self._frame_captured_handler:
-                    self._frame_captured_handler(frame1, frame2)
+                    self._frame_captured_handler((frame1, frame2))
                 # Increment frame count and save the synchronized frames
                 self.frame_count += 1
 

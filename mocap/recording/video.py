@@ -7,6 +7,7 @@ import cv2
 
 class VideoCapture:
     def __init__(self, video_source, sample_rate=24):
+        self.source = video_source
         self.video = cv2.VideoCapture(video_source)
         if not self.video.isOpened():
             raise ValueError("Unable to open video source", video_source)
@@ -66,12 +67,15 @@ class VideoCapture:
         self.video.release()
 
     def start(self):
+        print("Starting video capture for", self.source)
         if self._video_started_handler:
             self._video_started_handler()
 
         self.running = True
         self.worker_thread = threading.Thread(target=self._worker)
         self.worker_thread.start()
+
+        print("Video capture started for", self.source)
 
     def stop(self):
         self.running = False

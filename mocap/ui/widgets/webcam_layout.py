@@ -62,7 +62,6 @@ class WebcamLayout(QFrame):
         # Detect available cameras and dynamically adjust the grid size
         camera_ids = self.get_available_cameras()
         num_cameras = min(len(camera_ids), MAX_CAMERAS)
-        self.cameras = []
         self.cam_views = []
 
         # Determine the grid size dynamically
@@ -70,6 +69,8 @@ class WebcamLayout(QFrame):
         cols = (num_cameras // rows) + (num_cameras % rows > 0)  # Calculate the number of columns needed
 
         # Create and add the webcam views to the grid layout
+        self.camera = Camera()
+        self.camera.on_frame_fn = on_frame_fn
         for i in range(num_cameras):
             row = i // cols
             col = i % cols
@@ -81,16 +82,13 @@ class WebcamLayout(QFrame):
             cam_view.setFixedWidth((parent.width() - 48) // cols)  # Adjust width for grid
             self.gridLayout.addWidget(cam_view, row, col)
             self.cam_views.append(cam_view)
-
-            cam = Camera(cam_view, source=camera_ids.pop(0))
-            cam.on_frame_fn = on_frame_fn
-            self.cameras.append(cam)
+            self.camera.add_source(camera_ids.pop(0), cam_view)
 
         self.innerLayout.addLayout(self.gridLayout)
         self.innerLayout.addStretch()
 
         # Create the control panel
-        self.controlPanel = ControlPanel(self.cameras, parent=self)
+        self.controlPanel = ControlPanel(self.camera, parent=self)
         self.innerLayout.addWidget(self.controlPanel)
 
     def check_camera(self, camera_id):

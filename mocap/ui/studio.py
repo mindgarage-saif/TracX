@@ -57,7 +57,7 @@ class Content(QFrame):
         self.visualizer.kpt_thr = kpt_thr
         self.visualizer.draw_bbox = draw_bbox
 
-    def update_frame(self, frame, vis, first_frame=False, is_video=False):
+    def update_frame(self, frame):
         return frame
 
 

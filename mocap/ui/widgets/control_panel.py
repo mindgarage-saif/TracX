@@ -12,9 +12,9 @@ from ..config.styles import pauseButtonStyle, startButtonStyle, stopButtonStyle
 
 
 class ControlPanel(QFrame):
-    def __init__(self, cameras, parent=None):
+    def __init__(self, camera, parent=None):
         super().__init__(parent)
-        self.cameras = cameras
+        self.camera = camera
         self.statusBar = parent.statusBar
         self.setObjectName("ControlPanel")
         self.setStyleSheet(
@@ -160,11 +160,11 @@ class ControlPanel(QFrame):
         file_dialog.setViewMode(QFileDialog.ViewMode.Detail)
         if file_dialog.exec():
             file_path = file_dialog.selectedFiles()[0]
-            self.cameras[0].change_camera(file_path)
+            self.camera.change_camera(file_path)
 
     def startCalibration(self):
         # Set camera to calibration mode
-        self.cameras[0].calibrate(delay=5, max_frames=100)
+        self.camera.calibrate(delay=5, max_frames=100)
 
     def setStartCallback(self, callback):
         self.startButton.clicked.connect(callback)
@@ -176,16 +176,15 @@ class ControlPanel(QFrame):
         self.exportMenu.currentIndexChanged.connect(callback)
 
     def onStart(self):
-        for cam in self.cameras:
-            cam.toggle_start()
-            if cam._is_started:
-                self.statusBar.showMessage("Webcam started")
-                self.startButton.setText("Pause")
-                self.startButton.setStyleSheet(pauseButtonStyle)
-            else:
-                self.statusBar.showMessage("Webcam paused")
-                self.startButton.setText("Start")
-                self.startButton.setStyleSheet(startButtonStyle)
+        self.camera.toggle_start()
+        if self.camera._is_started:
+            self.statusBar.showMessage(f"Webcam started: {self.camera._camera_id}")
+            self.startButton.setText("Pause")
+            self.startButton.setStyleSheet(pauseButtonStyle)
+        else:
+            self.statusBar.showMessage("Webcam paused")
+            self.startButton.setText("Start")
+            self.startButton.setStyleSheet(startButtonStyle)
 
         self.stopButton.setEnabled(True)
 
@@ -193,10 +192,10 @@ class ControlPanel(QFrame):
         self.startButton.setEnabled(True)
         self.startButton.setText("Start")
         self.startButton.setStyleSheet(startButtonStyle)
-        [cam.release() for cam in self.cameras]
+        self.camera.release()
         self.stopButton.setEnabled(False)
 
     def onExport(self, index):
         self.statusBar.showMessage("Exporting screenshot...")
-        path = self.cameras[0].screenshot()
+        path = self.camera.screenshot()
         self.statusBar.showMessage(f"Screenshot saved to {path}")
