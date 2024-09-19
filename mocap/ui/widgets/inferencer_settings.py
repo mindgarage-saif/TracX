@@ -1,4 +1,3 @@
-# from pocketpose.apis import list_models
 from PyQt6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
@@ -16,149 +15,116 @@ class InferencerSettings(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("InferencerSettings")
-        self.setStyleSheet(
-            """
-            #InferencerSettings {
-                background-color: rgba(255, 255, 255, 100);
-                border-radius: 8px;
-            }
-            QLabel {
-                background-color: transparent;
-                font-size: 14px;
-                color: white;
-            }
-            QSlider {
-                background-color: transparent;
-                color: black;
-            }
-            QScrollBar {
-                background: white;
-                width: 10px;
-                margin: 0px 0px 0px 0px;
-            }
-            QScrollBar:vertical {
-                background: white;
-                width: 10px;
-                margin: 0px 0px 0px 0px;
-            }
-            QComboBox {
-                background-color: #6A004E;
-                border: 1px solid #6A004E;
-                border-radius: 8px;
-                padding: 8px;
-                color: white;
-            }
-            QComboBox:hover {
-                border: 1px solid black;
-            }
-            QComboBox::drop-down {
-                border-radius: 8px;
-            }
-        """
-        )
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
-        self.innerLayout.setContentsMargins(16, 16, 16, 16)
-        self.innerLayout.setSpacing(16)
         self.setLayout(self.innerLayout)
 
         # Section heading (centered, bold, larger font, white text)
-        heading = QLabel("Motion Estimation Settings", self)
-        heading.setStyleSheet("font-weight: bold; font-size: 14px;")
+        heading = QLabel("Configure Motion Estimation", self)
+        heading.setProperty("class", "h2")
         self.innerLayout.addWidget(heading)
 
-        # Pose estimation type (2D/3D)
-        self.innerLayout.addWidget(QLabel("Backend", self))
-        self.radio_2d = QRadioButton("Baseline", self)
-        self.radio_2d.setChecked(True)  # Set the default selected button
-        self.radio_3d = QRadioButton("Pose2Sim", self)
+        # Backend
+        label = QLabel("Select a Backend", self)
+        label.setProperty("class", "h3")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
+        self.defaultBackend = QRadioButton("Default", self)
+        self.defaultBackend.setChecked(True)  # Set the default selected button
+        self.pose2simBackend = QRadioButton("Pose2Sim", self)
 
         row = QWidget(self)
-        rowLayout = QHBoxLayout(row)
-        rowLayout.addWidget(self.radio_2d)
-        rowLayout.addWidget(self.radio_3d)
-        rowLayout.addStretch()
-        self.innerLayout.addWidget(row)
-        self.pose_type = QButtonGroup(self)
-        self.pose_type.addButton(self.radio_2d)
-        self.pose_type.addButton(self.radio_3d)
-
-        # Keypoints type (body/face/hand/wholebody)
-        self.innerLayout.addWidget(QLabel("Keypoints Type", self))
-        self.check_body = QRadioButton("Body", self)
-        self.check_face = QRadioButton("Face", self)
-        self.check_hand = QRadioButton("Hand", self)
-        self.check_wholebody = QRadioButton("Whole Body", self)
-        self.check_body.setChecked(True)
-
-        row = QWidget(self)
-        rowLayout = QHBoxLayout(row)
-        rowLayout.addWidget(self.check_body)
-        rowLayout.addWidget(self.check_face)
-        rowLayout.addWidget(self.check_hand)
-        rowLayout.addWidget(self.check_wholebody)
+        rowLayout = QVBoxLayout(row)
+        rowLayout.addWidget(self.defaultBackend)
+        rowLayout.addWidget(self.pose2simBackend)
         rowLayout.addStretch()
         self.innerLayout.addWidget(row)
 
-        self.keypoints_type = QButtonGroup(self)
-        self.keypoints_type.addButton(self.check_body)
-        self.keypoints_type.addButton(self.check_face)
-        self.keypoints_type.addButton(self.check_hand)
-        self.keypoints_type.addButton(self.check_wholebody)
+        self.backend = QButtonGroup(self)
+        self.backend.addButton(self.defaultBackend)
+        self.backend.addButton(self.pose2simBackend)
 
-        # Quantization radio buttons (FP32/FP16/INT8)
-        self.innerLayout.addWidget(QLabel("Quantization", self))
-        self.radio_fp32 = QRadioButton("FP32", self)
-        self.radio_fp32.setChecked(True)
-        self.radio_fp16 = QRadioButton("FP16", self)
-        self.radio_int8 = QRadioButton("INT8", self)
-
-        row = QWidget(self)
-        rowLayout = QHBoxLayout(row)
-        rowLayout.addWidget(self.radio_fp32)
-        rowLayout.addWidget(self.radio_fp16)
-        rowLayout.addWidget(self.radio_int8)
-        rowLayout.addStretch()
-        self.innerLayout.addWidget(row)
-
-        self.quantization = QButtonGroup(self)
-        self.quantization.addButton(self.radio_fp32)
-        self.quantization.addButton(self.radio_fp16)
-        self.quantization.addButton(self.radio_int8)
-
-        # Instantiate ModelBrowser
-        self.modelBrowser = ModelBrowser(self)
-        # available_models = (
-        #     list_models()
-        # )
-        # self.modelBrowser.setModels(available_models)
-
-        # Create a QScrollArea
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setStyleSheet(
-            """
-            QScrollArea {
-                background: #091a40;
-                color: white;
-                border-radius: 8px;
-                padding: 0px;
-            }
-        """
+        label = QLabel(
+            "Default backend uses our custom pipeline for motion capture. "
+            "Pose2Sim: https://github.com/perfanalytics/pose2sim", self
         )
-        # Important to make the scroll area adapt to the content
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setWidget(self.modelBrowser)
+        label.setProperty("class", "body")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+        self.innerLayout.addSpacing(16)
 
-        # Compute height of the scroll area
-        self.scroll_area_height = (
-            self.height() - self.innerLayout.sizeHint().height() - 48
-        )
-        self.scroll_area.setFixedHeight(self.scroll_area_height)
-        self.innerLayout.addWidget(self.scroll_area)
+        # Model selection area
+        label = QLabel("Select a Model", self)
+        label.setProperty("class", "h3")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
 
-    def setModelSelectedCallback(self, callback):
-        self.modelBrowser.callback = callback
+        self.modelSelectionArea = QWidget(self)
+        self.modelList = QVBoxLayout(self.modelSelectionArea)
+        self.innerLayout.addWidget(self.modelSelectionArea)
 
-    def setKeypointThresholdChangedCallback(self, callback):
-        self.filter.valueChanged.connect(callback)
+        # Initialize models
+        self.baselineModel = QRadioButton("Baseline", self)
+        self.motionbertModel = QRadioButton("MotionBERT", self)
+        self.v2vModel = QRadioButton("V2V-PoseNet", self)
+
+        self.openposeModel = QRadioButton("OpenSim", self)
+        self.rtmposeModel = QRadioButton("RTMPose", self)
+        self.openposeModel.hide()
+        self.rtmposeModel.hide()
+
+        # Set Default models initially
+        self.baselineModel.setChecked(True)
+        self.model = QButtonGroup(self)
+        self.model.addButton(self.baselineModel)
+        self.model.addButton(self.motionbertModel)
+        self.model.addButton(self.v2vModel)
+        self.updateModelList('Default')
+
+        # Connect backend change signal
+        self.defaultBackend.toggled.connect(self.onBackendChanged)
+        self.pose2simBackend.toggled.connect(self.onBackendChanged)
+
+        label = QLabel("More details on model performance are available in the documentation.", self)
+        label.setProperty("class", "body")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
+    def updateModelList(self, backend):
+        # Clear current model list layout
+        for i in reversed(range(self.modelList.count())):
+            widget = self.modelList.itemAt(i).widget()
+            if widget is not None:
+                widget.setParent(None)
+
+        # Clear model button group
+        self.model = QButtonGroup(self)
+
+        # Add models based on backend
+        if backend == 'Default':
+            self.modelList.addWidget(self.baselineModel)
+            self.modelList.addWidget(self.motionbertModel)
+            self.modelList.addWidget(self.v2vModel)
+            self.baselineModel.setChecked(True)  # Set baseline as the default selection
+            self.model.addButton(self.baselineModel)
+            self.model.addButton(self.motionbertModel)
+            self.model.addButton(self.v2vModel)
+        elif backend == 'Pose2Sim':
+            self.modelList.addWidget(self.openposeModel)
+            self.modelList.addWidget(self.rtmposeModel)
+            self.openposeModel.setChecked(True)  # Set OpenSim as the default selection
+            self.model.addButton(self.openposeModel)
+            self.model.addButton(self.rtmposeModel)
+            self.openposeModel.show()
+            self.rtmposeModel.show()
+
+        # Update the UI
+        self.modelList.addStretch()
+
+    def onBackendChanged(self):
+        if self.defaultBackend.isChecked():
+            self.updateModelList('Default')
+        elif self.pose2simBackend.isChecked():
+            self.updateModelList('Pose2Sim')

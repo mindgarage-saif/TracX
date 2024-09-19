@@ -5,40 +5,18 @@ from PyQt6.QtWidgets import QCheckBox, QLabel, QSlider, QVBoxLayout, QWidget
 class VisualizerSettings(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setStyleSheet(
-            """
-            QFrame {
-                background-color: rgba(255, 255, 255, 100);
-                border-radius: 8px;
-            }
-            QLabel {
-                background-color: transparent;
-                font-size: 14px;
-                color: white;
-            }
-            QSlider {
-                background-color: transparent;
-                color: black;
-            }
-            QCheckBox {
-                background-color: transparent;
-                color: black;
-            }
-        """
-        )
+        self.setObjectName("VisualizerSettings")
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
-        self.innerLayout.setContentsMargins(16, 16, 16, 16)
-        self.innerLayout.setSpacing(16)
 
         # Section heading (centered, bold, larger font, white text)
-        heading = QLabel("Visualization Settings", self)
-        heading.setStyleSheet("font-weight: bold; font-size: 14px;")
+        heading = QLabel("Configure Simulation", self)
+        heading.setProperty("class", "h3")
         self.innerLayout.addWidget(heading)
 
         # Keypoint threshold slider
-        self.innerLayout.addWidget(QLabel("Keypoint Threshold: ", self))
+        self.innerLayout.addWidget(QLabel("Setting 1", self))
         self.threshold = QSlider(Qt.Orientation.Horizontal, self)
         self.threshold.setMinimum(0)
         self.threshold.setMaximum(100)
@@ -46,7 +24,7 @@ class VisualizerSettings(QWidget):
         self.innerLayout.addWidget(self.threshold)
 
         # Keypoint radius slider
-        self.innerLayout.addWidget(QLabel("Keypoint Radius: ", self))
+        self.innerLayout.addWidget(QLabel("Setting 2", self))
         self.radius = QSlider(Qt.Orientation.Horizontal, self)
         self.radius.setMinimum(1)
         self.radius.setMaximum(20)
@@ -54,7 +32,7 @@ class VisualizerSettings(QWidget):
         self.innerLayout.addWidget(self.radius)
 
         # Line thickness slider
-        self.innerLayout.addWidget(QLabel("Line Thickness: ", self))
+        self.innerLayout.addWidget(QLabel("Setting 3", self))
         self.thickness = QSlider(Qt.Orientation.Horizontal, self)
         self.thickness.setMinimum(1)
         self.thickness.setMaximum(10)
@@ -62,7 +40,8 @@ class VisualizerSettings(QWidget):
         self.innerLayout.addWidget(self.thickness)
 
         # Checkbox to draw bounding box
-        self.draw_bbox = QCheckBox("Show Bounding Box", self)
+        self.draw_bbox = QCheckBox("Setting 4", self)
+        self.draw_bbox.setProperty("class", "body")
         self.innerLayout.addWidget(self.draw_bbox)
 
         self.innerLayout.addStretch()

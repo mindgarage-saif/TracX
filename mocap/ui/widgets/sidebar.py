@@ -9,6 +9,7 @@ from .visualizer_settings import VisualizerSettings
 class Sidebar(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.setObjectName("Sidebar")
 
         # Create an inner layout
         self.innerLayout = QVBoxLayout(self)
@@ -17,23 +18,10 @@ class Sidebar(QFrame):
 
         # Create a tab bar for the sidebar
         self.tabBar = QTabWidget(self)
-        self.tabBar.setStyleSheet(
-            """
-            QTabBar::tab {
-                background-color: #2c2c2c;
-                color: #ffffff;
-                padding: 8px;
-                font-size: 16px;
-            }
-            QTabBar::tab:selected {
-                background-color: #3c3c3c;
-            }
-            """
-        )
 
         # Add the tabs to the QTabWidget
         self.recordTab = QWidget()
-        self.tabBar.addTab(self.recordTab, "Video Recording")
+        self.tabBar.addTab(self.recordTab, "Recording")
         self.recordTabUI()
 
         self.uploadTab = QWidget()
@@ -75,8 +63,8 @@ class Sidebar(QFrame):
         )
 
         # Add widgets to the layout
-        layout.addWidget(inferencerSettings)
         layout.addWidget(visualizerSettings)
+        layout.addWidget(inferencerSettings)
         layout.addStretch()
         self.uploadTab.setLayout(layout)
 

@@ -35,26 +35,6 @@ class RecordingLayout(QFrame):
         self.setObjectName("RecordingLayout")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        self.setStyleSheet(
-            """
-            #RecordingLayout {
-                background-color: black;
-                border: 1px solid #0D47A1;
-                border-radius: 8px;
-                padding: 4px;
-                color: #0D47A1;
-            }
-                           
-            QPushButton {
-                background-color: white;
-                border: 1px solid #0D47A1;
-                border-radius: 8px;
-                padding: 4px;
-                color: #0D47A1;
-            }
-        """
-        )
-
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
         self.innerLayout.setContentsMargins(0, 0, 0, 0)

@@ -29,9 +29,7 @@ class CameraItemWidget(QWidget):
         camera_label = QLabel(
             f"[CAM {camera_info['id']}] {camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)"
         )
-        camera_label.setStyleSheet(
-            "font-size: 14px; font-weight: bold; padding-left: 5px;"
-        )
+        camera_label.setProperty("class", "body")
 
         # Add the camera label to the layout
         layout.addWidget(camera_label)
@@ -56,14 +54,14 @@ class CameraSelector(QWidget):
 
         # Add a title to the page
         title = QLabel("Select Cameras")
-        title.setStyleSheet("font-size: 24px; font-weight: bold;")
+        title.setProperty("class", "h3")
         self.innerLayout.addWidget(title)
 
         # Add instructions
         instructions = QLabel(
             "Select one or more cameras to record from. If multiple cameras are selected, they will be synchronized."
         )
-        instructions.setStyleSheet("font-size: 16px;")
+        instructions.setProperty("class", "body")
         instructions.setWordWrap(True)
         instructions.setSizePolicy(
             QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
@@ -82,7 +80,7 @@ class CameraSelector(QWidget):
         refresh_instructions = QLabel(
             "Don't see your camera? Unplug and replug it, then click the refresh button to search again."
         )
-        refresh_instructions.setStyleSheet("font-size: 14px;")
+        refresh_instructions.setProperty("class", "body")
         refresh_instructions.setWordWrap(True)
         refresh_instructions.setSizePolicy(
             QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum

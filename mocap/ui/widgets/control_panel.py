@@ -9,13 +9,6 @@ class ControlPanel(QWidget):
         self.controller = controller
         self.statusBar = parent.statusBar
         self.setObjectName("ControlPanel")
-        self.setStyleSheet(
-            """
-            #ControlPanel {
-                background-color: rgba(13, 71, 161, 200);
-            }
-        """
-        )
         self.setFixedHeight(48)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 

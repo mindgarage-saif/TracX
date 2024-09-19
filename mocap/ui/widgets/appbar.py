@@ -20,13 +20,7 @@ class AppBar(QWidget):
         # Back button (Unicode Home Character - U+1F3E0)
         back = QLabel("🏠", self)
         back.setObjectName("BackButton")
-        back.setStyleSheet(
-            """
-            #BackButton {
-                font-size: 20px;
-            }
-        """
-        )
+        back.setProperty("class", "icon")
         self.innerLayout.addWidget(back)
 
         # Connect back button to the previous page
@@ -35,14 +29,7 @@ class AppBar(QWidget):
         # Title
         title = QLabel("MoCap Studio", self)
         title.setObjectName("Title")
-        title.setStyleSheet(
-            """
-            #Title {
-                font-size: 20px;
-                font-weight: bold;
-            }
-        """
-        )
+        title.setProperty("class", "h1")
         self.innerLayout.addWidget(title)
 
         # Fill space

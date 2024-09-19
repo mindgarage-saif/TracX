@@ -17,9 +17,30 @@ class UploadLayout(QWidget):
         self.innerLayout = QVBoxLayout(self)
         self.setAcceptDrops(True)
 
+        label = QLabel("Select Videos", self)
+        label.setProperty("class", "h3")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
+        label = QLabel("Select synchronized videos of the same motion sequence to estimate 3D human poses.")
+        label.setProperty("class", "body")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
         # Create a placeholder for drag-and-drop area
         self.dragDropArea = DragDropWidget(self)
         self.innerLayout.addWidget(self.dragDropArea)
+        self.innerLayout.addSpacing(16)
+
+        label = QLabel("Select Camera Calibration", self)
+        label.setProperty("class", "h3")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
+        label = QLabel("Calibration file must contain intrinsic and extrinsic parameters for each camera. See documentation for format details.")
+        label.setProperty("class", "body")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
 
         # Create a button for selecting a calibration YAML file
         self.calibrationButton = QPushButton("Select Calibration File")
@@ -29,6 +50,7 @@ class UploadLayout(QWidget):
         # Label to display selected calibration file
         self.calibrationLabel = QLabel("No calibration file selected")
         self.innerLayout.addWidget(self.calibrationLabel)
+        self.innerLayout.addSpacing(16)
 
         # Upload button (initially disabled)
         self.uploadButton = QPushButton("Upload")
@@ -83,13 +105,15 @@ class UploadLayout(QWidget):
 class DragDropWidget(QFrame):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setFrameStyle(QFrame.Shape.Box)
-        self.setStyleSheet("border: 2px dashed #0D47A1;")
-        self.setFixedHeight(200)
+        self.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
+        self.setObjectName("DragDropWidget")
+        self.setFixedHeight(128)
         self.setAcceptDrops(True)
 
         self.layout = QVBoxLayout(self)
         self.label = QLabel("Drag and drop your videos here or click to browse")
+        self.label.setProperty("class", "body")
+        self.label.setWordWrap(True)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.label)
 

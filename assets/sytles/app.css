@@ -1,18 +1,177 @@
 QPushButton {{
-    color: {QTMATERIAL_SECONDARYCOLOR};
+    color: {QTMATERIAL_PRIMARYTEXTCOLOR};
     text-transform: none;
     background-color: {QTMATERIAL_PRIMARYCOLOR};
 }}
 
 .secondary_button {{
-    color: {QTMATERIAL_PRIMARYCOLOR};
-    background-color: transparent
+    color: {QTMATERIAL_SECONDARYTEXTCOLOR};
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
 }}
 
+/* Large Buttons */
 .big_button {{
     height: 256px;
     width: 256px;
     border-radius: 16px;
     font-size: 48px;
     font-weight: normal;
+}}
+
+/* Headings */
+.h1, .h2, .h3 {{
+    font-weight: bold;
+}}
+
+.h1 {{
+    font-size: 20px;
+}}
+
+.h2 {{
+    font-size: 18px;
+}}
+
+.h3 {{
+    font-size: 16px;
+}}
+
+/* Body Text */
+.body {{
+    font-weight: normal;
+    font-size: 14px;
+}}
+
+/* Tab Bar */
+QTabBar::tab {{
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
+    color: white;
+    padding: 8px;
+    font-size: 18px;
+    font-weight: normal;
+    text-transform: none;
+}}
+
+QTabBar::tab:selected {{
+    color: {QTMATERIAL_PRIMARYCOLOR};
+    font-weight: bold;
+}}
+
+/* Label */
+QLabel {{
+    font-weight: normal;
+    font-size: 14px;
+}}
+
+/* Control Panel */
+#ControlPanel {{
+    background-color: {QTMATERIAL_PRIMARYCOLOR};
+}}
+
+/* Inferencer Settings */
+#InferencerSettings {{
+    background-color: rgba(255, 255, 255, 100);
+    border-radius: 8px;
+}}
+
+#InferencerSettings QLabel {{
+    background-color: transparent;
+    font-size: 14px;
+    color: white;
+}}
+
+/* Slider */
+QSlider {{
+    background-color: transparent;
+    color: black;
+}}
+
+/* Scroll Bar */
+QScrollBar {{
+    background: white;
+    width: 10px;
+    margin: 0px;
+}}
+
+QScrollBar:vertical {{
+    background: white;
+    width: 10px;
+    margin: 0px;
+}}
+
+/* Scroll Area */
+QScrollArea {{
+    background: #091a40;
+    color: white;
+    border-radius: 8px;
+    padding: 0px;
+}}
+
+/* Recording Layout */
+#RecordingLayout {{
+    background-color: black;
+    border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
+    border-radius: 8px;
+    padding: 4px;
+    color: {QTMATERIAL_PRIMARYCOLOR};
+}}
+
+#RecordingLayout QPushButton {{
+    background-color: white;
+    border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
+    border-radius: 8px;
+    padding: 4px;
+    color: {QTMATERIAL_PRIMARYCOLOR};
+}}
+
+/* Model Browser */
+#ModelBrowser {{
+    background-color: transparent;
+}}
+
+/* List Items */
+.list-item {{
+    background-color: transparent;
+    padding: 8px;
+    color: #ccc;
+    border-bottom: 1px solid lightgray;
+}}
+
+.list-item::selection {{
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+}}
+
+/* Sidebar */
+#Sidebar {{
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
+}}
+
+/* Drag & Drop */
+#DragDropWidget {{
+    background-color: transparent;
+    border: 2px dashed {QTMATERIAL_PRIMARYCOLOR};
+    border-radius: 8px;
+    padding: 8px;
+}}
+
+/* Visualizer Settings */
+#VisualizerSettings QFrame {{
+    background-color: rgba(255, 255, 255, 100);
+    border-radius: 8px;
+}}
+
+#VisualizerSettings QLabel {{
+    background-color: transparent;
+    font-size: 14px;
+    color: white;
+}}
+
+#VisualizerSettings QSlider {{
+    background-color: transparent;
+    color: black;
+}}
+
+#VisualizerSettings QCheckBox {{
+    background-color: transparent;
+    color: black;
 }}
