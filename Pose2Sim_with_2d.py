@@ -41,11 +41,12 @@ def prepare_videos(path_to_video_dir,camera_parameters_path,should_rotate,exp_na
             shutil.move(os.path.join(path_to_video_dir,video),os.path.join(exp_name,'videos',video))
     return os.path.join('experiments',exp_name),exp_name
 
-def main(video_dir,camera_parameters,rotate,config,exp_name,sync,marker_augmentation,opensim,blender):
+def main(video_dir,camera_parameters,rotate,config,**kwargs):#exp_name,sync,marker_augmentation,opensim,blender
     assert config.endswith('.toml'), "The config file should be a toml file"
+    print(kwargs)
     #Moves the videos into the experiment folder, such that they are in the same location as the config file.
     # And creates the experiment folder
-    path_to_exp,exp_name = prepare_videos(video_dir,camera_parameters,rotate,exp_name)
+    path_to_exp,exp_name = prepare_videos(video_dir,camera_parameters,rotate,kwargs['exp_name'])
     shutil.copyfile(config,os.path.join(path_to_exp,'Config.toml'))
 
     if not (os.path.exists(os.path.join(path_to_exp,'pose')) and os.path.exists(os.path.join(path_to_exp,'pose_rotated'))):
@@ -58,12 +59,12 @@ def main(video_dir,camera_parameters,rotate,config,exp_name,sync,marker_augmenta
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #!!! Assumes file to be in QCA camera format. It doesnt matter if it is in XML file format or txt file format. But internaly it has to be in QCA format.!!!!!!!!
     shutil.copyfile(camera_parameters,os.path.join(path_to_exp,'calibration','camera_parameters.qca.txt'))
-    execute_pose2sim_triangluation(path_to_exp,sync,marker_augmentation)
+    execute_pose2sim_triangluation(path_to_exp,kwargs['sync'],kwargs['marker_augmentation'])
     os.chdir(os.path.join(os.getcwd(),"../../"))
     path_to_trc = glob.glob(os.path.join(path_to_exp,'pose-3d','*_filt_butterworth.trc'))[0]
-    if opensim:
+    if kwargs['opensim']:
         output,mot,scaled_model = create_opensim(path_to_trc,exp_name)
-        if blender:
+        if kwargs['blender']:
             bodykin_from_mot_osim.bodykin_from_mot_osim_func(mot,scaled_model,os.path.join(output,'bodykin.csv'))
     
 
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     argspaser.add_argument('--opensim', default=True, type=bool, help="Createse opensim files")
     argspaser.add_argument('--blender', default=True, type=bool, help="Also returns the CSV files for blender")
     args = argspaser.parse_args()
-    main(args.video_dir,args.camera_parameters,args.rotate,args.config,args.exp_name,args.sync,args.marker_augmentation,args.opensim,args.blender)
+    main(args.video_dir,args.camera_parameters,args.rotate,args.config,exp_name=args.exp_name,sync=args.sync,marker_augmentation=args.marker_augmentation,opensim=args.opensim,blender=args.blender)
     # assert args.config.endswith('.toml'), "The config file should be a toml file"
     # path_to_exp,exp_name = prepare_videos(args.video_dir,args.camera_parameters,args.rotate,args.exp_name)
     # shutil.copyfile(args.config,os.path.join(path_to_exp,'Config.toml'))

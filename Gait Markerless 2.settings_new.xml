@@ -1,63 +1,64 @@
-<Settings FileName="C:\Users\Qualisys Client\Documents\Gait PAF\Data\Test_FG_2024-03-01_DFKI\2024-03-04\Markerless_unspecified\Gait Markerless 2.qtm">
-    <CaptureStart Date="2024-03-04" Time="09:09:18.527" Timestamp="711.29075917" />
+<?xml version="1.0"?>
+<Settings FileName="C:\Users\Qualisys Client\Documents\Functional Assesment\Data\test_DFKI\Markerless_2024-03-04\Generic Markerless\Generic Markerless 2.qtm">
+    <CaptureStart Date="2024-03-04" Time="09:14:38.793" Timestamp="1031.55618560"/>
     <Channels>
-        <Channel Number="1" Name="Channel_01" Board="USB-2533" />
-        <Channel Number="2" Name="Channel_02" Board="USB-2533" />
-        <Channel Number="3" Name="Channel_03" Board="USB-2533" />
-        <Channel Number="4" Name="Channel_04" Board="USB-2533" />
-        <Channel Number="5" Name="Channel_05" Board="USB-2533" />
-        <Channel Number="6" Name="Channel_06" Board="USB-2533" />
-        <Channel Number="7" Name="Channel_07" Board="USB-2533" />
-        <Channel Number="8" Name="Channel_08" Board="USB-2533" />
-        <Channel Number="9" Name="Channel_09" Board="USB-2533" />
-        <Channel Number="10" Name="Channel_10" Board="USB-2533" />
-        <Channel Number="11" Name="Channel_11" Board="USB-2533" />
-        <Channel Number="12" Name="Channel_12" Board="USB-2533" />
-        <Channel Number="13" Name="Channel_13" Board="USB-2533" />
-        <Channel Number="14" Name="Channel_14" Board="USB-2533" />
-        <Channel Number="15" Name="Channel_15" Board="USB-2533" />
-        <Channel Number="16" Name="Channel_16" Board="USB-2533" />
-        <Channel Number="17" Name="Channel_17" Board="USB-2533" />
-        <Channel Number="18" Name="Channel_18" Board="USB-2533" />
-        <Channel Number="19" Name="Channel_19" Board="USB-2533" />
-        <Channel Number="20" Name="Channel_20" Board="USB-2533" />
-        <Channel Number="21" Name="Channel_21" Board="USB-2533" />
-        <Channel Number="22" Name="Channel_22" Board="USB-2533" />
-        <Channel Number="23" Name="Channel_23" Board="USB-2533" />
-        <Channel Number="24" Name="Channel_24" Board="USB-2533" />
-        <Channel Number="25" Name="Channel_25" Board="USB-2533" />
-        <Channel Number="26" Name="Channel_26" Board="USB-2533" />
-        <Channel Number="27" Name="Channel_27" Board="USB-2533" />
-        <Channel Number="28" Name="Channel_28" Board="USB-2533" />
+        <Channel Number="1" Name="Channel_01" Board="USB-2533"/>
+        <Channel Number="2" Name="Channel_02" Board="USB-2533"/>
+        <Channel Number="3" Name="Channel_03" Board="USB-2533"/>
+        <Channel Number="4" Name="Channel_04" Board="USB-2533"/>
+        <Channel Number="5" Name="Channel_05" Board="USB-2533"/>
+        <Channel Number="6" Name="Channel_06" Board="USB-2533"/>
+        <Channel Number="7" Name="Channel_07" Board="USB-2533"/>
+        <Channel Number="8" Name="Channel_08" Board="USB-2533"/>
+        <Channel Number="9" Name="Channel_09" Board="USB-2533"/>
+        <Channel Number="10" Name="Channel_10" Board="USB-2533"/>
+        <Channel Number="11" Name="Channel_11" Board="USB-2533"/>
+        <Channel Number="12" Name="Channel_12" Board="USB-2533"/>
+        <Channel Number="13" Name="Channel_13" Board="USB-2533"/>
+        <Channel Number="14" Name="Channel_14" Board="USB-2533"/>
+        <Channel Number="15" Name="Channel_15" Board="USB-2533"/>
+        <Channel Number="16" Name="Channel_16" Board="USB-2533"/>
+        <Channel Number="17" Name="Channel_17" Board="USB-2533"/>
+        <Channel Number="18" Name="Channel_18" Board="USB-2533"/>
+        <Channel Number="19" Name="Channel_19" Board="USB-2533"/>
+        <Channel Number="20" Name="Channel_20" Board="USB-2533"/>
+        <Channel Number="21" Name="Channel_21" Board="USB-2533"/>
+        <Channel Number="22" Name="Channel_22" Board="USB-2533"/>
+        <Channel Number="23" Name="Channel_23" Board="USB-2533"/>
+        <Channel Number="24" Name="Channel_24" Board="USB-2533"/>
+        <Channel Number="25" Name="Channel_25" Board="USB-2533"/>
+        <Channel Number="26" Name="Channel_26" Board="USB-2533"/>
+        <Channel Number="27" Name="Channel_27" Board="USB-2533"/>
+        <Channel Number="28" Name="Channel_28" Board="USB-2533"/>
     </Channels>
     <ForcePlates>
-        <ForcePlate Length="800.000000" Width="500.000000" Name="AMTI - Arsalis FP1" />
-        <ForcePlate Length="800.000000" Width="500.000000" Name="AMTI - Arsalis FP 2" />
+        <ForcePlate Length="800.000000" Width="500.000000" Name="AMTI - Arsalis FP1"/>
+        <ForcePlate Length="800.000000" Width="500.000000" Name="AMTI - Arsalis FP 2"/>
     </ForcePlates>
     <cameras>
         <camera active="1" calibrated="true" message="" point-count="1343" avg-residual="0.544413" serial="23087" model="Miqus Video" viewrotation="270" video_resolution="1080p">
-            <fov_marker left="0" top="0" right="1919" bottom="1087" />
-            <fov_marker_max left="0" top="0" right="1919" bottom="1087" />
-            <fov_video left="0" top="0" right="1919" bottom="1087" />
-            <fov_video_max left="0" top="0" right="1919" bottom="1087" />
-            <transform x="246.771744" y="4575.233887" z="2549.435303" r11="0.010665" r12="-0.492288" r13="0.870367" r21="0.999753" r22="0.022229" r23="0.000323" r31="-0.019506" r32="0.870148" r33="0.492404" />
-            <intrinsic focallength="9.213001" sensorMinU="0.000000" sensorMaxU="122879.000000" sensorMinV="0.000000" sensorMaxV="69631.000000" focalLengthU="107211.328125" focalLengthV="107200.320312" centerPointU="59982.031250" centerPointV="35304.015625" skew="0.000000" radialDistortion1="-0.049629" radialDistortion2="0.134358" radialDistortion3="0.000000" tangentalDistortion1="0.000507" tangentalDistortion2="0.000186" />
+            <fov_marker left="0" top="0" right="1919" bottom="1087"/>
+            <fov_marker_max left="0" top="0" right="1919" bottom="1087"/>
+            <fov_video left="0" top="0" right="1919" bottom="1087"/>
+            <fov_video_max left="0" top="0" right="1919" bottom="1087"/>
+            <transform x="246.771744" y="4575.233887" z="2549.435303" r11="0.010665" r12="-0.492288" r13="0.870367" r21="0.999753" r22="0.022229" r23="0.000323" r31="-0.019506" r32="0.870148" r33="0.492404"/>
+            <intrinsic focallength="9.213001" sensorMinU="0.000000" sensorMaxU="122879.000000" sensorMinV="0.000000" sensorMaxV="69631.000000" focalLengthU="107211.328125" focalLengthV="107200.320312" centerPointU="59982.031250" centerPointV="35304.015625" skew="0.000000" radialDistortion1="-0.049629" radialDistortion2="0.134358" radialDistortion3="0.000000" tangentalDistortion1="0.000507" tangentalDistortion2="0.000186"/>
         </camera>
         <camera active="1" calibrated="true" message="" point-count="1590" avg-residual="0.910921" serial="28984" model="Miqus Video" viewrotation="180" video_resolution="1080p">
-            <fov_marker left="0" top="0" right="1919" bottom="1087" />
-            <fov_marker_max left="0" top="0" right="1919" bottom="1087" />
-            <fov_video left="0" top="0" right="1919" bottom="1087" />
-            <fov_video_max left="0" top="0" right="1919" bottom="1087" />
-            <transform x="-3524.897461" y="-2937.935059" z="2524.328857" r11="-0.327863" r12="0.911541" r13="0.248190" r21="-0.396821" r22="0.105535" r23="-0.911809" r31="-0.857344" r32="-0.397436" r33="0.327117" />
-            <intrinsic focallength="9.228824" sensorMinU="0.000000" sensorMaxU="122879.000000" sensorMinV="0.000000" sensorMaxV="69631.000000" focalLengthU="107391.593750" focalLengthV="107388.304688" centerPointU="61609.566406" centerPointV="33880.640625" skew="0.000000" radialDistortion1="-0.043537" radialDistortion2="0.129150" radialDistortion3="0.000000" tangentalDistortion1="-0.000298" tangentalDistortion2="-0.000204" />
+            <fov_marker left="0" top="0" right="1919" bottom="1087"/>
+            <fov_marker_max left="0" top="0" right="1919" bottom="1087"/>
+            <fov_video left="0" top="0" right="1919" bottom="1087"/>
+            <fov_video_max left="0" top="0" right="1919" bottom="1087"/>
+            <transform x="-3524.897461" y="-2937.935059" z="2524.328857" r11="-0.327863" r12="0.911541" r13="0.248190" r21="-0.396821" r22="0.105535" r23="-0.911809" r31="-0.857344" r32="-0.397436" r33="0.327117"/>
+            <intrinsic focallength="9.228824" sensorMinU="0.000000" sensorMaxU="122879.000000" sensorMinV="0.000000" sensorMaxV="69631.000000" focalLengthU="107391.593750" focalLengthV="107388.304688" centerPointU="61609.566406" centerPointV="33880.640625" skew="0.000000" radialDistortion1="-0.043537" radialDistortion2="0.129150" radialDistortion3="0.000000" tangentalDistortion1="-0.000298" tangentalDistortion2="-0.000204"/>
         </camera>
         <camera active="1" calibrated="true" message="" point-count="1646" avg-residual="1.041385" serial="28983" model="Miqus Video" viewrotation="180" video_resolution="1080p">
-            <fov_marker left="0" top="0" right="1919" bottom="1087" />
-            <fov_marker_max left="0" top="0" right="1919" bottom="1087" />
-            <fov_video left="0" top="0" right="1919" bottom="1087" />
-            <fov_video_max left="0" top="0" right="1919" bottom="1087" />
-            <transform x="-3537.923584" y="-6349.459473" z="2517.497803" r11="-0.695190" r12="0.718330" r13="0.026693" r21="-0.238709" r22="-0.195674" r23="-0.951173" r31="-0.678033" r32="-0.667618" r33="0.307502" />
-            <intrinsic focallength="9.237220" sensorMinU="0.000000" sensorMaxU="122879.000000" sensorMinV="0.000000" sensorMaxV="69631.000000" focalLengthU="107489.906250" focalLengthV="107485.382812" centerPointU="61309.125000" centerPointV="34552.261719" skew="0.000000" radialDistortion1="-0.046653" radialDistortion2="0.133763" radialDistortion3="0.000000" tangentalDistortion1="0.000054" tangentalDistortion2="0.000353" />
+            <fov_marker left="0" top="0" right="1919" bottom="1087"/>
+            <fov_marker_max left="0" top="0" right="1919" bottom="1087"/>
+            <fov_video left="0" top="0" right="1919" bottom="1087"/>
+            <fov_video_max left="0" top="0" right="1919" bottom="1087"/>
+            <transform x="-3537.923584" y="-6349.459473" z="2517.497803" r11="-0.695190" r12="0.718330" r13="0.026693" r21="-0.238709" r22="-0.195674" r23="-0.951173" r31="-0.678033" r32="-0.667618" r33="0.307502"/>
+            <intrinsic focallength="9.237220" sensorMinU="0.000000" sensorMaxU="122879.000000" sensorMinV="0.000000" sensorMaxV="69631.000000" focalLengthU="107489.906250" focalLengthV="107485.382812" centerPointU="61309.125000" centerPointV="34552.261719" skew="0.000000" radialDistortion1="-0.046653" radialDistortion2="0.133763" radialDistortion3="0.000000" tangentalDistortion1="0.000054" tangentalDistortion2="0.000353"/>
         </camera>
-        </cameras>
+    </cameras>
 </Settings>
