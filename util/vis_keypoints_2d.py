@@ -66,9 +66,9 @@ def vis_json_mmpose(baseDir,xml_path,path_to_vid,rot: bool = True):
             plt.show()
 if __name__ == "__main__":
     argsparser = argparse.ArgumentParser()
-    argsparser.add_argument("--root_dir",default=r"C:\Users\Jeremias\anaconda3\envs\Pose2Sim\Lib\site-packages\Pose2Sim\idk_session\pose\29913_json", type=str, help="Path to the directory containing the JSON files")
-    argsparser.add_argument("--xml_path",default=r"E:\Uni\MonocularSystems\HiWi\Gait Markerless 1.settings.xml", type=str, help="Path to the camera XML file")
-    argsparser.add_argument("--vid_path",default=r"E:\Uni\Data\LIHS\LIHS\ROM_2\ROM_2\Generic Markerless 2_Miqus_8_29913.avi", type=str, help="Path to the video")
+    argsparser.add_argument("--root_dir",default=r"E:\Uni\MonocularSystems\HiWi\experiments\Experiment_2024-09-17_20-33-36\pose\Generic Markerless 2_Miqus_6_28983_rot_json", type=str, help="Path to the directory containing the JSON files")
+    argsparser.add_argument("--xml_path",default=r"E:\Uni\MonocularSystems\HiWi\Gait Markerless 2.settings_new.xml", type=str, help="Path to the camera XML file")
+    argsparser.add_argument("--vid_path",default=r"E:\Uni\Data\LIHS\LIHS\ROM_2\ROM_2\Generic Markerless 2_Miqus_6_28983.avi", type=str, help="Path to the video")
     argsparser.add_argument("--rot",default=True, type=bool, help="Whether to rotate the keypoints")
     args = argsparser.parse_args()
     vis_json_mmpose(args.root_dir,args.xml_path,args.vid_path,args.rot)

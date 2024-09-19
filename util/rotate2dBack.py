@@ -5,28 +5,28 @@ import shutil
 import xml.etree.ElementTree as ET
 import argparse
 
+def get_rotation(videoName, rotation_dict):
+    for key, value in rotation_dict.items():
+        if key in videoName:
+            return value
+    return None
+
+
 def rotate2dBack(baseDir,camera_parameters):
     listofDirs = os.listdir(baseDir)
+    tree = ET.parse(os.path.expanduser(camera_parameters))
+    root = tree.getroot()
+    rotation_dict = {camera.get('serial'): camera.get('viewrotation') for camera in root.find('cameras')}
     for dir in listofDirs:
         print(dir)
         if not os.path.isdir(os.path.join(baseDir,dir)):
             continue
-        # Parse the XML file
-        tree = ET.parse(os.path.expanduser(camera_parameters))
-        root = tree.getroot()
-
-        # Create a dictionary mapping serial numbers to viewrotation values
-        rotation_dict = {camera.get('serial') + '_json': camera.get('viewrotation') for camera in root.find('cameras')}
-
         # Get a list of all JSON files in the directory
         json_files = [f for f in os.listdir(os.path.join(baseDir , dir)) if f.endswith('.json')]
 
-        # Define the rotation matrices
-        #rot90cw = np.array([[0, 1], [-1, 0]])  # 90 degrees clockwise
-        #rot90ccw = np.array([[0, -1], [1, 0]])  # 90 degrees counterclockwise
-        #rot180 = np.array([[-1, 0], [0, -1]])  # 180 degrees
         new_dir = os.path.join(baseDir+"_rotated",dir)
         os.makedirs(new_dir, exist_ok=True)
+        rotation_angle = get_rotation(os.path.basename(dir),rotation_dict)
         for file in json_files:
             with open(os.path.join(baseDir,dir, file), 'r') as f:
                 data = json.load(f)
@@ -40,7 +40,6 @@ def rotate2dBack(baseDir,camera_parameters):
                     c = keypoints[2::3]
 
                     # Check the directory name against the dictionary to determine the rotation angle
-                    rotation_angle = rotation_dict.get(os.path.basename(dir))
                     if rotation_angle == '270':
                         y2 = np.array(keypoints[::3])
                         x2 = 1920 - np.array(keypoints[1::3])
@@ -51,6 +50,7 @@ def rotate2dBack(baseDir,camera_parameters):
                         x2 = (1920 + np.array(keypoints[::3])*-1)
                         y2 = 1088 - np.array(keypoints[1::3])
                     else:
+                        raise ValueError(f"Rotation angle {rotation_angle} not supported")
                         continue  # skip this file if the directory name doesn't specify a rotation
 
                     # Rotate the points

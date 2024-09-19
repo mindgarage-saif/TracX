@@ -3,8 +3,11 @@
 *.mp4
 *.trc
 *.mot
-*.xml
+*.png
 *.pyc
 *.log
 *.sto
 *.txt
+*.csv
+/output/*
+/experiments/*
