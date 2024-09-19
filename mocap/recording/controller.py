@@ -58,13 +58,12 @@ class CameraController:
             user_path = os.path.expanduser("~")
             videos_dir = os.path.join(user_path, "Videos")
             videos_dir = os.path.join(videos_dir, "MoCapStudio")
-            timestamp = strftime("%Y%m%d_%H%M%S")
+            videos_dir = os.path.join(videos_dir, f"VID_{strftime('%Y%m%d_%H%M%S')}")
+            os.makedirs(videos_dir, exist_ok=True)
 
             for cam_id, view in self._sources:
                 view.clear()
-                camera_dir = os.path.join(videos_dir, f"Camera_{cam_id}")
-                os.makedirs(camera_dir, exist_ok=True)
-                path = os.path.join(camera_dir, f"VID_{timestamp}.mp4")
+                path = os.path.join(videos_dir, f"{cam_id}.mp4")
 
                 self.writers.append(
                     cv2.VideoWriter(
