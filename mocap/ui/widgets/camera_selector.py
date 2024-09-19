@@ -1,15 +1,16 @@
 from PyQt6.QtWidgets import (
-    QWidget,
+    QCheckBox,
+    QHBoxLayout,
+    QLabel,
     QListWidget,
     QListWidgetItem,
-    QCheckBox,
     QPushButton,
-    QLabel,
-    QHBoxLayout,
+    QSizePolicy,
     QVBoxLayout,
+    QWidget,
 )
+
 from ...recording.utils import find_cameras
-from .base import BasePage
 
 
 class CameraItemWidget(QWidget):
@@ -25,9 +26,13 @@ class CameraItemWidget(QWidget):
         layout.addWidget(self.checkbox)
 
         # Create labels for camera details
-        camera_label = QLabel(f"[CAM {camera_info['id']}] {camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)")
-        camera_label.setStyleSheet("font-size: 14px; font-weight: bold; padding-left: 5px;")
-        
+        camera_label = QLabel(
+            f"[CAM {camera_info['id']}] {camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)"
+        )
+        camera_label.setStyleSheet(
+            "font-size: 14px; font-weight: bold; padding-left: 5px;"
+        )
+
         # Add the camera label to the layout
         layout.addWidget(camera_label)
 
@@ -40,61 +45,76 @@ class CameraItemWidget(QWidget):
         return self.checkbox.isChecked()
 
 
-class CameraSelectionPage(BasePage):
-    def __init__(self, context: QWidget, parent: QWidget) -> None:
-        super().__init__(context, parent)
+class CameraSelector(QWidget):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
 
-        self.container = QWidget()
-        self.innerLayout.addWidget(self.container)
-        self.containerLayout = QVBoxLayout(self.container)
-        self.containerLayout.setContentsMargins(8, 0, 8, 0)
-        self.containerLayout.setSpacing(16)
-        self.container.setLayout(self.containerLayout)
+        self.innerLayout = QVBoxLayout(self)
+        self.innerLayout.setContentsMargins(8, 0, 8, 0)
+        self.innerLayout.setSpacing(16)
+        self.setLayout(self.innerLayout)
 
         # Add a title to the page
         title = QLabel("Select Cameras")
         title.setStyleSheet("font-size: 24px; font-weight: bold;")
-        self.containerLayout.addWidget(title)
+        self.innerLayout.addWidget(title)
 
         # Add instructions
-        instructions = QLabel("Select one or more cameras to record from. If multiple cameras are selected, they will be synchronized.")
+        instructions = QLabel(
+            "Select one or more cameras to record from. If multiple cameras are selected, they will be synchronized."
+        )
         instructions.setStyleSheet("font-size: 16px;")
-        self.containerLayout.addWidget(instructions)
+        instructions.setWordWrap(True)
+        instructions.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+        )
+        self.innerLayout.addWidget(instructions)
 
         # Show all cameras in a list with checkboxes, allowing multiple selection
         self.camera_list = QListWidget()
-        self.camera_list.setFixedWidth(parent.width() - 16 * 4 - 4)
+        self.camera_list.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.camera_items = []
-        self.containerLayout.addWidget(self.camera_list)
-        
+        self.innerLayout.addWidget(self.camera_list)
+
         # Add refresh instructions
-        refresh_instructions = QLabel("Don't see your camera? Unplug and replug it, then click the refresh button to search again.")
+        refresh_instructions = QLabel(
+            "Don't see your camera? Unplug and replug it, then click the refresh button to search again."
+        )
         refresh_instructions.setStyleSheet("font-size: 14px;")
-        self.containerLayout.addWidget(refresh_instructions)
+        refresh_instructions.setWordWrap(True)
+        refresh_instructions.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+        )
+        self.innerLayout.addWidget(refresh_instructions)
 
         # Create a horizontal button bar
         self.buttonBar = QWidget()
         self.buttonBarLayout = QHBoxLayout(self.buttonBar)
         self.buttonBarLayout.setContentsMargins(0, 0, 0, 0)
         self.buttonBarLayout.setSpacing(16)
-        self.containerLayout.addWidget(self.buttonBar)
-
-        # Add a record button to start recording
-        self.recordButton = QPushButton("Start Recording")
-        self.recordButton.clicked.connect(self.record)
-        self.buttonBarLayout.addWidget(self.recordButton)
+        self.innerLayout.addWidget(self.buttonBar)
 
         # Refresh button
-        self.refreshButton = QPushButton("Refresh Cameras")
+        self.refreshButton = QPushButton("Refresh")
         self.refreshButton.clicked.connect(self.refresh)
         self.refreshButton.setProperty("class", "secondary_button")
         self.buttonBarLayout.addWidget(self.refreshButton)
+
+        # Add a record button to start recording
+        self.recordButton = QPushButton("Select Cameras")
+        self.recordButton.clicked.connect(self.record)
+        self.buttonBarLayout.addWidget(self.recordButton)
 
         # Refresh the camera list
         self.createCameraList()
 
         # Add stretch to push the list to the top
         self.innerLayout.addStretch()
+
+        # Callbacks.
+        self.onCamerasSelected = None
 
     def createCameraList(self):
         self.camera_list.clear()
@@ -105,7 +125,7 @@ class CameraSelectionPage(BasePage):
             # Create a custom widget for each camera and wrap it in a QListWidgetItem
             camera_item_widget = CameraItemWidget(camera)
             self.camera_items.append((camera_item_widget, camera))
-            
+
             # Create a QListWidgetItem to hold the custom widget
             list_item = QListWidgetItem(self.camera_list)
             list_item.setSizeHint(camera_item_widget.sizeHint())
@@ -123,8 +143,11 @@ class CameraSelectionPage(BasePage):
                 selected_camera_ids.append(camera_info)
 
         if not selected_camera_ids:
-            self.log("Please select at least one camera to record.")
+            # TODO: logger.info("Please select at least one camera to record.")
             return
 
-        # Pass selected camera IDs to the next page
-        self.context.changePage("record", cameras=selected_camera_ids)
+        if self.onCamerasSelected:
+            self.onCamerasSelected(selected_camera_ids)
+
+    def setCameraSelectedCallback(self, callback):
+        self.onCamerasSelected = callback

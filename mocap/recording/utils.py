@@ -1,14 +1,16 @@
 import subprocess
-
-from typing import List, Dict
+from typing import Dict, List
 
 import cv2
 
 
 def get_camera_hardware(cam_id):
-    # Prepare the external command to extract serial number. 
-    p = subprocess.Popen('udevadm info --query=all /dev/video{} | grep "ID_"'.format(cam_id),
-                         stdout=subprocess.PIPE, shell=True)
+    # Prepare the external command to extract serial number.
+    p = subprocess.Popen(
+        'udevadm info --query=all /dev/video{} | grep "ID_"'.format(cam_id),
+        stdout=subprocess.PIPE,
+        shell=True,
+    )
 
     # Run the command
     (output, err) = p.communicate()
@@ -17,10 +19,10 @@ def get_camera_hardware(cam_id):
     p.status = p.wait()
 
     # Decode the output
-    response = output.decode('utf-8')
+    response = output.decode("utf-8")
 
     # Parse response to get hardware info
-    response = response.split('\n')
+    response = response.split("\n")
     info = {}
     for line in response:
         line = line.strip()
@@ -46,7 +48,7 @@ def get_camera_info(camera_id):
             "width": int(camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
             "height": int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
             "fps": int(camera.get(cv2.CAP_PROP_FPS)),
-            **get_camera_hardware(camera_id)
+            **get_camera_hardware(camera_id),
         }
         camera.release()
         return info
@@ -55,7 +57,7 @@ def get_camera_info(camera_id):
 
 
 def find_cameras(max_cameras=5) -> List[Dict]:
-    """ Find available cameras.
+    """Find available cameras.
 
     Args:
         max_cameras (int): Maximum number of cameras to search for.

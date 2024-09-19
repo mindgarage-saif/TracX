@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from ..config.constants import PAD_X, PAD_Y
 

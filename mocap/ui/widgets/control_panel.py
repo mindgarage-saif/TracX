@@ -1,8 +1,4 @@
-from PyQt6.QtWidgets import (
-    QWidget,
-    QHBoxLayout,
-    QPushButton,
-)
+from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QWidget
 
 from ..config.styles import startButtonStyle, stopButtonStyle
 
@@ -21,7 +17,8 @@ class ControlPanel(QWidget):
         """
         )
         self.setFixedHeight(48)
-        self.setFixedWidth(parent.width() - 16 * 2 - 10)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
         self.innerLayout = QHBoxLayout(self)
         self.innerLayout.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.setSpacing(16)
@@ -47,7 +44,7 @@ class ControlPanel(QWidget):
         self.controller.toggle_start()
         if self.controller._is_started:
             self.statusBar.showMessage(f"Webcam started: {self.controller._camera_id}")
-            self.startButton.setText("Save")
+            self.startButton.setText("Stop")
             self.startButton.setStyleSheet(stopButtonStyle)
         else:
             self.statusBar.showMessage("Webcam paused")
@@ -56,6 +53,6 @@ class ControlPanel(QWidget):
 
     def onStop(self):
         self.startButton.setEnabled(True)
-        self.startButton.setText("Start")
+        self.startButton.setText("Record")
         self.startButton.setStyleSheet(startButtonStyle)
         self.controller.release()

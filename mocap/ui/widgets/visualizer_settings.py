@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import QCheckBox, QFrame, QLabel, QSlider, QVBoxLayout
 class VisualizerSettings(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setFixedWidth(parent.width())
         self.setStyleSheet(
             """
             QFrame {

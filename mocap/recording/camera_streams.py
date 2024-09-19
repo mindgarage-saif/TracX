@@ -1,5 +1,5 @@
 import threading
-from typing import Any, Callable, Dict, List, Tuple, Union, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from .camera_stream import CameraStream
 
@@ -13,7 +13,7 @@ def get_recommended_fps(frame_rates):
 
     Returns:
         int: The recommended frame rate.
-    
+
     Raises:
         ValueError: If the input list is empty or contains non-integer values.
     """
@@ -24,7 +24,7 @@ def get_recommended_fps(frame_rates):
         raise ValueError("All frame rates must be integers.")
 
     smallest_fps = min(frame_rates)
-    
+
     # Find the maximum even number <= smallest_fps
     if smallest_fps % 2 == 0:
         recommended_fps = smallest_fps

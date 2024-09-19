@@ -1,6 +1,6 @@
 import logging
-import threading
 import os
+import threading
 from time import strftime
 
 import cv2
@@ -23,7 +23,7 @@ class CameraController:
     def add_source(self, camera_id, view):
         self._sources.append((camera_id, view))
 
-    def change_camera(self):
+    def initialize(self):
         camera_id = [c[0] for c in self._sources]
         logger.info(f"Changing camera to {camera_id}")
 
@@ -42,7 +42,6 @@ class CameraController:
         if self._is_started:
             self.release()
         else:
-            self.change_camera()
             self.start()
 
     def start(self):
@@ -59,7 +58,7 @@ class CameraController:
             user_path = os.path.expanduser("~")
             videos_dir = os.path.join(user_path, "Videos")
             videos_dir = os.path.join(videos_dir, "MoCapStudio")
-            timestamp = strftime('%Y%m%d_%H%M%S')
+            timestamp = strftime("%Y%m%d_%H%M%S")
 
             for cam_id, view in self._sources:
                 view.clear()
@@ -67,12 +66,14 @@ class CameraController:
                 os.makedirs(camera_dir, exist_ok=True)
                 path = os.path.join(camera_dir, f"VID_{timestamp}.mp4")
 
-                self.writers.append(cv2.VideoWriter(
-                    path,
-                    cv2.VideoWriter_fourcc(*"mp4v"),
-                    self._camera.sample_rate,
-                    self._camera.resolution(cam_id)
-                ))
+                self.writers.append(
+                    cv2.VideoWriter(
+                        path,
+                        cv2.VideoWriter_fourcc(*"mp4v"),
+                        self._camera.sample_rate,
+                        self._camera.resolution(cam_id),
+                    )
+                )
 
             self._camera.on_frame(self.process_multi)
             self._is_started = True
@@ -83,7 +84,7 @@ class CameraController:
             return
 
         self._is_started = False
-        
+
         # Release video writers
         for writer in self.writers:
             writer.release()

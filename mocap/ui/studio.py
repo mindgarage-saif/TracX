@@ -2,16 +2,16 @@ import logging
 
 from PyQt6.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
-    QVBoxLayout,
     QMainWindow,
     QMessageBox,
+    QVBoxLayout,
     QWidget,
-    QFrame,
 )
 
 from .config.constants import PAD_X, PAD_Y
-from .pages import CameraSelectionPage, MenuPage, RecordPage, UploadPage
+from .pages import RecordPage
 from .widgets import AppBar
 
 logger = logging.getLogger(__name__)
@@ -70,14 +70,13 @@ class StudioWindow(QMainWindow):
         # Add pages
         self.pages = {
             "record": RecordPage,
-            "menu": MenuPage,
-            "upload": UploadPage,
-            "camera_selection": CameraSelectionPage,
         }
         self.pageFrame = QFrame(self)
         self.pageFrame.setObjectName("PageFrame")
-        self.pageFrame.setFixedSize(self.width() - PAD_X * 2,
-                                    self.height() - self.appbar.height() - PAD_Y * 4 - 8)
+        self.pageFrame.setFixedSize(
+            self.width() - PAD_X * 2,
+            self.height() - self.appbar.height() - PAD_Y * 4 - 8,
+        )
         self.pageFrame.layout = QHBoxLayout(self.pageFrame)
         self.pageFrame.setLayout(self.pageFrame.layout)
         window.addWidget(self.pageFrame)
@@ -85,7 +84,7 @@ class StudioWindow(QMainWindow):
         # Set the initial page
         self.page = None
         self.pageHistory = []
-        self.changePage("menu")
+        self.changePage("record")
 
     def changePage(self, page, *args, **kwagrs):
         # Remove existing page
@@ -98,7 +97,7 @@ class StudioWindow(QMainWindow):
         # Add page inside the frame
         self.page = self.pages[page](self, self, *args, **kwagrs)
         self.pageFrame.layout.addWidget(self.page)
-        
+
         # Add to history
         self.pageHistory.append(page)
 

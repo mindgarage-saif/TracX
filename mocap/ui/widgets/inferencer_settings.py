@@ -2,7 +2,6 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QButtonGroup,
-    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -15,10 +14,8 @@ from .model_browser import ModelBrowser
 
 
 class InferencerSettings(QFrame):
-    def __init__(self, parent, height):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.setFixedWidth(parent.width())
-        self.setFixedHeight(height)
         self.setObjectName("InferencerSettings")
         self.setStyleSheet(
             """

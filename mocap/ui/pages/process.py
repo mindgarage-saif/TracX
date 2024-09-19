@@ -1,9 +1,7 @@
-from PyQt6.QtWidgets import (
-    QWidget,
-)
+from PyQt6.QtWidgets import QWidget
 
-from .base import BasePage
 from ..widgets import Sidebar
+from .base import BasePage
 
 
 class ProcessingPage(BasePage):
@@ -16,4 +14,3 @@ class ProcessingPage(BasePage):
 
         # Add stretch to push the webcam feed to the top
         self.innerLayout.addStretch()
-

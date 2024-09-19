@@ -1,9 +1,6 @@
 import logging
 
-from PyQt6.QtWidgets import (
-    QHBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QHBoxLayout, QWidget
 
 from ..config.constants import PAD_X, PAD_Y
 
