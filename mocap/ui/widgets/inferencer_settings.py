@@ -1,19 +1,18 @@
 # from pocketpose.apis import list_models
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QButtonGroup,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QRadioButton,
     QScrollArea,
     QVBoxLayout,
+    QWidget,
 )
 
 from .model_browser import ModelBrowser
 
 
-class InferencerSettings(QFrame):
+class InferencerSettings(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("InferencerSettings")
@@ -62,6 +61,7 @@ class InferencerSettings(QFrame):
         self.innerLayout = QVBoxLayout(self)
         self.innerLayout.setContentsMargins(16, 16, 16, 16)
         self.innerLayout.setSpacing(16)
+        self.setLayout(self.innerLayout)
 
         # Section heading (centered, bold, larger font, white text)
         heading = QLabel("Motion Estimation Settings", self)
@@ -73,11 +73,13 @@ class InferencerSettings(QFrame):
         self.radio_2d = QRadioButton("Baseline", self)
         self.radio_2d.setChecked(True)  # Set the default selected button
         self.radio_3d = QRadioButton("Pose2Sim", self)
-        row = QHBoxLayout(self)
-        row.addWidget(self.radio_2d)
-        row.addWidget(self.radio_3d)
-        row.addStretch()
-        self.innerLayout.addLayout(row)
+
+        row = QWidget(self)
+        rowLayout = QHBoxLayout(row)
+        rowLayout.addWidget(self.radio_2d)
+        rowLayout.addWidget(self.radio_3d)
+        rowLayout.addStretch()
+        self.innerLayout.addWidget(row)
         self.pose_type = QButtonGroup(self)
         self.pose_type.addButton(self.radio_2d)
         self.pose_type.addButton(self.radio_3d)
@@ -89,13 +91,16 @@ class InferencerSettings(QFrame):
         self.check_hand = QRadioButton("Hand", self)
         self.check_wholebody = QRadioButton("Whole Body", self)
         self.check_body.setChecked(True)
-        row = QHBoxLayout(self)
-        row.addWidget(self.check_body)
-        row.addWidget(self.check_face)
-        row.addWidget(self.check_hand)
-        row.addWidget(self.check_wholebody)
-        row.addStretch()
-        self.innerLayout.addLayout(row)
+
+        row = QWidget(self)
+        rowLayout = QHBoxLayout(row)
+        rowLayout.addWidget(self.check_body)
+        rowLayout.addWidget(self.check_face)
+        rowLayout.addWidget(self.check_hand)
+        rowLayout.addWidget(self.check_wholebody)
+        rowLayout.addStretch()
+        self.innerLayout.addWidget(row)
+
         self.keypoints_type = QButtonGroup(self)
         self.keypoints_type.addButton(self.check_body)
         self.keypoints_type.addButton(self.check_face)
@@ -108,12 +113,15 @@ class InferencerSettings(QFrame):
         self.radio_fp32.setChecked(True)
         self.radio_fp16 = QRadioButton("FP16", self)
         self.radio_int8 = QRadioButton("INT8", self)
-        row = QHBoxLayout(self)
-        row.addWidget(self.radio_fp32)
-        row.addWidget(self.radio_fp16)
-        row.addWidget(self.radio_int8)
-        row.addStretch()
-        self.innerLayout.addLayout(row)
+
+        row = QWidget(self)
+        rowLayout = QHBoxLayout(row)
+        rowLayout.addWidget(self.radio_fp32)
+        rowLayout.addWidget(self.radio_fp16)
+        rowLayout.addWidget(self.radio_int8)
+        rowLayout.addStretch()
+        self.innerLayout.addWidget(row)
+
         self.quantization = QButtonGroup(self)
         self.quantization.addButton(self.radio_fp32)
         self.quantization.addButton(self.radio_fp16)

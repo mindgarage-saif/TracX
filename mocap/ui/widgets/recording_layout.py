@@ -1,7 +1,14 @@
 import logging
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QFrame, QGridLayout, QLabel, QVBoxLayout
+from PyQt6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ...recording import CameraController
 from .camera_view import CameraView
@@ -20,14 +27,14 @@ class RecordingLayout(QFrame):
     ):
         super().__init__(parent)
         self.statusBar = parent.statusBar
-        self.parentWidth = parentWidth
         self.on_frame_fn = on_frame_fn
         self.cameras = cameras or []
         self.controller = CameraController()
         self.controller.on_frame_fn = self.on_frame_fn
 
         self.setObjectName("RecordingLayout")
-        self.setFixedWidth(parentWidth)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
         self.setStyleSheet(
             """
             #RecordingLayout {
@@ -60,9 +67,12 @@ class RecordingLayout(QFrame):
         self.innerLayout.addWidget(self.noCamerasLabel)
 
         # Grid layout for webcam views
-        self.gridLayout = QGridLayout(self)
+        self.gridWidget = QWidget(self)
+        self.gridLayout = QGridLayout(self.gridWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(16)
+        self.gridWidget.setLayout(self.gridLayout)
+        self.innerLayout.addWidget(self.gridWidget)
 
         self.cam_views = []
         self.innerLayout.addStretch()
@@ -91,7 +101,7 @@ class RecordingLayout(QFrame):
         num_cameras = min(len(camera_ids), 10)
         camera_ids = camera_ids[:num_cameras]
 
-        max_cam_w = self.parentWidth
+        max_cam_w = self.width()
         max_cam_h = self.parent().height() - 48
         aspect_ratio = 4 / 3
         current_aspect_ratio = max_cam_w / max_cam_h

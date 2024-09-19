@@ -1,8 +1,8 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QCheckBox, QFrame, QLabel, QSlider, QVBoxLayout
+from PyQt6.QtWidgets import QCheckBox, QLabel, QSlider, QVBoxLayout, QWidget
 
 
-class VisualizerSettings(QFrame):
+class VisualizerSettings(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setStyleSheet(

@@ -67,6 +67,6 @@ class CameraView(QLabel):
             logger.error(e)
 
     def clear(self):
-        image = cv2.imread("assets/nocamera.jpg")
+        image = cv2.imread("assets/nocamera.png")
         image = cv2.flip(image, 1)
         self.show(image)

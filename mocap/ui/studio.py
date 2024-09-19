@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -44,7 +45,11 @@ class StudioWindow(QMainWindow):
         self.statusBar().showMessage("Ready")
 
         # Set window size and move to center
-        self.setFixedSize(width, height)
+        self.setMinimumSize(width, height)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
         position_x = (screen_width - width) // 2
         position_y = (screen_height - height) // 2
         self.move(position_x, position_y)
@@ -54,13 +59,16 @@ class StudioWindow(QMainWindow):
         height -= 32
         central_widget.setObjectName("CentralWidget")
         self.setCentralWidget(central_widget)
-        central_widget.setFixedSize(width, height)
+        central_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
         central_widget.setContentsMargins(0, 0, 0, 0)
 
         # Layout
         window = QVBoxLayout(central_widget)
         window.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
-        window.setSpacing(PAD_Y)
+        window.setSpacing(0)
 
         # Create app bar
         self.appbar = AppBar(self, height=32)
@@ -72,10 +80,12 @@ class StudioWindow(QMainWindow):
             "record": RecordPage,
         }
         self.pageFrame = QFrame(self)
-        self.pageFrame.setObjectName("PageFrame")
-        self.pageFrame.setFixedSize(
-            self.width() - PAD_X * 2,
+        self.pageFrame.setMinimumHeight(
             self.height() - self.appbar.height() - PAD_Y * 4 - 8,
+        )
+        self.pageFrame.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
         )
         self.pageFrame.layout = QHBoxLayout(self.pageFrame)
         self.pageFrame.setLayout(self.pageFrame.layout)

@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QWidget
 
 from ..config.constants import PAD_X, PAD_Y
 
@@ -6,16 +6,19 @@ from ..config.constants import PAD_X, PAD_Y
 class AppBar(QWidget):
     def __init__(self, parent, height=32):
         super().__init__(parent)
-        self.setFixedWidth(parent.width())
         self.setFixedHeight(height)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed,
+        )
 
         # Create an inner layout for the frame
         self.innerLayout = QHBoxLayout(self)
         self.innerLayout.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.setSpacing(PAD_X)
 
-        # Back button
-        back = QLabel("←", self)
+        # Back button (Unicode Home Character - U+1F3E0)
+        back = QLabel("🏠", self)
         back.setObjectName("BackButton")
         back.setStyleSheet(
             """

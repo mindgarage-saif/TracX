@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QSizePolicy, QWidget
 
 from ..config.constants import PAD_X
 from ..widgets import RecordingLayout, Sidebar
@@ -9,13 +9,13 @@ class RecordPage(BasePage):
     def __init__(self, context: QWidget, parent: QWidget) -> None:
         super().__init__(context, parent)
 
-        self.innerLayout.setContentsMargins(8, 0, 8, 0)
-
         # Create the sidebar
-        sidebarWidth = int(parent.width() * 0.25)
+        sidebarWidth = int(parent.width() * 0.2)
         self.sidebar = Sidebar(self)
         self.sidebar.setFixedWidth(int(sidebarWidth))
-        self.sidebar.setFixedHeight(parent.pageHeight())
+        self.sidebar.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
         self.innerLayout.addWidget(self.sidebar)
 
         # Create the webcam view
@@ -25,7 +25,9 @@ class RecordPage(BasePage):
             webcamWidth,
             on_frame_fn=self.process,
         )
-        self.recordingLayout.setFixedHeight(parent.pageHeight())
+        self.recordingLayout.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.innerLayout.addWidget(self.recordingLayout)
 
         # Add camera selection callback

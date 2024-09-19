@@ -2,8 +2,6 @@ import logging
 
 from PyQt6.QtWidgets import QHBoxLayout, QWidget
 
-from ..config.constants import PAD_X, PAD_Y
-
 logger = logging.getLogger(__name__)
 
 
@@ -12,13 +10,13 @@ class BasePage(QWidget):
         super().__init__(parent)
         self.context = context
         self.statusBar = parent.statusBar()
-        self.setFixedWidth(parent.width())
-        self.setFixedHeight(parent.pageHeight())
+        self.setMinimumWidth(parent.width())
+        self.setMinimumHeight(parent.pageHeight())
 
         # Create an inner layout for the frame
         self.innerLayout = QHBoxLayout(self)
         self.innerLayout.setContentsMargins(0, 0, 0, 0)
-        self.innerLayout.setSpacing(PAD_X)
+        self.innerLayout.setSpacing(8)
 
     def log(self, message: str) -> None:
         """

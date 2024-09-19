@@ -1,12 +1,12 @@
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QTabWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QFrame, QSizePolicy, QTabWidget, QVBoxLayout, QWidget
 
 from .camera_selector import CameraSelector
 from .inferencer_settings import InferencerSettings
-from .visualizer_settings import VisualizerSettings
 from .upload_layout import UploadLayout
+from .visualizer_settings import VisualizerSettings
 
 
-class Sidebar(QWidget):
+class Sidebar(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -33,16 +33,12 @@ class Sidebar(QWidget):
 
         # Add the tabs to the QTabWidget
         self.recordTab = QWidget()
-        self.tabBar.addTab(self.recordTab, "1. Record")
+        self.tabBar.addTab(self.recordTab, "Video Recording")
         self.recordTabUI()
 
         self.uploadTab = QWidget()
-        self.tabBar.addTab(self.uploadTab, "2. Upload")
+        self.tabBar.addTab(self.uploadTab, "Motion Estimation")
         self.uploadTabUI()
-
-        self.processTab = QWidget()
-        self.tabBar.addTab(self.processTab, "3. Process")
-        self.processTabUI()
 
         # Add the tab widget to the layout
         self.innerLayout.addWidget(self.tabBar)
@@ -65,10 +61,6 @@ class Sidebar(QWidget):
         layout = QVBoxLayout()
         label = UploadLayout(self)
         layout.addWidget(label)
-        self.uploadTab.setLayout(layout)
-
-    def processTabUI(self):
-        layout = QVBoxLayout()
 
         # Inferencer and visualizer settings
         visualizerSettings = VisualizerSettings(self)
@@ -76,17 +68,17 @@ class Sidebar(QWidget):
 
         # Let layouts handle the dynamic sizing
         visualizerSettings.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
         )
         inferencerSettings.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
         )
 
         # Add widgets to the layout
         layout.addWidget(inferencerSettings)
         layout.addWidget(visualizerSettings)
-
-        self.processTab.setLayout(layout)
+        layout.addStretch()
+        self.uploadTab.setLayout(layout)
 
     def setCamerasSelectedCallback(self, callback):
         self.onCamerasSelected = callback
