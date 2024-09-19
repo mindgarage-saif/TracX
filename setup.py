@@ -11,6 +11,7 @@ setup(
     install_requires=required,
     entry_points="""
         [console_scripts]
-        mocap=mocap.app:main
+        mocap-studio=mocap.studio:main
+        mocap-calibrate=mocap.calibrate:main
     """,
 )
