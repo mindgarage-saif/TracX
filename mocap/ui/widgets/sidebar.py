@@ -40,7 +40,7 @@ class Sidebar(QFrame):
         cameras = CameraSelector(self)
         cameras.setCameraSelectedCallback(self.handleCamerasSelected)
         cameras.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )
         layout.addWidget(cameras)
         self.recordTab.setLayout(layout)
@@ -56,10 +56,10 @@ class Sidebar(QFrame):
 
         # Let layouts handle the dynamic sizing
         visualizerSettings.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
         )
         inferencerSettings.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
         )
 
         # Add widgets to the layout

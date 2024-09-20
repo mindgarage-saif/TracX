@@ -27,6 +27,10 @@ class InferencerSettings(QWidget):
 
         # Backend
         label = QLabel("Select a Backend", self)
+        label.setToolTip(
+            "Default backend uses our custom pipeline for motion capture. "
+            "Pose2Sim: https://github.com/perfanalytics/pose2sim"
+        )
         label.setProperty("class", "h3")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
@@ -36,7 +40,7 @@ class InferencerSettings(QWidget):
         self.pose2simBackend = QRadioButton("Pose2Sim", self)
 
         row = QWidget(self)
-        rowLayout = QVBoxLayout(row)
+        rowLayout = QHBoxLayout(row)
         rowLayout.addWidget(self.defaultBackend)
         rowLayout.addWidget(self.pose2simBackend)
         rowLayout.addStretch()
@@ -46,17 +50,11 @@ class InferencerSettings(QWidget):
         self.backend.addButton(self.defaultBackend)
         self.backend.addButton(self.pose2simBackend)
 
-        label = QLabel(
-            "Default backend uses our custom pipeline for motion capture. "
-            "Pose2Sim: https://github.com/perfanalytics/pose2sim", self
-        )
-        label.setProperty("class", "body")
-        label.setWordWrap(True)
-        self.innerLayout.addWidget(label)
         self.innerLayout.addSpacing(16)
 
         # Model selection area
         label = QLabel("Select a Model", self)
+        label.setToolTip("More details on model performance are available in the documentation.")
         label.setProperty("class", "h3")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
@@ -87,10 +85,6 @@ class InferencerSettings(QWidget):
         self.defaultBackend.toggled.connect(self.onBackendChanged)
         self.pose2simBackend.toggled.connect(self.onBackendChanged)
 
-        label = QLabel("More details on model performance are available in the documentation.", self)
-        label.setProperty("class", "body")
-        label.setWordWrap(True)
-        self.innerLayout.addWidget(label)
 
     def updateModelList(self, backend):
         # Clear current model list layout

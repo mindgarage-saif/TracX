@@ -24,21 +24,21 @@ QPushButton {{
 }}
 
 .h1 {{
-    font-size: 20px;
-}}
-
-.h2 {{
     font-size: 18px;
 }}
 
-.h3 {{
+.h2 {{
     font-size: 16px;
+}}
+
+.h3 {{
+    font-size: 14px;
 }}
 
 /* Body Text */
 .body {{
     font-weight: normal;
-    font-size: 14px;
+    font-size: 12px;
 }}
 
 /* Tab Bar */
@@ -46,7 +46,7 @@ QTabBar::tab {{
     background-color: {QTMATERIAL_SECONDARYCOLOR};
     color: white;
     padding: 8px;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: normal;
     text-transform: none;
 }}
@@ -59,7 +59,7 @@ QTabBar::tab:selected {{
 /* Label */
 QLabel {{
     font-weight: normal;
-    font-size: 14px;
+    font-size: 12px;
 }}
 
 /* Control Panel */
@@ -71,12 +71,6 @@ QLabel {{
 #InferencerSettings {{
     background-color: rgba(255, 255, 255, 100);
     border-radius: 8px;
-}}
-
-#InferencerSettings QLabel {{
-    background-color: transparent;
-    font-size: 14px;
-    color: white;
 }}
 
 /* Slider */
@@ -111,7 +105,7 @@ QScrollArea {{
     background-color: black;
     border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
     border-radius: 8px;
-    padding: 4px;
+    padding: 8px;
     color: {QTMATERIAL_PRIMARYCOLOR};
 }}
 
@@ -132,13 +126,13 @@ QScrollArea {{
 .list-item {{
     background-color: transparent;
     padding: 8px;
-    color: #ccc;
-    border-bottom: 1px solid lightgray;
+    color: {QTMATERIAL_SECONDARYTEXTCOLOR};
+    border-bottom: 1px solid {QTMATERIAL_SECONDARYCOLOR};
 }}
 
 .list-item::selection {{
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
+    background-color: rgba(0, 0, 0, 100);
+    color: {QTMATERIAL_PRIMARYTEXTCOLOR};
 }}
 
 /* Sidebar */
@@ -155,23 +149,12 @@ QScrollArea {{
 }}
 
 /* Visualizer Settings */
-#VisualizerSettings QFrame {{
-    background-color: rgba(255, 255, 255, 100);
-    border-radius: 8px;
-}}
-
-#VisualizerSettings QLabel {{
-    background-color: transparent;
-    font-size: 14px;
-    color: white;
-}}
-
 #VisualizerSettings QSlider {{
     background-color: transparent;
-    color: black;
+    color: {QTMATERIAL_PRIMARYTEXTCOLOR};
 }}
 
 #VisualizerSettings QCheckBox {{
     background-color: transparent;
-    color: black;
+    color: {QTMATERIAL_PRIMARYTEXTCOLOR};
 }}

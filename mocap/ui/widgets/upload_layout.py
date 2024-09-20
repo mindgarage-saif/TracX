@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QSizePolicy,
 )
 
 
@@ -18,12 +19,8 @@ class UploadLayout(QWidget):
         self.setAcceptDrops(True)
 
         label = QLabel("Select Videos", self)
+        label.setToolTip("Select synchronized videos of the same motion sequence to estimate 3D human poses.")
         label.setProperty("class", "h3")
-        label.setWordWrap(True)
-        self.innerLayout.addWidget(label)
-
-        label = QLabel("Select synchronized videos of the same motion sequence to estimate 3D human poses.")
-        label.setProperty("class", "body")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
 
@@ -33,12 +30,8 @@ class UploadLayout(QWidget):
         self.innerLayout.addSpacing(16)
 
         label = QLabel("Select Camera Calibration", self)
+        label.setToolTip("Calibration file must contain intrinsic and extrinsic parameters for each camera. See documentation for format details.")
         label.setProperty("class", "h3")
-        label.setWordWrap(True)
-        self.innerLayout.addWidget(label)
-
-        label = QLabel("Calibration file must contain intrinsic and extrinsic parameters for each camera. See documentation for format details.")
-        label.setProperty("class", "body")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
 
@@ -107,7 +100,9 @@ class DragDropWidget(QFrame):
         super().__init__(parent)
         self.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
         self.setObjectName("DragDropWidget")
-        self.setFixedHeight(128)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.setAcceptDrops(True)
 
         self.layout = QVBoxLayout(self)

@@ -49,7 +49,7 @@ class CameraSelector(QWidget):
 
         self.innerLayout = QVBoxLayout(self)
         self.innerLayout.setContentsMargins(8, 0, 8, 0)
-        self.innerLayout.setSpacing(16)
+        self.innerLayout.setSpacing(0)
         self.setLayout(self.innerLayout)
 
         # Add a title to the page
@@ -64,17 +64,19 @@ class CameraSelector(QWidget):
         instructions.setProperty("class", "body")
         instructions.setWordWrap(True)
         instructions.setSizePolicy(
-            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
         )
         self.innerLayout.addWidget(instructions)
+        self.innerLayout.addSpacing(16)
 
         # Show all cameras in a list with checkboxes, allowing multiple selection
         self.camera_list = QListWidget()
         self.camera_list.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )
         self.camera_items = []
         self.innerLayout.addWidget(self.camera_list)
+        self.innerLayout.addSpacing(16)
 
         # Add refresh instructions
         refresh_instructions = QLabel(
@@ -83,9 +85,10 @@ class CameraSelector(QWidget):
         refresh_instructions.setProperty("class", "body")
         refresh_instructions.setWordWrap(True)
         refresh_instructions.setSizePolicy(
-            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
         )
         self.innerLayout.addWidget(refresh_instructions)
+        self.innerLayout.addSpacing(16)
 
         # Create a horizontal button bar
         self.buttonBar = QWidget()
