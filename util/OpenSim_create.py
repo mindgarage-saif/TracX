@@ -19,11 +19,12 @@ def addapt_scaling_xml(path_to_scaling,sclaing_setup,trc_file,scaling_time_range
     for time_range in root.iter('time_range'):
         time_range.text = str(scaling_time_range[0]) + ' ' + str(scaling_time_range[1])
     for output_model_file in root.iter('output_model_file'):
-        output_model_file.text = os.path.join(output_dir,'scaled_model.osim')
+        output_model_file.text = os.path.abspath(os.path.join(output_dir,'scaled_model.osim'))
     for model_file in root.iter('model_file'):
         model_file.text = model_file_path
     # for marker_set_file in root.iter('marker_set_file'):
     #     marker_set_file.text = os.path.join(output_dir,'marker_set.xml')
+    print(os.path.join(output_dir,sclaing_setup))
     tree.write(os.path.join(output_dir,sclaing_setup))
 
 def addapt_ik_xml(path_to_ik_setup,ik_setup,trc_file,output_dir,ik_time_range=None):
@@ -38,7 +39,7 @@ def addapt_ik_xml(path_to_ik_setup,ik_setup,trc_file,output_dir,ik_time_range=No
         for time_range in root.iter('time_range'):
             time_range.text = str(ik_time_range[0]) + ' ' + str(ik_time_range[1])
     for output_motion_file in root.iter('output_motion_file'):
-        output_motion_file.text = os.path.join(output_dir,'ik.mot')
+        output_motion_file.text = os.path.abspath(os.path.join(output_dir,'ik.mot'))
     for model_file in root.iter('model_file'):
         model_file.text = os.path.join(output_dir,'scaled_model.osim')
     for results_directory in root.iter('results_directory'):
@@ -49,7 +50,7 @@ def create_opensim(trc,experiment_name,scaling_time_range=[0.5,1.0],opensim_setu
     model_path = os.path.join(opensim_setup,model)
     model = model_path
     model = os.path.abspath(model)
-    output = os.path.join('.\experiments',experiment_name)
+    output = os.path.join('./experiments',experiment_name)
     os.makedirs(output,exist_ok=True)
     scaling_path = os.path.join(opensim_setup,sclaing_setup)
     ik_path = os.path.join(opensim_setup,ik_setup)

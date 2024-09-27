@@ -91,7 +91,7 @@ if __name__ == '__main__':
     video_dir = [os.path.expanduser(vid) for vid in video_dir]
     camera = "Gait Markerless 2.settings_new.xml"
     config = "Config.toml"
-    main(video_dir,camera,config,True)
+    main(video_dir,camera,config,True,opensim=True,blender=True)
     # assert args.config.endswith('.toml'), "The config file should be a toml file"
     # path_to_exp,exp_name = prepare_videos(args.video_dir,args.camera_parameters,args.rotate,args.exp_name)
     # shutil.copyfile(args.config,os.path.join(path_to_exp,'Config.toml'))

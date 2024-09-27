@@ -1,0 +1,172 @@
+<OpenSimDocument Version="40000">
+	<InverseKinematicsTool>
+		
+		<results_directory>.\experiments/Experiment_2024-09-27_15-13-56</results_directory>
+		
+		<model_file>.\experiments/Experiment_2024-09-27_15-13-56/scaled_model.osim</model_file>
+		
+		<constraint_weight>Inf</constraint_weight>
+		
+		<accuracy>1.0000000000000001e-05</accuracy>
+		
+		<time_range> </time_range>
+		
+		<output_motion_file>.\experiments/Experiment_2024-09-27_15-13-56/ik.mot</output_motion_file>
+		
+		<report_errors>true</report_errors>
+		
+		<IKTaskSet>
+			<objects>
+				<IKMarkerTask name="Nose">
+					
+					<apply>true</apply>
+					
+					<weight>0.50000000000000001</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="Head">
+					
+					<apply>true</apply>
+					
+					<weight>0.50000000000000001</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="Neck">
+					
+					<apply>true</apply>
+					
+					<weight>0.20000000000000001</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LShoulder">
+					
+					<apply>true</apply>
+					
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RShoulder">
+					
+					<apply>true</apply>
+					
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LElbow">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RElbow">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LWrist">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RWrist">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="Hip">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LHip">
+					
+					<apply>true</apply>
+					
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RHip">
+					
+					<apply>true</apply>
+					
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LKnee">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RKnee">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LAnkle">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RAnkle">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LHeel">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LSmallToe">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="LBigToe">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RHeel">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RSmallToe">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="RBigToe">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKCoordinateTask name="L5_S1_Flex_Ext">
+					
+					<apply>true</apply>
+					
+					<weight>1</weight>
+					
+					<value_type>default_value</value_type>
+					
+					<value>0</value>
+				</IKCoordinateTask>
+			</objects>
+			<groups />
+		</IKTaskSet>
+		
+		<marker_file>pose-3d/Experiment_2024-09-27_15-13-56_0-342_filt_butterworth.trc</marker_file>
+		
+		<coordinate_file>Unassigned</coordinate_file>
+		
+		<report_marker_locations>false</report_marker_locations>
+	</InverseKinematicsTool>
+</OpenSimDocument>
