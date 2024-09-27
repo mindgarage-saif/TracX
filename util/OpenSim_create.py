@@ -45,10 +45,11 @@ def addapt_ik_xml(path_to_ik_setup,ik_setup,trc_file,output_dir,ik_time_range=No
         results_directory.text = output_dir
     tree.write(os.path.join(output_dir,ik_setup))
 
-def create_opensim(trc,experiment_name,scaling_time_range=[0.5,1.0],opensim_setup="./OpenSim",model = "Model_Pose2Sim_Halpe26.osim" ,ik_setup="Inverse-Kinematics\IK_Setup_Pose2Sim_Halpe26.xml",sclaing_setup="Scaling\Scaling_Setup_Pose2Sim_Halpe26.xml",ik_time_range=None,output="./output"):
+def create_opensim(trc,experiment_name,scaling_time_range=[0.5,1.0],opensim_setup="./OpenSim",model = "Model_Pose2Sim_Halpe26.osim" ,ik_setup="Inverse-Kinematics/IK_Setup_Pose2Sim_Halpe26.xml",sclaing_setup="Scaling/Scaling_Setup_Pose2Sim_Halpe26.xml",ik_time_range=None,output="./output"):
     model_path = os.path.join(opensim_setup,model)
     model = model_path
-    output = os.path.join(output,experiment_name)
+    model = os.path.abspath(model)
+    output = os.path.join('.\experiments',experiment_name)
     os.makedirs(output,exist_ok=True)
     scaling_path = os.path.join(opensim_setup,sclaing_setup)
     ik_path = os.path.join(opensim_setup,ik_setup)

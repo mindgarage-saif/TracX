@@ -11,13 +11,14 @@ def get_rotation(videoName, rotation_dict):
         if key in videoName:
             return float(value)
     return None
-def rotate(input_dir,output_dir,camera_parameters):
+def rotate(video_list,output_dir,camera_parameters):
     tree = ET.parse(os.path.expanduser(camera_parameters))
     root = tree.getroot()
     rotation_dict = {camera.get('serial'): camera.get('viewrotation') for camera in root.find('cameras')}
-    for videoName in os.listdir(input_dir):
-        rot = get_rotation(videoName, rotation_dict)
-        cap = cv2.VideoCapture(os.path.join(input_dir, videoName))
+    for video in video_list:
+        video_name = os.path.basename(video)
+        rot = get_rotation(video_name, rotation_dict)
+        cap = cv2.VideoCapture(video)
         ret, frame = cap.read()
         if not ret:
             continue
@@ -41,7 +42,7 @@ def rotate(input_dir,output_dir,camera_parameters):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         # Define VideoWriter object for MP4 file
-        out = cv2.VideoWriter(os.path.join(output_dir, videoName.split('.')[0] +"_rot.mp4"), cv2.VideoWriter_fourcc(*'mp4v'), fps, (frame_width, frame_height))
+        out = cv2.VideoWriter(os.path.join(output_dir, video_name.split('.')[0] +"_rot.mp4"), cv2.VideoWriter_fourcc(*'mp4v'), fps, (frame_width, frame_height))
 
         #out = cv2.VideoWriter(os.path.join(output_dir, videoName +"_rot.avi"), cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
         out.write(frame)

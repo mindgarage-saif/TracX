@@ -12,10 +12,12 @@ import glob
 from Pose2Sim.Utilities import bodykin_from_mot_osim
 def execute_pose2sim_triangluation(path,should_sync = False, with_marker_augmentation = False):
     os.chdir(path)
+    print(os.getcwd())
     Pose2Sim.calibration('./')
     Pose2Sim.personAssociation('./')
     if should_sync:
         Pose2Sim.synchronization('./')
+    print(os.getcwd())
     Pose2Sim.triangulation('./')
     Pose2Sim.filtering('./')
     if with_marker_augmentation:
@@ -24,29 +26,30 @@ def execute_pose2sim_triangluation(path,should_sync = False, with_marker_augment
 def execute_2d_detection(path):
     Pose2Sim.poseEstimation(path)
 
-def prepare_videos(path_to_video_dir,camera_parameters_path,should_rotate,exp_name):
-    if exp_name and not os.path.exists(os.path.join("experiments",exp_name,'videos')):
+def prepare_videos(video_list,camera_parameters_path,should_rotate,kwargs):
+    if "exp_name" in kwargs and not os.path.exists(os.path.join("experiments",kwargs["exp_name"],'videos')):
         os.makedirs(os.path.join("experiments",exp_name,'videos'))
+        exp_name = kwargs["exp_name"]
     else:
         # Get the current date and time
         exp_name = f'Experiment_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
         os.makedirs(os.path.join("experiments",exp_name,'videos'))
     if should_rotate:
-        rotate(path_to_video_dir,os.path.join("experiments",exp_name,'videos'),camera_parameters_path)
+        rotate(video_list,os.path.join("experiments",exp_name,'videos'),camera_parameters_path)
     else:
-        for video in os.listdir(path_to_video_dir):
+        for video in video_list:
             # moves the video to the videos folder. Can be changed to copy if needed or swapped out entirely. Because Pose2Sim doesnt nativly allow to give paths but allways assumes the current dir or the the provided dir is the experiment directory with the config file in it.
             if not video.endswith('.mp4') or not video.endswith('.avi'):
                 continue
-            shutil.move(os.path.join(path_to_video_dir,video),os.path.join(exp_name,'videos',video))
+            shutil.move(video,os.path.join(exp_name,'videos',video))
     return os.path.join('experiments',exp_name),exp_name
 
-def main(video_dir,camera_parameters,rotate,config,**kwargs):#exp_name,sync,marker_augmentation,opensim,blender
+def main(video_list,camera_parameters,config,rotate=False,**kwargs):#exp_name,sync,marker_augmentation,opensim,blender
     assert config.endswith('.toml'), "The config file should be a toml file"
     print(kwargs)
     #Moves the videos into the experiment folder, such that they are in the same location as the config file.
     # And creates the experiment folder
-    path_to_exp,exp_name = prepare_videos(video_dir,camera_parameters,rotate,kwargs['exp_name'])
+    path_to_exp,exp_name = prepare_videos(video_list,camera_parameters,rotate,kwargs)
     shutil.copyfile(config,os.path.join(path_to_exp,'Config.toml'))
 
     if not (os.path.exists(os.path.join(path_to_exp,'pose')) and os.path.exists(os.path.join(path_to_exp,'pose_rotated'))):
@@ -59,28 +62,36 @@ def main(video_dir,camera_parameters,rotate,config,**kwargs):#exp_name,sync,mark
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #!!! Assumes file to be in QCA camera format. It doesnt matter if it is in XML file format or txt file format. But internaly it has to be in QCA format.!!!!!!!!
     shutil.copyfile(camera_parameters,os.path.join(path_to_exp,'calibration','camera_parameters.qca.txt'))
-    execute_pose2sim_triangluation(path_to_exp,kwargs['sync'],kwargs['marker_augmentation'])
+    execute_pose2sim_triangluation(path_to_exp,'sync' in kwargs,'marker_augmentation' in kwargs)
     os.chdir(os.path.join(os.getcwd(),"../../"))
     path_to_trc = glob.glob(os.path.join(path_to_exp,'pose-3d','*_filt_butterworth.trc'))[0]
-    if kwargs['opensim']:
+    trc_name = os.path.basename(path_to_trc)
+    path_to_trc = os.path.join('pose-3d',trc_name)
+    if 'opensim' in kwargs:
         output,mot,scaled_model = create_opensim(path_to_trc,exp_name)
-        if kwargs['blender']:
+        if 'blender' in kwargs:
             bodykin_from_mot_osim.bodykin_from_mot_osim_func(mot,scaled_model,os.path.join(output,'bodykin.csv'))
     
 
 if __name__ == '__main__':
-    argspaser = argparse.ArgumentParser()
-    argspaser.add_argument("--config",required=True,default=r"E:\Uni\MonocularSystems\HiWi\Data\experiments\new\LIHS\ROM2", type=str, help="Path to the config file")
-    argspaser.add_argument("--sync",default=False, type=bool, help="Sync the data")
-    argspaser.add_argument("--marker_augmentation",default=False, type=bool, help="Marker augmentation")
-    argspaser.add_argument("--camera_parameters",required=True,default=r"E:\Uni\MonocularSystems\HiWi\Gait Markerless 2.settings_new.xml", type=str, help="Path to the camera XML file")
-    argspaser.add_argument('--video_dir',required=True, type=str, help="Path to the video directory, which only contains the videos")
-    argspaser.add_argument('--rotate', default=False, type=bool, help="Should rotate the the videos")
-    argspaser.add_argument('--exp_name', default=None, type=str, help="Should sync the the videos")
-    argspaser.add_argument('--opensim', default=True, type=bool, help="Createse opensim files")
-    argspaser.add_argument('--blender', default=True, type=bool, help="Also returns the CSV files for blender")
-    args = argspaser.parse_args()
-    main(args.video_dir,args.camera_parameters,args.rotate,args.config,exp_name=args.exp_name,sync=args.sync,marker_augmentation=args.marker_augmentation,opensim=args.opensim,blender=args.blender)
+    #argspaser = argparse.ArgumentParser()
+    #argspaser.add_argument("--config",required=True,default=r"E:\Uni\MonocularSystems\HiWi\Data\experiments\new\LIHS\ROM2", type=str, help="Path to the config file")
+    #argspaser.add_argument("--sync",default=False, type=bool, help="Sync the data")
+    #argspaser.add_argument("--marker_augmentation",default=False, type=bool, help="Marker augmentation")
+    #argspaser.add_argument("--camera_parameters",required=True,default=r"E:\Uni\MonocularSystems\HiWi\Gait Markerless 2.settings_new.xml", type=str, help="Path to the camera XML file")
+    #argspaser.add_argument('--video_dir',required=True, type=str, help="Path to the video directory, which only contains the videos")
+    #argspaser.add_argument('--rotate', default=False, type=bool, help="Should rotate the the videos")
+    #argspaser.add_argument('--exp_name', default=None, type=str, help="Should sync the the videos")
+    #argspaser.add_argument('--opensim', default=True, type=bool, help="Createse opensim files")
+    #argspaser.add_argument('--blender', default=True, type=bool, help="Also returns the CSV files for blender")
+    #args = argspaser.parse_args()
+    
+    #main(args.video_dir,args.camera_parameters,args.config,args.rotate,exp_name=args.exp_name,sync=args.sync,marker_augmentation=args.marker_augmentation,opensim=args.opensim,blender=args.blender)
+    video_dir =["~/Downloads/GAIT_1/Gait Markerless 1_Miqus_1_23087.avi","~/Downloads/GAIT_1/Gait Markerless 1_Miqus_3_28984.avi","~/Downloads/GAIT_1/Gait Markerless 1_Miqus_6_28983.avi"]
+    video_dir = [os.path.expanduser(vid) for vid in video_dir]
+    camera = "Gait Markerless 2.settings_new.xml"
+    config = "Config.toml"
+    main(video_dir,camera,config,True)
     # assert args.config.endswith('.toml'), "The config file should be a toml file"
     # path_to_exp,exp_name = prepare_videos(args.video_dir,args.camera_parameters,args.rotate,args.exp_name)
     # shutil.copyfile(args.config,os.path.join(path_to_exp,'Config.toml'))

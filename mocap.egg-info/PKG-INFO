@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: mocap
+Version: 0.1.0
+License-File: LICENSE
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: opencv-python-headless~=4.6.0.66
+Requires-Dist: Pillow
+Requires-Dist: PyQt6
+Requires-Dist: PyQt6-3D
+Requires-Dist: qt-material==2.14
