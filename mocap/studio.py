@@ -28,7 +28,7 @@ class Studio(QApplication):
 
 def main():
     studio = Studio()
-    apply_stylesheet(studio, theme="dark_purple.xml", css_file="assets/sytles/app.css")
+    apply_stylesheet(studio, theme="dark_purple.xml", css_file="assets/styles/app.css")
     studio.run()
 
 
