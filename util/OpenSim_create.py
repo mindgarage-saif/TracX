@@ -15,87 +15,125 @@ def do_ik(path_to_ik_setup):
     print("Inverse Kinematics has been completed")
 
 
-def addapt_scaling_xml(
-    path_to_scaling,
-    sclaing_setup,
+def adapt_scaling_xml(
+    setup_file,
     trc_file,
-    scaling_time_range,
+    time_range,
     output_dir,
-    model_file_path,
+    model_path,
 ):
-    tree = ET.parse(path_to_scaling)
+    # Read the file
+    tree = ET.parse(setup_file)
     root = tree.getroot()
-    for marker_file in root.iter("marker_file"):
-        marker_file.text = trc_file  # might need to be changed for linux because ther it is / instead of \
-    for time_range in root.iter("time_range"):
-        time_range.text = str(scaling_time_range[0]) + " " + str(scaling_time_range[1])
-    for output_model_file in root.iter("output_model_file"):
-        output_model_file.text = os.path.abspath(
+
+    # Change path to the trc file
+    for item in root.iter("marker_file"):
+        item.text = trc_file
+
+    # Change the time range
+    for item in root.iter("time_range"):
+        item.text = str(time_range[0]) + " " + str(time_range[1])
+
+    # Change the output model file
+    for item in root.iter("output_model_file"):
+        item.text = os.path.abspath(
             os.path.join(output_dir, "scaled_model.osim")
         )
-    for model_file in root.iter("model_file"):
-        model_file.text = model_file_path
-    # for marker_set_file in root.iter('marker_set_file'):
-    #     marker_set_file.text = os.path.join(output_dir,'marker_set.xml')
-    print(os.path.join(output_dir, sclaing_setup))
-    tree.write(os.path.join(output_dir, sclaing_setup))
+
+    for item in root.iter("model_file"):
+        item.text = model_path
+
+    # for item in root.iter('marker_set_file'):
+    #     item.text = os.path.join(output_dir,'marker_set.xml')
+
+    # Write the new file
+    filename = os.path.basename(setup_file)
+    outfile = os.path.join(output_dir, filename)
+    tree.write(outfile)
 
 
-def addapt_ik_xml(path_to_ik_setup, ik_setup, trc_file, output_dir, ik_time_range=None):
-    tree = ET.parse(path_to_ik_setup)
+def adapt_ik_xml(
+        setup_file,
+        trc_file,
+        output_dir,
+        time_range=None
+    ):
+    # Read the file
+    tree = ET.parse(setup_file)
     root = tree.getroot()
-    for marker_file in root.iter("marker_file"):
-        marker_file.text = trc_file
-    if ik_time_range is None:
-        for time_range in root.iter("time_range"):
-            time_range.text = " "
-    else:
-        for time_range in root.iter("time_range"):
-            time_range.text = str(ik_time_range[0]) + " " + str(ik_time_range[1])
-    for output_motion_file in root.iter("output_motion_file"):
-        output_motion_file.text = os.path.abspath(os.path.join(output_dir, "ik.mot"))
-    for model_file in root.iter("model_file"):
-        model_file.text = os.path.join(output_dir, "scaled_model.osim")
-    for results_directory in root.iter("results_directory"):
-        results_directory.text = output_dir
-    tree.write(os.path.join(output_dir, ik_setup))
+
+    # Change path to the trc file
+    for item in root.iter("marker_file"):
+        item.text = trc_file
+
+    # Change the time range
+    if time_range is not None:
+        for item in root.iter("time_range"):
+            item.text = str(time_range[0]) + " " + str(time_range[1])
+    # else:
+    #     for item in root.iter("time_range"):
+    #         item.text = " "
+
+    for item in root.iter("output_motion_file"):
+        item.text = os.path.abspath(os.path.join(output_dir, "ik.mot"))
+
+    for item in root.iter("model_file"):
+        item.text = os.path.join(output_dir, "scaled_model.osim")
+
+    for item in root.iter("results_directory"):
+        item.text = output_dir
+
+    filename = os.path.basename(setup_file)
+    tree.write(os.path.join(output_dir, filename))
 
 
 def create_opensim(
     trc,
-    experiment_name,
+    experiment_dir,
     scaling_time_range=[0.5, 1.0],
-    opensim_setup="./OpenSim",
-    model="Model_Pose2Sim_Halpe26.osim",
-    ik_setup="Inverse-Kinematics/IK_Setup_Pose2Sim_Halpe26.xml",
-    sclaing_setup="Scaling/Scaling_Setup_Pose2Sim_Halpe26.xml",
+    opensim_dir="./assets/opensim/Pose2Sim_Halpe26/",
+    model="Model.osim",
+    ik_file="IK_Setup.xml",
+    scaling_file="Scaling_Setup.xml",
     ik_time_range=None,
-    output="./output",
 ):
-    model_path = os.path.join(opensim_setup, model)
-    model = model_path
-    model = os.path.abspath(model)
-    output = os.path.join("./experiments", experiment_name)
-    os.makedirs(output, exist_ok=True)
-    scaling_path = os.path.join(opensim_setup, sclaing_setup)
-    ik_path = os.path.join(opensim_setup, ik_setup)
-    sclaing_setup = os.path.basename(sclaing_setup)
-    ik_setup = os.path.basename(ik_setup)
-    # do the scaling
-    addapt_scaling_xml(
-        scaling_path, sclaing_setup, trc, scaling_time_range, output, model
-    )
-    do_scaling(os.path.join(output, sclaing_setup))
+    opensim_dir = os.path.join(experiment_dir, "..", "..", opensim_dir)
 
-    # do the ik
-    addapt_ik_xml(ik_path, ik_setup, trc, output, ik_time_range)
-    do_ik(os.path.join(output, ik_setup))
-    print("Inverse Kinematics has been completed")
-    print("The results can be found in: ", output)
+    model_path = os.path.join(opensim_dir, model)
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file {model_path} not found")
+
+    scaling_setup_file = os.path.join(opensim_dir, scaling_file)
+    if not os.path.exists(scaling_setup_file):
+        raise FileNotFoundError(f"Scaling file {scaling_setup_file} not found")
+
+    ik_setup_path = os.path.join(opensim_dir, ik_file)
+    if not os.path.exists(ik_setup_path):
+        raise FileNotFoundError(f"IK file {ik_setup_path} not found")
+
+    output_dir = os.path.join(experiment_dir, "output")
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Scaling
+    scaling_file = os.path.basename(scaling_file)
+    adapt_scaling_xml(
+        setup_file=scaling_setup_file,
+        trc_file=trc,
+        time_range=scaling_time_range,
+        output_dir=output_dir,
+        model_path=model_path,
+    )
+    do_scaling(os.path.join(output_dir, scaling_file))
+
+    # Inverse Kinematics
+    adapt_ik_xml(ik_setup_path, trc, output_dir, ik_time_range)
+    do_ik(os.path.join(output_dir, ik_file))
+
+    print("The results can be found in: ", output_dir)
     return (
-        output,
-        os.path.join(output, "ik.mot"),
-        os.path.join(output, "scaled_model.osim"),
+        output_dir,
+        os.path.join(output_dir, "ik.mot"),
+        os.path.join(output_dir, "scaled_model.osim"),
     )
 
 

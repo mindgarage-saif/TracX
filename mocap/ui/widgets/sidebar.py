@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import QFrame, QSizePolicy, QTabWidget, QVBoxLayout, QWidget
 
 from .camera_selector import CameraSelector
-from .execute_button import Execute_button
+from .execute_button import MotionEstimationButton
 from .inferencer_settings import InferencerSettings
-from .setting_store import Info_storage
+from .setting_store import MotionEstimationParams
 from .upload_layout import UploadLayout
 from .visualizer_settings import VisualizerSettings
 
@@ -49,14 +49,14 @@ class Sidebar(QFrame):
 
     def uploadTabUI(self):
         layout = QVBoxLayout()
-        info_storage = Info_storage()
+        info_storage = MotionEstimationParams()
         label = UploadLayout(self, info_storage)
         layout.addWidget(label)
 
         # Inferencer and visualizer settings
         visualizerSettings = VisualizerSettings(self, info_storage)
         inferencerSettings = InferencerSettings(self, info_storage)
-        motion_estimation = Execute_button(self, info_storage)
+        motion_estimation = MotionEstimationButton(self, info_storage)
 
         # Let layouts handle the dynamic sizing
         visualizerSettings.setSizePolicy(

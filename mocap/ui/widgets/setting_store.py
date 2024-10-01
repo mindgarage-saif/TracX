@@ -1,4 +1,4 @@
-class Info_storage:
+class MotionEstimationParams:
     def __init__(self):
         self.settings = {
             "video_list": [],
