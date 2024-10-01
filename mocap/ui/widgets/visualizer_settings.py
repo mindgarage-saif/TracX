@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QCheckBox, QLabel, QSlider, QVBoxLayout, QWidget
 
 
 class VisualizerSettings(QWidget):
-    def __init__(self, parent,info_storage):
+    def __init__(self, parent, info_storage):
         super().__init__(parent)
         self.setObjectName("VisualizerSettings")
 
@@ -16,7 +16,7 @@ class VisualizerSettings(QWidget):
         self.innerLayout.addWidget(heading)
         self.info_storage = info_storage
         # Keypoint threshold slider
-        '''self.innerLayout.addWidget(QLabel("Setting 1", self))
+        """self.innerLayout.addWidget(QLabel("Setting 1", self))
         self.threshold = QSlider(Qt.Orientation.Horizontal, self)
         self.threshold.setMinimum(0)
         self.threshold.setMaximum(100)
@@ -38,7 +38,7 @@ class VisualizerSettings(QWidget):
         self.thickness.setMaximum(10)
         self.thickness.setValue(3)
         self.innerLayout.addWidget(self.thickness)
-        '''
+        """
         # Checkbox to draw bounding box
         self.rotate_bbox = QCheckBox("Rotated Video", self)
         self.rotate_bbox.setProperty("class", "body")
@@ -59,28 +59,28 @@ class VisualizerSettings(QWidget):
         self.blender_bbox.stateChanged.connect(self.on_blender)
 
     def on_rotate(self):
-        self.info_storage.update('rotate',self.rotate_bbox.isChecked())
+        self.info_storage.update("rotate", self.rotate_bbox.isChecked())
 
     def on_opensim(self):
-        self.info_storage.update('openSim',self.openSim_bbox.isChecked())
-    
+        self.info_storage.update("openSim", self.openSim_bbox.isChecked())
+
     def on_blender(self):
-        self.info_storage.update('blender',self.blender_bbox.isChecked())
+        self.info_storage.update("blender", self.blender_bbox.isChecked())
 
     def setCallback(self, callback):
         def inner_callback():
             callback(**self.data)
 
-        #self.threshold.valueChanged.connect(inner_callback)
-        #self.radius.valueChanged.connect(inner_callback)
-        #self.thickness.valueChanged.connect(inner_callback)
+        # self.threshold.valueChanged.connect(inner_callback)
+        # self.radius.valueChanged.connect(inner_callback)
+        # self.thickness.valueChanged.connect(inner_callback)
         self.draw_bbox.stateChanged.connect(inner_callback)
 
     @property
     def data(self):
         return dict(
-            #radius=self.radius.value(),
-            #thickness=self.thickness.value(),
-            #kpt_thr=self.threshold.value() / 100.0,
+            # radius=self.radius.value(),
+            # thickness=self.thickness.value(),
+            # kpt_thr=self.threshold.value() / 100.0,
             draw_bbox=self.draw_bbox.isChecked(),
         )

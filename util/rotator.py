@@ -1,20 +1,28 @@
-import cv2
-import numpy as np
 import argparse
 import os
 import xml.etree.ElementTree as ET
-from scipy import ndimage
+
+import cv2
+import numpy as np
 from PIL import Image
+from scipy import ndimage
+
+
 # Open the video file
 def get_rotation(videoName, rotation_dict):
     for key, value in rotation_dict.items():
         if key in videoName:
             return float(value)
     return None
-def rotate(video_list,output_dir,camera_parameters):
+
+
+def rotate(video_list, output_dir, camera_parameters):
     tree = ET.parse(os.path.expanduser(camera_parameters))
     root = tree.getroot()
-    rotation_dict = {camera.get('serial'): camera.get('viewrotation') for camera in root.find('cameras')}
+    rotation_dict = {
+        camera.get("serial"): camera.get("viewrotation")
+        for camera in root.find("cameras")
+    }
     for video in video_list:
         video_name = os.path.basename(video)
         rot = get_rotation(video_name, rotation_dict)
@@ -42,11 +50,16 @@ def rotate(video_list,output_dir,camera_parameters):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         # Define VideoWriter object for MP4 file
-        out = cv2.VideoWriter(os.path.join(output_dir, video_name.split('.')[0] +"_rot.mp4"), cv2.VideoWriter_fourcc(*'mp4v'), fps, (frame_width, frame_height))
+        out = cv2.VideoWriter(
+            os.path.join(output_dir, video_name.split(".")[0] + "_rot.mp4"),
+            cv2.VideoWriter_fourcc(*"mp4v"),
+            fps,
+            (frame_width, frame_height),
+        )
 
-        #out = cv2.VideoWriter(os.path.join(output_dir, videoName +"_rot.avi"), cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
+        # out = cv2.VideoWriter(os.path.join(output_dir, videoName +"_rot.avi"), cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
         out.write(frame)
-        while(cap.isOpened()):
+        while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
@@ -65,10 +78,17 @@ def rotate(video_list,output_dir,camera_parameters):
         # Release the VideoCapture and VideoWriter objects
         cap.release()
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Rotate videos')
-    parser.add_argument('--input_dir', type=str, help='Input directory containing videos')
-    parser.add_argument('camera_parameters', type=str, help='Path to the camera parameters XML file')
-    parser.add_argument('--output_dir', type=str, help='Output directory to save rotated videos')
+    parser = argparse.ArgumentParser(description="Rotate videos")
+    parser.add_argument(
+        "--input_dir", type=str, help="Input directory containing videos"
+    )
+    parser.add_argument(
+        "camera_parameters", type=str, help="Path to the camera parameters XML file"
+    )
+    parser.add_argument(
+        "--output_dir", type=str, help="Output directory to save rotated videos"
+    )
     args = parser.parse_args()
     rotate(args.input_dir, args.output_dir, args.camera_parameters)
