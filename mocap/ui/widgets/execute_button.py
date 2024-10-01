@@ -9,9 +9,12 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
 from Pose2Sim_with_2d import main
+
+
 class Execute_button(QWidget):
-    def __init__(self, parent: QWidget,info_storage) -> None:
+    def __init__(self, parent: QWidget, info_storage) -> None:
         super().__init__(parent)
         self.settings_store = info_storage
         self.innerLayout = QVBoxLayout(self)
@@ -21,4 +24,11 @@ class Execute_button(QWidget):
 
     def execute(self):
         settings = self.settings_store.read()
-        main(settings["video_list"],settings["calibration"],settings["config"],settings["rotate"],opensim=settings['openSim'],blender=settings['blender'])
+        main(
+            settings["video_list"],
+            settings["calibration"],
+            settings["config"],
+            settings["rotate"],
+            opensim=settings["openSim"],
+            blender=settings["blender"],
+        )

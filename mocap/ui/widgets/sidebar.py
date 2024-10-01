@@ -1,11 +1,12 @@
 from PyQt6.QtWidgets import QFrame, QSizePolicy, QTabWidget, QVBoxLayout, QWidget
 
 from .camera_selector import CameraSelector
+from .execute_button import Execute_button
 from .inferencer_settings import InferencerSettings
+from .setting_store import Info_storage
 from .upload_layout import UploadLayout
 from .visualizer_settings import VisualizerSettings
-from .setting_store import Info_storage
-from .execute_button import Execute_button
+
 
 class Sidebar(QFrame):
     def __init__(self, parent):
@@ -49,13 +50,13 @@ class Sidebar(QFrame):
     def uploadTabUI(self):
         layout = QVBoxLayout()
         info_storage = Info_storage()
-        label = UploadLayout(self,info_storage)
+        label = UploadLayout(self, info_storage)
         layout.addWidget(label)
 
         # Inferencer and visualizer settings
-        visualizerSettings = VisualizerSettings(self,info_storage)
-        inferencerSettings = InferencerSettings(self,info_storage)
-        motion_estimation = Execute_button(self,info_storage)
+        visualizerSettings = VisualizerSettings(self, info_storage)
+        inferencerSettings = InferencerSettings(self, info_storage)
+        motion_estimation = Execute_button(self, info_storage)
 
         # Let layouts handle the dynamic sizing
         visualizerSettings.setSizePolicy(
