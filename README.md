@@ -26,6 +26,14 @@ In case of any missing libraries, you can install them using the following comma
 sudo apt-get install build-essential python3-dev python3-tk libatlas-base-dev libfreetype6-dev
 ```
 
+Next, follow the [Pose2Sim installation instructions](https://github.com/perfanalytics/pose2sim/tree/main?tab=readme-ov-file#2d-pose-estimation) to install the required dependencies for human pose estimation, including the OpenSim library. We recommend following the instructions using the `conda` environment.
+
+Activate the `Pose2Sim` environment:
+
+```bash
+conda activate Pose2Sim
+```
+
 ### Installation Steps
 
 1. Clone the repository:
@@ -63,9 +71,14 @@ To start the main GUI for the motion capture studio:
 mocap-studio
 ```
 
+Detailed instructions for the video recording can be found [here](./docs/recording.md) and for the 3D motion capture [here](./docs/motion.md).
+
 ## Contributing 
 
 Contributions are very welcome. Open a fresh issue to start a discussion around a feature idea or a bug.
+
+> [!NOTE]
+> The repository cotains many unused utiltity functions under `util/` directory which provide  some planned features. We are working on merging them into the main codebase.
 
 ## Acknowledgments
 
@@ -88,9 +101,36 @@ Please use the following BibTeX entry to cite this repository:
   howpublished = {\url{
 ```
 
-Please also consider citing the following paper if you use the camera calibration tool:
+For Pose2Sim and the calibration tool, we also recommend citing the following papers:
 
 ```bibtex
+@Article{Pagnon_2022_JOSS, 
+  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel}, 
+  TITLE = {Pose2Sim: An open-source Python package for multiview markerless kinematics}, 
+  JOURNAL = {Journal of Open Source Software}, 
+  YEAR = {2022},
+  DOI = {10.21105/joss.04362}, 
+  URL = {https://joss.theoj.org/papers/10.21105/joss.04362}
+ }
+
+@Article{Pagnon_2022_Accuracy,
+  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel},
+  TITLE = {Pose2Sim: An End-to-End Workflow for 3D Markerless Sports Kinematics—Part 2: Accuracy},
+  JOURNAL = {Sensors},
+  YEAR = {2022},
+  DOI = {10.3390/s22072712},
+  URL = {https://www.mdpi.com/1424-8220/22/7/2712}
+}
+
+@Article{Pagnon_2021_Robustness,
+  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel},
+  TITLE = {Pose2Sim: An End-to-End Workflow for 3D Markerless Sports Kinematics—Part 1: Robustness},
+  JOURNAL = {Sensors},
+  YEAR = {2021},
+  DOI = {10.3390/s21196530},
+  URL = {https://www.mdpi.com/1424-8220/21/19/6530}
+}
+
 @inproceedings{schramm2021multispectral,
   author  = {Schramm, Sebastian and Rangel, Johannes and Aguirre Salazar, Daniela and Schmoll, Robert and Kroll, Andreas},
   title   = {Multispectral Geometric Calibration of Cameras in Visual and Infrared Spectral Range},
