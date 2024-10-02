@@ -9,9 +9,17 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from Pose2Sim_with_2d import main
+from Pose2Sim_with_2d import main,do_it
+import threading
+
+
+def run_in_thread(target_function, *args, **kwargs):
+    # Create a new thread and pass the target function along with its arguments
+    thread = threading.Thread(target=target_function, args=args, kwargs=kwargs)
+    thread.start()
+
 class Execute_button(QWidget):
-    def __init__(self, parent: QWidget,info_storage) -> None:
+    def __init__(self, parent: QWidget, info_storage) -> None:
         super().__init__(parent)
         self.settings_store = info_storage
         self.innerLayout = QVBoxLayout(self)
@@ -20,5 +28,16 @@ class Execute_button(QWidget):
         self.innerLayout.addWidget(self.motionEstimationButton)
 
     def execute(self):
+        # Read settings from info_storage
         settings = self.settings_store.read()
-        main(settings["video_list"],settings["calibration"],settings["config"],settings["rotate"],opensim=settings['openSim'],blender=settings['blender'])
+        
+        # Extract the necessary arguments
+        video_list = settings["video_list"]
+        calibration = settings["calibration"]
+        config = settings["config"]
+        rotate = settings["rotate"]
+        opensim = settings["openSim"]
+        blender = settings["blender"]
+
+        # Call the 'main' function in a separate thread
+        run_in_thread(main, video_list, calibration, config, rotate, opensim=opensim, blender=blender)

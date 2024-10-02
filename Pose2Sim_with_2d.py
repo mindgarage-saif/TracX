@@ -9,6 +9,7 @@ from util.rotator import rotate
 import shutil
 from util.OpenSim_create import create_opensim
 import glob
+import locale
 from Pose2Sim.Utilities import bodykin_from_mot_osim
 def execute_pose2sim_triangluation(path,should_sync = False, with_marker_augmentation = False):
     os.chdir(path)
@@ -68,7 +69,12 @@ def main(video_list,camera_parameters,config,rotate=False,**kwargs):#exp_name,sy
     trc_name = os.path.basename(path_to_trc)
     path_to_trc = os.path.join('pose-3d',trc_name)
     if 'opensim' in kwargs:
-        output,mot,scaled_model = create_opensim(path_to_trc,exp_name)
+        try:
+            print(locale.getlocale())
+            output,mot,scaled_model = create_opensim(path_to_trc,exp_name)
+        except Exception as e:
+            print('e')
+            raise e
         if 'blender' in kwargs:
             bodykin_from_mot_osim.bodykin_from_mot_osim_func(mot,scaled_model,os.path.join(output,'bodykin.csv'))
     
@@ -109,3 +115,11 @@ if __name__ == '__main__':
     # path_to_trc = glob.glob(os.path.join(path_to_exp,'pose-3d','*_filt_butterworth.trc'))[0]
     # if args.opensim:
     #     create_opensim(path_to_trc,exp_name)
+
+def do_it():
+    video_dir =["~/Downloads/GAIT_1/Gait Markerless 1_Miqus_1_23087.avi","~/Downloads/GAIT_1/Gait Markerless 1_Miqus_3_28984.avi","~/Downloads/GAIT_1/Gait Markerless 1_Miqus_6_28983.avi"]
+    video_dir = [os.path.expanduser(vid) for vid in video_dir]
+    camera = "Gait Markerless 2.settings_new.xml"
+    config = "Config.toml"
+    print(locale.getlocale())
+    main(video_dir,camera,config,True,opensim=True,blender=True)

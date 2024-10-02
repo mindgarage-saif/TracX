@@ -2,16 +2,20 @@ import opensim
 import os
 import argparse
 import xml.etree.ElementTree as ET
-
+from distutils.dir_util import copy_tree
+import locale
 def do_scaling(path_to_scaling):
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     opensim.ScaleTool(path_to_scaling).run()
     print('Scaling has been completed')
 
 def do_ik(path_to_ik_setup):
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     opensim.InverseKinematicsTool(path_to_ik_setup).run()
     print('Inverse Kinematics has been completed')
 
 def addapt_scaling_xml(path_to_scaling,sclaing_setup,trc_file,scaling_time_range,output_dir,model_file_path):
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     tree = ET.parse(path_to_scaling)
     root = tree.getroot()
     for marker_file in root.iter('marker_file'):
@@ -28,6 +32,7 @@ def addapt_scaling_xml(path_to_scaling,sclaing_setup,trc_file,scaling_time_range
     tree.write(os.path.join(output_dir,sclaing_setup))
 
 def addapt_ik_xml(path_to_ik_setup,ik_setup,trc_file,output_dir,ik_time_range=None):
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     tree = ET.parse(path_to_ik_setup)
     root = tree.getroot()
     for marker_file in root.iter('marker_file'):
@@ -47,11 +52,13 @@ def addapt_ik_xml(path_to_ik_setup,ik_setup,trc_file,output_dir,ik_time_range=No
     tree.write(os.path.join(output_dir,ik_setup))
 
 def create_opensim(trc,experiment_name,scaling_time_range=[0.5,1.0],opensim_setup="./OpenSim",model = "Model_Pose2Sim_Halpe26.osim" ,ik_setup="Inverse-Kinematics/IK_Setup_Pose2Sim_Halpe26.xml",sclaing_setup="Scaling/Scaling_Setup_Pose2Sim_Halpe26.xml",ik_time_range=None,output="./output"):
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     model_path = os.path.join(opensim_setup,model)
     model = model_path
     model = os.path.abspath(model)
     output = os.path.join('./experiments',experiment_name)
     os.makedirs(output,exist_ok=True)
+    copy_tree(os.path.join(opensim_setup,'Geometry'),os.path.join(output,'Geometry'))
     scaling_path = os.path.join(opensim_setup,sclaing_setup)
     ik_path = os.path.join(opensim_setup,ik_setup)
     sclaing_setup = os.path.basename(sclaing_setup)
