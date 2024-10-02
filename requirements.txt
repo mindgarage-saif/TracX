@@ -1,3 +1,4 @@
+easydict
 matplotlib~=3.1.1
 numpy
 opencv-python-headless~=4.10.0.84

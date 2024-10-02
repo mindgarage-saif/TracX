@@ -2,6 +2,7 @@ import os
 import shutil
 from typing import Optional
 
+import cv2
 import toml
 from easydict import EasyDict as edict
 from Pose2Sim import Pose2Sim
@@ -74,7 +75,7 @@ class Experiment:
     def videos(self) -> list:
         return [
             os.path.join(self.videos_dir, name)
-            for name in os.listdir(self.videos_dir)
+            for name in sorted(os.listdir(self.videos_dir))
             if os.path.isfile(os.path.join(self.videos_dir, name))
             and name.split(".")[-1].lower() in SUPPORTED_VIDEO_FORMATS
         ]
@@ -170,8 +171,54 @@ class Experiment:
         return os.path.join(self.pose3d_dir, trc_files[0])
 
     def _visualize_naive(self, motion_file):
-        path = os.path.join(self.output_dir, "stick_animation.mp4")
-        export_naive_vis(motion_file, path)
+        # Find FPS of the first camera video
+        video_file = self.videos[0]
+        video = cv2.VideoCapture(video_file)
+        fps = video.get(cv2.CAP_PROP_FPS)
+        video.release()
+
+        # Create the visualization
+        animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
+        export_naive_vis(motion_file, animation_file, fps=fps)
+
+        # Create a side-by-side visualization using OpenCV
+        path = os.path.join(self.output_dir, "side_by_side.mp4")
+
+        # Read the animation video
+        anim = cv2.VideoCapture(animation_file)
+
+        # Read the original video
+        video = cv2.VideoCapture(video_file)
+
+        # Get the video dimensions
+        width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        size = (width * 2, height)
+
+        # Create the output video
+        out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
+
+        while True:
+            ret1, frame1 = video.read()
+            ret2, frame2 = anim.read()
+
+            if not ret1 or not ret2:
+                break
+
+            frame1 = cv2.resize(frame1, (width, height))
+            frame2 = cv2.resize(frame2, (width, height))
+
+            # Concatenate the frames
+            frame = cv2.hconcat([frame1, frame2])
+
+            # Write the frame
+            out.write(frame)
+
+        # Release the video objects
+        video.release()
+        anim.release()
+        out.release()
+
         return path
 
     def _visualize_mesh(self, motion_file):

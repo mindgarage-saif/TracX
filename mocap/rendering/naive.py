@@ -155,7 +155,7 @@ def create_naive_vis(
     plt.close()
 
 
-def export_naive_vis(motion_file, save_path):
+def export_naive_vis(motion_file, save_path, fps=24):
     if not motion_file.endswith(".trc"):
         raise ValueError("Input file must be a .trc file.")
 
@@ -259,7 +259,7 @@ def export_naive_vis(motion_file, save_path):
         )
 
     # Create video
-    export_video(tmp_dir, save_path)
+    export_video(tmp_dir, save_path, fps=fps)
 
     # Clean up temporary images
     shutil.rmtree(tmp_dir)
