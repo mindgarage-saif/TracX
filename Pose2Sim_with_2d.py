@@ -100,14 +100,14 @@ def main(
     )[0]
     trc_name = os.path.basename(path_to_trc)
     path_to_trc = os.path.join("pose-3d", trc_name)
-    if "opensim" in kwargs:
+    if "opensim" in kwargs and kwargs["opensim"]:
         try:
             print(locale.getlocale())
             output, mot, scaled_model = create_opensim(path_to_trc, exp_name)
         except Exception as e:
             print('e')
             raise e
-        if "blender" in kwargs:
+        if "blender" in kwargs and kwargs["blender"]:
             bodykin_from_mot_osim.bodykin_from_mot_osim_func(
                 mot, scaled_model, os.path.join(output, "bodykin.csv")
             )
