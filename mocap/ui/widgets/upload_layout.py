@@ -5,20 +5,24 @@ from PyQt6.QtWidgets import (
     QFrame,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
-    QSizePolicy,
 )
-#from Pose2Sim_with_2d import main
+
+
+# from Pose2Sim_with_2d import main
 class UploadLayout(QWidget):
-    def __init__(self, parent: QWidget,info_storage) -> None:
+    def __init__(self, parent: QWidget, info_storage) -> None:
         super().__init__(parent)
 
         self.innerLayout = QVBoxLayout(self)
         self.setAcceptDrops(True)
 
         label = QLabel("Select Videos", self)
-        label.setToolTip("Select synchronized videos of the same motion sequence to estimate 3D human poses.")
+        label.setToolTip(
+            "Select synchronized videos of the same motion sequence to estimate 3D human poses."
+        )
         label.setProperty("class", "h3")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
@@ -29,7 +33,9 @@ class UploadLayout(QWidget):
         self.innerLayout.addSpacing(16)
 
         label = QLabel("Select Camera Calibration", self)
-        label.setToolTip("Calibration file must contain intrinsic and extrinsic parameters for each camera. See documentation for format details.")
+        label.setToolTip(
+            "Calibration file must contain intrinsic and extrinsic parameters for each camera. See documentation for format details."
+        )
         label.setProperty("class", "h3")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
@@ -76,12 +82,11 @@ class UploadLayout(QWidget):
     def uploadFiles(self):
         """Handle the file upload logic."""
         # Your file upload logic goes here
-        #main(self.selectedVideos,self.calibrationFile,standard_config)
-        self.setting_store.update('video_list',self.selectedVideos)
-        self.setting_store.update('calibration',self.calibrationFile)
+        # main(self.selectedVideos,self.calibrationFile,standard_config)
+        self.setting_store.update("video_list", self.selectedVideos)
+        self.setting_store.update("calibration", self.calibrationFile)
         print(f"Uploading videos: {self.selectedVideos}")
         print(f"Using calibration file: {self.calibrationFile}")
-
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         """Handle drag-enter event."""
@@ -104,9 +109,7 @@ class DragDropWidget(QFrame):
         super().__init__(parent)
         self.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
         self.setObjectName("DragDropWidget")
-        self.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setAcceptDrops(True)
 
         self.layout = QVBoxLayout(self)

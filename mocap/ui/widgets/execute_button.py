@@ -19,7 +19,7 @@ def run_in_thread(target_function, *args, **kwargs):
     thread.start()
 
 class Execute_button(QWidget):
-    def __init__(self, parent: QWidget, info_storage) -> None:
+    def __init__(self, parent: QWidget,  info_storage) -> None:
         super().__init__(parent)
         self.settings_store = info_storage
         self.innerLayout = QVBoxLayout(self)

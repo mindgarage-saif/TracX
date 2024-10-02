@@ -12,7 +12,7 @@ from .model_browser import ModelBrowser
 
 
 class InferencerSettings(QWidget):
-    def __init__(self, parent,info_storage):
+    def __init__(self, parent, info_storage):
         super().__init__(parent)
         self.setObjectName("InferencerSettings")
 
@@ -54,7 +54,9 @@ class InferencerSettings(QWidget):
 
         # Model selection area
         label = QLabel("Select a Model", self)
-        label.setToolTip("More details on model performance are available in the documentation.")
+        label.setToolTip(
+            "More details on model performance are available in the documentation."
+        )
         label.setProperty("class", "h3")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
@@ -79,12 +81,11 @@ class InferencerSettings(QWidget):
         self.model.addButton(self.baselineModel)
         self.model.addButton(self.motionbertModel)
         self.model.addButton(self.v2vModel)
-        self.updateModelList('Default')
+        self.updateModelList("Default")
 
         # Connect backend change signal
         self.defaultBackend.toggled.connect(self.onBackendChanged)
         self.pose2simBackend.toggled.connect(self.onBackendChanged)
-
 
     def updateModelList(self, backend):
         # Clear current model list layout
@@ -97,7 +98,7 @@ class InferencerSettings(QWidget):
         self.model = QButtonGroup(self)
 
         # Add models based on backend
-        if backend == 'Default':
+        if backend == "Default":
             self.modelList.addWidget(self.baselineModel)
             self.modelList.addWidget(self.motionbertModel)
             self.modelList.addWidget(self.v2vModel)
@@ -105,7 +106,7 @@ class InferencerSettings(QWidget):
             self.model.addButton(self.baselineModel)
             self.model.addButton(self.motionbertModel)
             self.model.addButton(self.v2vModel)
-        elif backend == 'Pose2Sim':
+        elif backend == "Pose2Sim":
             self.modelList.addWidget(self.openposeModel)
             self.modelList.addWidget(self.rtmposeModel)
             self.openposeModel.setChecked(True)  # Set OpenSim as the default selection
@@ -119,6 +120,6 @@ class InferencerSettings(QWidget):
 
     def onBackendChanged(self):
         if self.defaultBackend.isChecked():
-            self.updateModelList('Default')
+            self.updateModelList("Default")
         elif self.pose2simBackend.isChecked():
-            self.updateModelList('Pose2Sim')
+            self.updateModelList("Pose2Sim")
