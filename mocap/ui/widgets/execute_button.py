@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
-from Pose2Sim_with_2d import run_pipeline
+from mocap.core.pipeline import execute_pipeline
 
 
 class MotionEstimationButton(QWidget):
@@ -14,11 +14,14 @@ class MotionEstimationButton(QWidget):
 
     def execute(self):
         settings = self.params.read()
-        run_pipeline(
+        execute_pipeline(
             video_files=settings["video_list"],
             calibration_file=settings["calibration"],
-            config=settings["config"],
-            rotate=settings["rotate"],
-            opensim=settings["openSim"],
-            blender=settings["blender"],
+            correct_rotation=settings["rotate"],
+            visualization_mode="naive",
+            # visualization_mode="opensim",
+            # visualization_args=dict(
+            #     openSim=settings["openSim"],
+            #     blender=settings["blender"],
+            # ),
         )
