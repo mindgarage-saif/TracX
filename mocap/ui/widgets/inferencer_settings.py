@@ -3,12 +3,9 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QRadioButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
-
-from .model_browser import ModelBrowser
 
 
 class InferencerSettings(QWidget):

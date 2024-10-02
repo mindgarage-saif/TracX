@@ -1,17 +1,25 @@
-from PyQt6.QtWidgets import QFrame, QSizePolicy, QTabWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QFrame,
+    QPushButton,
+    QSizePolicy,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .camera_selector import CameraSelector
-from .execute_button import MotionEstimationButton
-from .inferencer_settings import InferencerSettings
-from .setting_store import MotionEstimationParams
-from .upload_layout import UploadLayout
-from .visualizer_settings import VisualizerSettings
+from .experiment_list import ExperimentList
 
 
 class Sidebar(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("Sidebar")
+
+        # Callbacks.
+        self.onCamerasSelected = None
+        self.onExperimentSelected = lambda x: None
+        self.onTabSelected = None
 
         # Create an inner layout
         self.innerLayout = QVBoxLayout(self)
@@ -34,8 +42,15 @@ class Sidebar(QFrame):
         self.innerLayout.addWidget(self.tabBar)
         self.setLayout(self.innerLayout)
 
-        # Callbacks.
-        self.onCamerasSelected = None
+        # Attach the tab change event
+        self.tabBar.currentChanged.connect(self.handleTabSelected)
+
+    def handleTabSelected(self, index):
+        if self.onTabSelected:
+            self.onTabSelected(index)
+
+    def handleExperimentSelected(self, experiment):
+        self.onExperimentSelected(experiment)
 
     def recordTabUI(self):
         layout = QVBoxLayout()
@@ -49,28 +64,20 @@ class Sidebar(QFrame):
 
     def uploadTabUI(self):
         layout = QVBoxLayout()
-        info_storage = MotionEstimationParams()
-        label = UploadLayout(self, info_storage)
-        layout.addWidget(label)
 
-        # Inferencer and visualizer settings
-        visualizerSettings = VisualizerSettings(self, info_storage)
-        inferencerSettings = InferencerSettings(self, info_storage)
-        motion_estimation = MotionEstimationButton(self, info_storage)
-
-        # Let layouts handle the dynamic sizing
-        visualizerSettings.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
+        experimentList = ExperimentList(self)
+        experimentList.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )
-        inferencerSettings.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
-        )
+        experimentList.callback = self.handleExperimentSelected
+        layout.addWidget(experimentList)
 
-        # Add widgets to the layout
-        layout.addWidget(visualizerSettings)
-        layout.addWidget(inferencerSettings)
-        layout.addWidget(motion_estimation)
-        layout.addStretch()
+        createButton = QPushButton("Create Experiment")
+        createButton.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+        )
+        layout.addWidget(createButton)
+
         self.uploadTab.setLayout(layout)
 
     def setCamerasSelectedCallback(self, callback):
