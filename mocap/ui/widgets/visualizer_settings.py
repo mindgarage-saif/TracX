@@ -53,10 +53,19 @@ class VisualizerSettings(QWidget):
         self.blender_bbox.setProperty("class", "body")
         self.innerLayout.addWidget(self.blender_bbox)
 
+        self.cleanup_bbox = QCheckBox("Delete computed intermediate files", self)
+        self.cleanup_bbox.setProperty("class", "body")
+        self.cleanup_bbox.setChecked(True)
+        self.innerLayout.addWidget(self.cleanup_bbox)
+
         self.innerLayout.addStretch()
         self.rotate_bbox.stateChanged.connect(self.on_rotate)
         self.openSim_bbox.stateChanged.connect(self.on_opensim)
         self.blender_bbox.stateChanged.connect(self.on_blender)
+        self.cleanup_bbox.stateChanged.connect(self.on_cleanup)
+
+    def on_cleanup(self):
+        self.info_storage.update("cleanup", self.cleanup_bbox.isChecked())
 
     def on_rotate(self):
         self.info_storage.update("rotate", self.rotate_bbox.isChecked())

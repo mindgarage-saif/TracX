@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from distutils.dir_util import copy_tree
 import locale
 import opensim
-
+import shutil
 
 def do_scaling(path_to_scaling):
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -30,9 +30,9 @@ def addapt_scaling_xml(
     tree = ET.parse(path_to_scaling)
     root = tree.getroot()
     for marker_file in root.iter("marker_file"):
-        marker_file.text = trc_file  # might need to be changed for linux because ther it is / instead of \
+        marker_file.text = os.path.join("../",trc_file)  # might need to be changed for linux because ther it is / instead of \
     for time_range in root.iter("time_range"):
-        time_range.text = str(scaling_time_range[0]) + " " + str(scaling_time_range[1])
+        time_range.text = str(scaling_time_range[0]) + "," + str(scaling_time_range[1])
     for output_model_file in root.iter("output_model_file"):
         output_model_file.text = os.path.abspath(
             os.path.join(output_dir, "scaled_model.osim")
@@ -50,7 +50,7 @@ def addapt_ik_xml(path_to_ik_setup, ik_setup, trc_file, output_dir, ik_time_rang
     tree = ET.parse(path_to_ik_setup)
     root = tree.getroot()
     for marker_file in root.iter("marker_file"):
-        marker_file.text = trc_file
+        marker_file.text = os.path.join("../",trc_file)
     if ik_time_range is None:
         for time_range in root.iter("time_range"):
             time_range.text = " "
@@ -75,15 +75,17 @@ def create_opensim(
     ik_setup="Inverse-Kinematics/IK_Setup_Pose2Sim_Halpe26.xml",
     sclaing_setup="Scaling/Scaling_Setup_Pose2Sim_Halpe26.xml",
     ik_time_range=None,
-    output="./output",
+    output_end="./output",
 ):
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     model_path = os.path.join(opensim_setup, model)
     model = model_path
     model = os.path.abspath(model)
-    output = os.path.join("./experiments", experiment_name)
+    #output = os.path.join("./experiments", experiment_name)
+    output = opensim_setup
+    trc = os.path.join("experiments", experiment_name,trc)
     os.makedirs(output, exist_ok=True)
-    copy_tree(os.path.join(opensim_setup,'Geometry'),os.path.join(output,'Geometry'))
+    #copy_tree(os.path.join(opensim_setup,'Geometry'),os.path.join(output,'Geometry'))
     scaling_path = os.path.join(opensim_setup, sclaing_setup)
     ik_path = os.path.join(opensim_setup, ik_setup)
     sclaing_setup = os.path.basename(sclaing_setup)
@@ -97,6 +99,13 @@ def create_opensim(
     # do the ik
     addapt_ik_xml(ik_path, ik_setup, trc, output, ik_time_range)
     do_ik(os.path.join(output, ik_setup))
+    output2 = os.path.join(output_end,experiment_name)
+    os.makedirs(output2,exist_ok=True)
+    shutil.move(os.path.join(output, "ik.mot"), os.path.join(output2,"ik.mot"))
+    shutil.move(os.path.join(output, "scaled_model.osim"), os.path.join(output2,"scaled_model.osim"))
+    os.remove(os.path.join(output,sclaing_setup))
+    os.remove(os.path.join(output,ik_setup))
+    output = output2
     print("Inverse Kinematics has been completed")
     print("The results can be found in: ", output)
     return (

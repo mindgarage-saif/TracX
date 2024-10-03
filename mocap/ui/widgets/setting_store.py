@@ -8,6 +8,7 @@ class Info_storage:
             "pose2d": "",
             "openSim": True,
             "blender": False,
+            "cleanup": True,
             "others": {},
         }
 

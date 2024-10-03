@@ -38,6 +38,7 @@ class Execute_button(QWidget):
         rotate = settings["rotate"]
         opensim = settings["openSim"]
         blender = settings["blender"]
+        cleanup = settings["cleanup"]
 
         # Call the 'main' function in a separate thread
-        run_in_thread(main, video_list, calibration, config, rotate, opensim=opensim, blender=blender)
+        run_in_thread(main, video_list, calibration, config, rotate, opensim=opensim, blender=blender,cleanup=cleanup)

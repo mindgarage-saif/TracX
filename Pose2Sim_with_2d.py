@@ -56,7 +56,7 @@ def prepare_videos(video_list, camera_parameters_path, should_rotate, kwargs):
             # moves the video to the videos folder. Can be changed to copy if needed or swapped out entirely. Because Pose2Sim doesnt nativly allow to give paths but allways assumes the current dir or the the provided dir is the experiment directory with the config file in it.
             if not video.endswith(".mp4") or not video.endswith(".avi"):
                 continue
-            shutil.move(video, os.path.join(exp_name, "videos", video))
+            shutil.copyfile(video, os.path.join(exp_name, "videos", video))
     return os.path.join("experiments", exp_name), exp_name
 
 
@@ -100,6 +100,13 @@ def main(
     )[0]
     trc_name = os.path.basename(path_to_trc)
     path_to_trc = os.path.join("pose-3d", trc_name)
+    if "cleanup" in kwargs and kwargs["cleanup"]:
+        shutil.rmtree(os.path.join(path_to_exp,"calibration"))
+        shutil.rmtree(os.path.join(path_to_exp,"pose"))
+        if os.path.exists(os.path.join(path_to_exp,"pose_old_unrotated")):
+            shutil.rmtree(os.path.join(path_to_exp,"pose_old_unrotated"))
+        shutil.rmtree(os.path.join(path_to_exp,"pose-associated"))
+        shutil.rmtree(os.path.join(path_to_exp,"videos"))
     if "opensim" in kwargs and kwargs["opensim"]:
         try:
             print(locale.getlocale())
