@@ -1,3 +1,5 @@
+import os
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent
 from PyQt6.QtWidgets import (
@@ -11,12 +13,117 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from mocap.constants import MAX_VIDEOS, MIN_VIDEOS, SUPPORTED_VIDEO_FORMATS
+from mocap.core import Experiment
+
 from .video_list import VideoList
 
 
-# from Pose2Sim_with_2d import main
-class UploadLayout(QFrame):
-    def __init__(self, parent: QWidget, params) -> None:
+class VideoUploaderWidget(QFrame):
+    """Widget for uploading experiment videos."""
+
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.setObjectName("DragDropWidget")
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setFixedHeight(300)
+        self.setAcceptDrops(True)
+
+        self.label = QLabel(
+            f"Select or drop {MIN_VIDEOS}-{MAX_VIDEOS} videos here", self
+        )
+        self.label.setProperty("class", "body")
+        self.label.setWordWrap(True)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setFixedHeight(300)
+        layout.addWidget(self.label)
+
+        self.preview = VideoList(self, preview_size=200)
+        self.preview.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
+        self.preview.hide()
+        layout.addWidget(self.preview)
+        layout.addStretch()
+
+        # Callback.
+        self.onVideosSelected = lambda files: None
+
+        self.isEnabled = True
+
+    def setEnabled(self, enabled):
+        self.isEnabled = enabled
+
+    def previewSelected(self, selectedVideos):
+        """Show the list of selected files."""
+        if not selectedVideos:
+            self.label.show()
+            self.preview.hide()
+            return
+
+        self.preview.populate_list(selectedVideos)
+        self.label.hide()
+        self.preview.show()
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        """Handle drag-enter event."""
+        if not self.isEnabled:
+            return
+
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event: QDropEvent):
+        """Handle drop event."""
+        if not self.isEnabled:
+            return
+
+        files = [url.toLocalFile() for url in event.mimeData().urls()]
+        self.onFilesSelected(files)
+
+    def mousePressEvent(self, event):
+        """Open file dialog when the drag-drop area is clicked."""
+        if not self.isEnabled:
+            return
+
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        dialog.setNameFilter("Video Files (*.mp4 *.avi *.mov)")
+        if dialog.exec():
+            self.onFilesSelected(dialog.selectedFiles())
+
+    def onFilesSelected(self, files):
+        """Handle the selected files."""
+
+        def isVideoFile(file):
+            fmt = os.path.splitext(file)[1]
+            return fmt.lower() in SUPPORTED_VIDEO_FORMATS and os.path.isfile(file)
+
+        files = [f for f in files if isVideoFile(f)][:MAX_VIDEOS]
+        if len(files) >= MIN_VIDEOS:
+            self.label.hide()
+            self.onVideosSelected(files)
+        else:
+            self.label.setText(f"Select at least {MIN_VIDEOS} videos")
+            self.label.show()
+
+
+class ExperimentDataWidget(QFrame):
+    """Widget for viewing and uploading experiment data.
+
+    This widget allows users to upload experiment videos and camera calibration files using a
+    drag-and-drop interface. The widget also displays information about the uploaded files.
+
+    Args:
+        parent (QWidget): The parent widget.
+    """
+
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
 
         self.innerLayout = QVBoxLayout(self)
@@ -36,9 +143,10 @@ class UploadLayout(QFrame):
         self.innerLayout.addWidget(info)
 
         # Create a placeholder for drag-and-drop area
-        self.dragDropArea = DragDropWidget(self)
-        self.innerLayout.addWidget(self.dragDropArea)
-        self.innerLayout.addSpacing(16)
+        self.videoUploader = VideoUploaderWidget(self)
+        self.videoUploader.onVideosSelected = self.handleVideosSelected
+        self.innerLayout.addWidget(self.videoUploader)
+        self.innerLayout.addSpacing(8)
 
         calibrationSelection = QWidget(self)
         calibrationSelection.setSizePolicy(
@@ -58,7 +166,7 @@ class UploadLayout(QFrame):
         calibrationLayout.addWidget(calibrationSelectionLabels)
         calibrationLayout.addStretch()
 
-        label = QLabel("Select Camera Calibration", self)
+        label = QLabel("Camera Calibration Parameters", self)
         label.setToolTip(
             "Calibration file must contain intrinsic and extrinsic parameters for each camera. See documentation for format details."
         )
@@ -67,24 +175,22 @@ class UploadLayout(QFrame):
         calibrationSelectionLabelsLayout.addWidget(label)
 
         # Label to display selected calibration file
-        self.calibrationLabel = QLabel("No calibration file selected")
+        self.calibrationLabel = QLabel("No calibration file uploaded", self)
         calibrationSelectionLabelsLayout.addWidget(self.calibrationLabel)
 
-        # Create a button for selecting a calibration YAML file
-        self.calibrationButton = QPushButton("Select Calibration File")
+        # Create a button for selecting a calibration XML file
+        self.calibrationButton = QPushButton("Upload Calibration File", self)
         self.calibrationButton.clicked.connect(self.selectCalibrationFile)
         calibrationLayout.addWidget(self.calibrationButton)
-        self.innerLayout.addSpacing(16)
 
-        # Upload button (initially disabled)
-        self.uploadButton = QPushButton("Upload")
-        self.uploadButton.setEnabled(False)  # Initially disabled
-        self.uploadButton.clicked.connect(self.uploadFiles)
-        self.innerLayout.addWidget(self.uploadButton)
+    def setExperiment(self, experiment):
+        """Set the experiment object.
 
-        self.selectedVideos = []
-        self.calibrationFile = None
-        self.params = params
+        Args:
+            experiment (Experiment): The experiment object.
+        """
+        self.experiment = experiment
+        self.refreshUI()
 
     def selectCalibrationFile(self):
         """Open a file dialog to select the XML calibration file."""
@@ -92,74 +198,52 @@ class UploadLayout(QFrame):
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         file_dialog.setNameFilter("XML Files (*.xml)")
         if file_dialog.exec():
-            selected_files = file_dialog.selectedFiles()
-            self.calibrationFile = selected_files[0]
-            self.calibrationLabel.setText(f"Selected: {self.calibrationFile}")
+            try:
+                selected_file = file_dialog.selectedFiles()[0]
+                self.experiment.set_camera_parameters(selected_file)
 
-        self.updateUploadButtonState()
+                # Show the selected calibration file
+                self.updateCalibrationFile(selected_file)
+                self.calibrationLabel.setText("Calibration file uploaded")
+            except ValueError as e:
+                self.calibrationLabel.setText(f"Error: {e}")
+                return
 
-    def updateUploadButtonState(self):
-        """Enable the Upload button if both videos and calibration file are selected."""
-        if self.selectedVideos and self.calibrationFile:
-            self.uploadButton.setEnabled(True)
+    def updateCalibrationFile(self, file_path: str):
+        """Display the selected calibration file."""
+        if file_path is not None:
+            filename = os.path.basename(file_path)
+            self.calibrationLabel.setText("Calibration file: " + filename)
+            self.calibrationButton.setEnabled(False)
         else:
-            self.uploadButton.setEnabled(False)
+            self.calibrationLabel.setText("No calibration file uploaded")
+            self.calibrationButton.setEnabled(True)
+
+    def handleVideosSelected(self, selectedVideos):
+        """Handle the selected videos."""
+        for video in selectedVideos:
+            if os.path.exists(video):
+                self.experiment.add_video(video)
+
+        self.refreshUI()
+
+    def refreshUI(self):
+        """Display the selected experiment."""
+        experiment: Experiment = self.experiment
+        if experiment is None:
+            return
+
+        experimentVideos = experiment.videos
+        if experimentVideos:
+            self.videoUploader.previewSelected(experimentVideos)
+            self.videoUploader.setEnabled(False)
+        else:
+            self.videoUploader.previewSelected([])
+            self.videoUploader.setEnabled(True)
+
+        self.updateCalibrationFile(experiment.get_camera_parameters())
 
     def uploadFiles(self):
         """Handle the file upload logic."""
-        self.params.video_files = self.selectedVideos
-        self.params.calibration_file = self.calibrationFile
-
-    def dragEnterEvent(self, event: QDragEnterEvent):
-        """Handle drag-enter event."""
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-
-    def dropEvent(self, event: QDropEvent):
-        """Handle drop event."""
-        files = [url.toLocalFile() for url in event.mimeData().urls()]
-        video_files = [f for f in files if f.lower().endswith((".mp4", ".avi", ".mov"))]
-        if video_files:
-            self.dragDropArea.setFileList(video_files)
-            self.selectedVideos = video_files
-
-        self.updateUploadButtonState()
-
-
-class DragDropWidget(QFrame):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
-        self.setObjectName("DragDropWidget")
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setMinimumHeight(250)
-        self.setAcceptDrops(True)
-
-        self.layout = QVBoxLayout(self)
-        self.label = QLabel("Drag and drop your videos here or click to browse")
-        self.label.setProperty("class", "body")
-        self.label.setWordWrap(True)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.label)
-
-        # Store the list of selected files
-        self.fileList = []
-
-    def setFileList(self, files):
-        """Update the drag-and-drop area with selected files."""
-        self.fileList = files
-        newLabel = VideoList(self, self.fileList)
-        self.layout.replaceWidget(self.label, newLabel)
-        self.label = newLabel
-
-    def mousePressEvent(self, event):
-        """Open file dialog when the drag-drop area is clicked."""
-        file_dialog = QFileDialog(self)
-        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
-        file_dialog.setNameFilter("Video Files (*.mp4 *.avi *.mov)")
-        if file_dialog.exec():
-            selected_files = file_dialog.selectedFiles()
-            self.setFileList(selected_files)
-            self.parent().selectedVideos = selected_files
-
-        self.parent().updateUploadButtonState()
+        for video in self.selectedVideos:
+            self.experiment.add_video(video)

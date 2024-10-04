@@ -9,9 +9,9 @@ from Pose2Sim import Pose2Sim
 from Pose2Sim.Utilities import bodykin_from_mot_osim
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
-from mocap.core import MotionSequence
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
+from .motion import MotionSequence
 from .rotation import rotate_videos, unrotate_pose2d
 
 
@@ -80,7 +80,7 @@ class Experiment:
             os.path.join(self.videos_dir, name)
             for name in sorted(os.listdir(self.videos_dir))
             if os.path.isfile(os.path.join(self.videos_dir, name))
-            and name.split(".")[-1].lower() in SUPPORTED_VIDEO_FORMATS
+            and os.path.splitext(name)[-1].lower() in SUPPORTED_VIDEO_FORMATS
         ]
 
     @property
@@ -89,7 +89,7 @@ class Experiment:
 
     def add_video(self, video_path, move=False) -> bool:
         video_name = os.path.basename(video_path)
-        video_fmt = video_name.split(".")[-1].lower()
+        video_fmt = os.path.splitext(video_name)[-1].lower()
         if video_fmt not in SUPPORTED_VIDEO_FORMATS:
             return False
 
@@ -111,6 +111,9 @@ class Experiment:
             )
 
         shutil.copy(params_file, self.calibration_file)
+
+    def get_camera_parameters(self):
+        return self.calibration_file if os.path.exists(self.calibration_file) else None
 
     def process(
         self,

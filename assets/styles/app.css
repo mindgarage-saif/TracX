@@ -79,27 +79,6 @@ QSlider {{
     color: black;
 }}
 
-/* Scroll Bar */
-QScrollBar {{
-    background: white;
-    width: 10px;
-    margin: 0px;
-}}
-
-QScrollBar:vertical {{
-    background: white;
-    width: 10px;
-    margin: 0px;
-}}
-
-/* Scroll Area */
-QScrollArea {{
-    background: #091a40;
-    color: white;
-    border-radius: 8px;
-    padding: 0px;
-}}
-
 /* Recording Layout */
 #RecordingLayout {{
     background-color: black;

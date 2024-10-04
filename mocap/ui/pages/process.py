@@ -14,11 +14,10 @@ from mocap.core import Experiment
 
 from ..widgets import (
     EmptyState,
+    ExperimentDataWidget,
     MotionOptions,
     PipelineParams,
     SimulationOptions,
-    UploadLayout,
-    VideoList,
 )
 from .base import BasePage
 
@@ -60,8 +59,9 @@ class ProcessingPage(BasePage):
         self.experimentUI.setLayout(self.experimentUILayout)
 
         # Inferencer and visualizer settings
-        uploadUI = UploadLayout(self, self.params)
-        self.experimentUILayout.addWidget(uploadUI)
+        self.experimentDataView = ExperimentDataWidget(self)
+        self.experimentUILayout.addWidget(self.experimentDataView)
+        self.experimentUILayout.addSpacing(8)
 
         self.videoListWidget = QWidget(self)
         self.experimentUILayout.addWidget(self.videoListWidget)
@@ -108,10 +108,10 @@ class ProcessingPage(BasePage):
             self.experiment = Experiment(name, create=False)
             self.log(f"Loaded experiment: {self.experiment}")
 
-            # oldWidget = self.videoListWidget
-            # newWidget = VideoList(self, self.experiment.videos)
-            # self.experimentUILayout.replaceWidget(oldWidget, newWidget)
-            # self.videoListWidget = newWidget
+            self.experimentDataView.setExperiment(self.experiment)
+            self.experimentDataView.videoUploader.previewSelected(
+                self.experiment.videos
+            )
 
             self.emptyState.hide()
             self.experimentUI.show()

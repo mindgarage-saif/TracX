@@ -1,11 +1,13 @@
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 
 from .video_preview import VideoPreview
 
 
 class VideoList(QWidget):
-    def __init__(self, parent, video_paths: list):
+    def __init__(self, parent, preview_size=200):
         super().__init__(parent)
+        self.preview_size = preview_size
 
         # Create the main layout for the VideoList
         self.layout = QVBoxLayout()
@@ -14,6 +16,9 @@ class VideoList(QWidget):
         # Create a scrollable area
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
 
         # Create a container widget inside the scroll area
         self.scroll_widget = QWidget(self.scroll_area)
@@ -26,13 +31,21 @@ class VideoList(QWidget):
         # Add the scroll area to the main layout
         self.layout.addWidget(self.scroll_area)
 
-        # Populate the list with VideoPreviews
-        self.populate_list(video_paths)
+        self.layout.addStretch()
+
+    def clear_list(self):
+        # Clear the list of VideoPreviews
+        for i in reversed(range(self.scroll_layout.count())):
+            widget = self.scroll_layout.itemAt(i).widget()
+            if widget:
+                self.scroll_layout.removeWidget(widget)
+                widget.setParent(None)
 
     def populate_list(self, video_paths: list):
+        self.clear_list()
         # Iterate through the list of video paths and create VideoPreview widgets
         for video_path in video_paths:
-            video_preview = VideoPreview(self, video_path)
+            video_preview = VideoPreview(self, video_path, self.preview_size)
             self.scroll_layout.addWidget(video_preview)
 
         # Add a stretch to fill the remaining space

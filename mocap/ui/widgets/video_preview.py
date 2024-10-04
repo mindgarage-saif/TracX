@@ -7,9 +7,10 @@ from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 
 class VideoPreview(QWidget):
-    def __init__(self, parent, path: str):
+    def __init__(self, parent, path: str, thumbnail_size: int = 150):
         super().__init__(parent)
         self.path = path
+        self.thumbnail_size = thumbnail_size
 
         # Create layout
         self.layout = QVBoxLayout()
@@ -49,16 +50,17 @@ class VideoPreview(QWidget):
 
         if ret:
             # Resize the frame to create a square thumbnail
-            thumbnail_size = 150
+            thumbnail_size = self.thumbnail_size
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             thumbnail = cv2.resize(frame, (thumbnail_size, thumbnail_size))
 
             # Convert the frame to a QImage
-            height, width, channel = thumbnail.shape
-            bytes_per_line = 3 * width
+            height_, width_, channel = thumbnail.shape
+            bytes_per_line = 3 * width_
             q_img = QImage(
                 thumbnail.data,
-                width,
-                height,
+                width_,
+                height_,
                 bytes_per_line,
                 QImage.Format.Format_RGB888,
             )
@@ -71,6 +73,7 @@ class VideoPreview(QWidget):
             painter.setPen(Qt.GlobalColor.white)
             painter.drawText(10, 20, f"{width}x{height} px")
             painter.drawText(10, 40, f"Duration: {duration:.2f}s")
+            painter.drawText(10, 60, f"FPS: {fps:.2f}")
             painter.end()
 
             # Set the thumbnail pixmap

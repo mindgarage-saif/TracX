@@ -2,7 +2,8 @@ from typing import Dict
 
 from tqdm import tqdm
 
-from mocap.core import BaseSkeleton, MotionSequence
+from ..core.motion import MotionSequence
+from ..core.skeletons import BaseSkeleton
 
 
 class MotionRenderer:

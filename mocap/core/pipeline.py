@@ -11,9 +11,8 @@ def create_experiment(
     experiment_name: Optional[str] = None,
 ) -> Experiment:
     # Create or load the experiment.
-    create = experiment_name is None  # Create a new experiment if no name is provided.
     experiment_name = experiment_name or strftime("%Y%m%d_%H%M%S")
-    experiment = Experiment(experiment_name, create=create)
+    experiment = Experiment(experiment_name)
 
     # Add the video files.
     for video_file in video_files:
@@ -60,12 +59,16 @@ def execute_pipeline(
     """
     # Initialize the experiment
     print("Initializing experiment...")
-    experiment: Experiment = create_experiment(
-        video_files,
-        calibration_file,
-        experiment_name=experiment_name,
-    )
-    print(f"Created {experiment} with {experiment.num_videos} video(s)")
+    if experiment_name is None:
+        experiment: Experiment = create_experiment(
+            video_files,
+            calibration_file,
+            experiment_name=experiment_name,
+        )
+        print(f"Created {experiment} with {experiment.num_videos} video(s)")
+    else:
+        experiment = Experiment(experiment_name, create=False)
+        print(f"Loaded {experiment} with {experiment.num_videos} video(s)")
     print(f"Experiment configuration: {json.dumps(experiment.cfg, indent=4)}")
 
     experiment.process(
