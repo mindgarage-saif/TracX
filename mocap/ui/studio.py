@@ -2,7 +2,6 @@ import logging
 
 from PyQt6.QtWidgets import (
     QApplication,
-    QFrame,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
@@ -12,8 +11,8 @@ from PyQt6.QtWidgets import (
 )
 
 from .config.constants import PAD_X, PAD_Y
-from .pages import RecordPage
-from .widgets import AppBar
+from .pages import ProcessingPage, RecordPage
+from .widgets import AppBar, Sidebar
 
 logger = logging.getLogger(__name__)
 
@@ -75,21 +74,47 @@ class StudioWindow(QMainWindow):
         self.appbar.setObjectName("AppBar")
         window.addWidget(self.appbar)
 
+        # Studio frame
+        self.studioFrame = QWidget(self)
+        self.studioFrame.setContentsMargins(0, 0, 0, 0)
+        self.studioFrame.setObjectName("StudioFrame")
+        self.studioFrame.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+        self.studioFrame.layout = QHBoxLayout(self.studioFrame)
+        self.studioFrame.layout.setContentsMargins(0, 0, 0, 0)
+        self.studioFrame.layout.setSpacing(PAD_X // 2)
+        window.addWidget(self.studioFrame)
+
+        # Create the sidebar
+        sidebarWidth = int(width * 0.2)
+        self.sidebar = Sidebar(self.studioFrame)
+        self.sidebar.setFixedWidth(int(sidebarWidth))
+        self.sidebar.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
+        self.studioFrame.layout.addWidget(self.sidebar)
+
         # Add pages
         self.pages = {
             "record": RecordPage,
+            "process": ProcessingPage,
         }
-        self.pageFrame = QFrame(self)
-        self.pageFrame.setMinimumHeight(
-            self.height() - self.appbar.height() - PAD_Y * 4 - 8,
-        )
+        self.pageFrame = QWidget(self.studioFrame)
         self.pageFrame.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
         self.pageFrame.layout = QHBoxLayout(self.pageFrame)
+        self.pageFrame.layout.setContentsMargins(0, 0, 0, 0)
+        self.pageFrame.layout.setSpacing(0)
         self.pageFrame.setLayout(self.pageFrame.layout)
-        window.addWidget(self.pageFrame)
+        self.studioFrame.layout.addWidget(self.pageFrame)
+
+        self.sidebar.onTabSelected = lambda index: self.changePage(
+            "record" if index == 0 else "process"
+        )
 
         # Set the initial page
         self.page = None
@@ -105,7 +130,7 @@ class StudioWindow(QMainWindow):
             self.page = None
 
         # Add page inside the frame
-        self.page = self.pages[page](self, self, *args, **kwagrs)
+        self.page = self.pages[page](self, *args, **kwagrs)
         self.pageFrame.layout.addWidget(self.page)
 
         # Add to history

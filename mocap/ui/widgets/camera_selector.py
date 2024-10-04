@@ -48,7 +48,7 @@ class CameraSelector(QWidget):
         super().__init__(parent)
 
         self.innerLayout = QVBoxLayout(self)
-        self.innerLayout.setContentsMargins(8, 0, 8, 0)
+        self.innerLayout.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.setSpacing(0)
         self.setLayout(self.innerLayout)
 
@@ -110,9 +110,6 @@ class CameraSelector(QWidget):
 
         # Refresh the camera list
         self.createCameraList()
-
-        # Add stretch to push the list to the top
-        self.innerLayout.addStretch()
 
         # Callbacks.
         self.onCamerasSelected = None

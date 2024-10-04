@@ -6,12 +6,10 @@ logger = logging.getLogger(__name__)
 
 
 class BasePage(QWidget):
-    def __init__(self, context: QWidget, parent: QWidget) -> None:
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.context = context
         self.statusBar = parent.statusBar()
-        self.setMinimumWidth(parent.width())
-        self.setMinimumHeight(parent.pageHeight())
+        self.sidebar = parent.sidebar
 
         # Create an inner layout for the frame
         self.innerLayout = QHBoxLayout(self)

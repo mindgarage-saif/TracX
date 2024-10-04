@@ -3,6 +3,7 @@ from PyQt6.QtGui import QDragEnterEvent, QDropEvent
 from PyQt6.QtWidgets import (
     QFileDialog,
     QFrame,
+    QHBoxLayout,
     QLabel,
     QPushButton,
     QSizePolicy,
@@ -10,44 +11,69 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from .video_list import VideoList
+
 
 # from Pose2Sim_with_2d import main
-class UploadLayout(QWidget):
-    def __init__(self, parent: QWidget, info_storage) -> None:
+class UploadLayout(QFrame):
+    def __init__(self, parent: QWidget, params) -> None:
         super().__init__(parent)
 
         self.innerLayout = QVBoxLayout(self)
         self.setAcceptDrops(True)
 
-        label = QLabel("Select Videos", self)
-        label.setToolTip(
-            "Select synchronized videos of the same motion sequence to estimate 3D human poses."
-        )
+        label = QLabel("Experiment Videos", self)
         label.setProperty("class", "h3")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
+
+        info = QLabel(
+            "Select 3-10 synchronized videos of a motion sequence to estimate 3D human poses.",
+            self,
+        )
+        info.setProperty("class", "body")
+        info.setWordWrap(True)
+        self.innerLayout.addWidget(info)
 
         # Create a placeholder for drag-and-drop area
         self.dragDropArea = DragDropWidget(self)
         self.innerLayout.addWidget(self.dragDropArea)
         self.innerLayout.addSpacing(16)
 
+        calibrationSelection = QWidget(self)
+        calibrationSelection.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        calibrationLayout = QHBoxLayout(calibrationSelection)
+        calibrationLayout.setContentsMargins(0, 0, 0, 0)
+        self.innerLayout.addWidget(calibrationSelection)
+
+        calibrationSelectionLabels = QWidget(self)
+        calibrationSelectionLabels.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
+        calibrationSelectionLabelsLayout = QVBoxLayout(calibrationSelectionLabels)
+        calibrationSelectionLabelsLayout.setContentsMargins(0, 0, 0, 0)
+        calibrationSelectionLabelsLayout.setSpacing(0)
+        calibrationLayout.addWidget(calibrationSelectionLabels)
+        calibrationLayout.addStretch()
+
         label = QLabel("Select Camera Calibration", self)
         label.setToolTip(
             "Calibration file must contain intrinsic and extrinsic parameters for each camera. See documentation for format details."
         )
         label.setProperty("class", "h3")
-        label.setWordWrap(True)
-        self.innerLayout.addWidget(label)
+        label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        calibrationSelectionLabelsLayout.addWidget(label)
+
+        # Label to display selected calibration file
+        self.calibrationLabel = QLabel("No calibration file selected")
+        calibrationSelectionLabelsLayout.addWidget(self.calibrationLabel)
 
         # Create a button for selecting a calibration YAML file
         self.calibrationButton = QPushButton("Select Calibration File")
         self.calibrationButton.clicked.connect(self.selectCalibrationFile)
-        self.innerLayout.addWidget(self.calibrationButton)
-
-        # Label to display selected calibration file
-        self.calibrationLabel = QLabel("No calibration file selected")
-        self.innerLayout.addWidget(self.calibrationLabel)
+        calibrationLayout.addWidget(self.calibrationButton)
         self.innerLayout.addSpacing(16)
 
         # Upload button (initially disabled)
@@ -58,7 +84,7 @@ class UploadLayout(QWidget):
 
         self.selectedVideos = []
         self.calibrationFile = None
-        self.setting_store = info_storage
+        self.params = params
 
     def selectCalibrationFile(self):
         """Open a file dialog to select the XML calibration file."""
@@ -81,12 +107,8 @@ class UploadLayout(QWidget):
 
     def uploadFiles(self):
         """Handle the file upload logic."""
-        # Your file upload logic goes here
-        # main(self.selectedVideos,self.calibrationFile,standard_config)
-        self.setting_store.update("video_list", self.selectedVideos)
-        self.setting_store.update("calibration", self.calibrationFile)
-        print(f"Uploading videos: {self.selectedVideos}")
-        print(f"Using calibration file: {self.calibrationFile}")
+        self.params.video_files = self.selectedVideos
+        self.params.calibration_file = self.calibrationFile
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         """Handle drag-enter event."""
@@ -109,7 +131,8 @@ class DragDropWidget(QFrame):
         super().__init__(parent)
         self.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
         self.setObjectName("DragDropWidget")
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setMinimumHeight(250)
         self.setAcceptDrops(True)
 
         self.layout = QVBoxLayout(self)
@@ -125,7 +148,9 @@ class DragDropWidget(QFrame):
     def setFileList(self, files):
         """Update the drag-and-drop area with selected files."""
         self.fileList = files
-        self.label.setText(f"Selected {len(files)} videos")
+        newLabel = VideoList(self, self.fileList)
+        self.layout.replaceWidget(self.label, newLabel)
+        self.label = newLabel
 
     def mousePressEvent(self, event):
         """Open file dialog when the drag-drop area is clicked."""

@@ -1,55 +1,149 @@
-Pose2Sim setup for LIHS dataset
-===============================
-Cotains many util functions that are not needed directly in the main code, but could be useful for debugging and testing or some edge cases.
+# MoCap Studio: An Advanced Optical Motion Capture Tool
+
+**MoCap Studio** is an advanced tool designed for optical motion capture (MoCap) of human poses using one or more synchronized cameras. It supports full end-to-end motion capture pipelines, from video recording to 3D motion export for biomechanical analysis.
+
+## Key Features
+
+- **Synchronized Multi-Camera Recording**: Capture video streams from multiple cameras in a perfectly synchronized manner.
+- **Camera Calibration**: Easily calibrate cameras using a chessboard pattern to ensure accurate depth and motion estimation.
+- **Depth & Motion Estimation**: Leverage cutting-edge pose estimation networks for depth and motion capture.
+- **3D Visualization**: Export 3D motion data to OpenSim for biomechanical simulations, or render it in 3D for visualization in tools like Blender.
+- **Automated Workflow**: The tool provides a simple GUI, automating the entire pipeline from recording to visualization, making it accessible even for non-technical users.
+
+## System Overview
+
+![System Overview](./docs/system-overview.png)
 
 ## Installation
-Follow the instruction to install Pose2Sim in https://github.com/perfanalytics/pose2sim/tree/main?tab=readme-ov-file#2d-pose-estimation
-Also install the opensim library(detailed in the above link)
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+To get started, clone the repository and install the required dependencies.
 
-What files do you need?
-1. Video file
-2. The camera paramters file. LIHS has it in a similiar/eqaul format to QCA camera parameters format.
-    !!!!!!!Code assumes this format.!!!!!!!!!!!!!!!!!!!
+### Prerequisites
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+In case of any missing libraries, you can install them using the following command:
 
-Attention!:
-In the Lihs data set the view of the videos are Rotated, to have better 2d detection use util/rotator.py to rotate the videos.
-After the 2d detection is done, doesnt matter external or internal, the 2d keypoints need to be rotated back to the original view. Use util/jsonMMPOSE_CMU.py for that.
-## How to run the code?
-### With new Pose2Sim code which inculeds the RTMPose 2d Detection
-1. Create a new Experiment in the "Data/experiments" folder.
-2. In the experiment folder add the video files in a folder called "videos" and the camera parameters in a file called calibrations.
-3. Copy a config.toml file from Pose2Sim git or some from other experiments and modify it according to your needs.
-3.1 Especially the "video" and "calibration" fields in the config.toml file and which 2d Pose Framework you want. E.g the video input format or if some graphs/2d poses should be visualized.
-On some linux machine the visulaization might not work. In that case set the field to false.
-4. Go into the Expirement folder e.g cd data/experiments/your_experiment
-5. Run Pose2Sim_with_2d.py with apropriate arguments. !! NOTE on Windows some times premisson error on renaming folders. Just run the code again.
-6. The resulting trinagulated 3d pose is save in pose-3d folder in the experiment folder.
-7. To create OpenSim model from the 3d pose run .\util\OpenSim_create.py with the appropriate arguments. The scaled model and motion file is saved in the output folder.
-8. Open OpenSim and load the model and motion file.
+```bash
+sudo apt-get install build-essential python3-dev python3-tk libatlas-base-dev libfreetype6-dev
+```
 
-### With new Pose2Sim code which needs external 2d Pose Detection
-1. Create a new Experiment in the experiments folder.
-2. In the experiment folder add the detected 2d Keypoints in a folder called "pose" and the camera parameters in a file called calibrations.
-3. In util are is file formater from alphapose format to openpose format which Pose2Sim supports.
-4. If 2d points need rotation use util/rotate2dBack.py
-5. Copy a config.toml file from Pose2Sim git or some from other experiments and modify it according to your needs.
-6. Go into the Expirement folder e.g cd data/experiments/your_experiment and run Pose2SimP.py with apropriate arguments.
-7. look at point 6-8 from the above section.
+Next, follow the [Pose2Sim installation instructions](https://github.com/perfanalytics/pose2sim/tree/main?tab=readme-ov-file#2d-pose-estimation) to install the required dependencies for human pose estimation, including the OpenSim library. We recommend following the instructions using the `conda` environment.
 
+Activate the `Pose2Sim` environment:
 
-## Blender Visualization
-1. Go to https://github.com/davidpagnon/Pose2Sim_Blender?tab=readme-ov-file
-and follow instructions
-2. If you did not do a full installation of the plugin or there are some error in importing the .mot file
-see section "opensim-imports -> Import Motion" in https://github.com/davidpagnon/Pose2Sim_Blender?tab=readme-ov-file#opensim-imports
+```bash
+conda activate Pose2Sim
+```
 
-## Example execution for LIHS data
-1. Select 3 videos from the LIHS dataset from the same experiment and put them into a seperate folder. E.g From ROM2 Generic Markerless 2_Miqus_1_23087.avi,Generic Markerless 2_Miqus_3_28984.avi,Generic Markerless 2_Miqus_6_28983.avi
-2. Take the the camera calibration file and delete every camera expcept the 3 cameras for the selected videos. E.g In ROM2 the file Generic Markerless 2.settings.xml (For example the one in project root)
-3. Take a look in the Config.toml in the project root. Change anyparameters that you want to change. E.g In which vile format the videos are. Right now if the videos are rotated such that the viewrotation is 0 (The case for LIHS), they are stored as MP4 files.
-4. Run Pose2Sim_with_2d.py e.g python Pose2Sim_with_2d.py --camera_parameters "Path to the camera parameters" --rotate True --video_folder "Path to the video folder" --config "Path to the config.toml file can be the one from the project root"
-5. NOTE right now the RTMPose 2d detection is set to lightweight/small in the config.toml file. If you want better results change it to balanced or performance.
+### Installation Steps
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-repo/mocap-studio.git
+cd mocap-studio
+```
+
+2. Install the package:
+
+```bash
+pip install -e .
+```
+
+_Tested on Ubuntu 22.04 with Python 3.10.12_
+
+## Usage
+
+### Camera Calibration
+
+To run the camera calibration tool, use the following command:
+
+```bash
+mocap-calibrate
+```
+
+This tool will guide you through the process of calibrating the cameras using a chessboard pattern. Refer to the [user manual](./docs/calibration-manual.pdf) for more details.
+
+### Launch MoCap Studio
+
+To start the main GUI for the motion capture studio:
+
+```bash
+mocap-studio
+```
+
+Detailed instructions for the video recording can be found [here](./docs/recording.md) and for the 3D motion capture [here](./docs/motion.md).
+
+## Contributing 
+
+Contributions are very welcome. Open a fresh issue to start a discussion around a feature idea or a bug.
+
+> [!NOTE]
+> The repository cotains many unused utiltity functions under `util/` directory which provide  some planned features. We are working on merging them into the main codebase.
+
+## Acknowledgments
+
+The camera calibration tool is based on [MRT-Camera-Calibration-Toolbox](https://github.com/MT-MRT/MRT-Camera-Calibration-Toolbox). The MoCap Studio tool is developed by the Augmented Vision Group at the German Research Center for Artificial Intelligence (DFKI) by the following contributors:
+
+- [Muhammad Saif Ullah Khan](https://github.com/saifkhichi96/)
+- [Jeremias Krauss](#)
+
+## Citation
+
+Please use the following BibTeX entry to cite this repository:
+
+```bibtex
+@misc{mocap-studio,
+  author = {Khan, Muhammad Saif Ullah and Krauss, Jeremias},
+  title = {MoCap Studio: An Advanced Optical Motion Capture Tool},
+  year = {2022},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{
+```
+
+For Pose2Sim and the calibration tool, we also recommend citing the following papers:
+
+```bibtex
+@Article{Pagnon_2022_JOSS, 
+  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel}, 
+  TITLE = {Pose2Sim: An open-source Python package for multiview markerless kinematics}, 
+  JOURNAL = {Journal of Open Source Software}, 
+  YEAR = {2022},
+  DOI = {10.21105/joss.04362}, 
+  URL = {https://joss.theoj.org/papers/10.21105/joss.04362}
+ }
+
+@Article{Pagnon_2022_Accuracy,
+  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel},
+  TITLE = {Pose2Sim: An End-to-End Workflow for 3D Markerless Sports Kinematics—Part 2: Accuracy},
+  JOURNAL = {Sensors},
+  YEAR = {2022},
+  DOI = {10.3390/s22072712},
+  URL = {https://www.mdpi.com/1424-8220/22/7/2712}
+}
+
+@Article{Pagnon_2021_Robustness,
+  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel},
+  TITLE = {Pose2Sim: An End-to-End Workflow for 3D Markerless Sports Kinematics—Part 1: Robustness},
+  JOURNAL = {Sensors},
+  YEAR = {2021},
+  DOI = {10.3390/s21196530},
+  URL = {https://www.mdpi.com/1424-8220/21/19/6530}
+}
+
+@inproceedings{schramm2021multispectral,
+  author  = {Schramm, Sebastian and Rangel, Johannes and Aguirre Salazar, Daniela and Schmoll, Robert and Kroll, Andreas},
+  title   = {Multispectral Geometric Calibration of Cameras in Visual and Infrared Spectral Range},
+  journal = {IEEE Sensors},
+  year    = {2021},
+  volume  = {21},
+  number  = {2},
+  pages   = {2159-2168},
+  doi     = {10.1109/JSEN.2020.3019959},
+  url     = {https://ieeexplore.ieee.org/document/9178752},
+}
+```
+
+## Contact
+
+If you have any questions, please email Saif Khan at muhammad_saif_ullah.khan@dfki.de.
