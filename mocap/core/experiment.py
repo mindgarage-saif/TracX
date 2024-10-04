@@ -9,7 +9,8 @@ from Pose2Sim import Pose2Sim
 from Pose2Sim.Utilities import bodykin_from_mot_osim
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
-from mocap.rendering import create_opensim_vis, export_naive_vis
+from mocap.core import MotionSequence
+from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from .rotation import rotate_videos, unrotate_pose2d
 
@@ -182,7 +183,9 @@ class Experiment:
 
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        export_naive_vis(motion_file, animation_file, fps=fps)
+        motion_data = MotionSequence.from_pose2sim_trc(motion_file)
+        renderer = StickFigureRenderer(motion_data, animation_file)
+        renderer.render()
 
         # Create a side-by-side visualization using OpenCV
         path = os.path.join(self.output_dir, "side_by_side.mp4")
@@ -231,6 +234,9 @@ class Experiment:
         pass
 
     def _visualize_opensim(self, motion_file, with_blender=False):
+        from distutils.dir_util import copy_tree
+
+        # copy_tree(os.path.join(opensim_dir,'geometry'), os.path.join(output,'Geometry'))
         output, mot, scaled_model = create_opensim_vis(
             trc=motion_file,
             experiment_dir=self.path,

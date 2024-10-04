@@ -6,6 +6,27 @@ import opensim
 from mocap.constants import OPENSIM_DIR
 
 
+def parse_osim_file(file_path):
+    """
+    Parse the osim file to extract marker names and locations.
+    """
+    tree = ET.parse(file_path)
+    root = tree.getroot()
+
+    markerset = root.find(".//MarkerSet")
+    if markerset is None:
+        raise ValueError("MarkerSet not found in the file")
+
+    markers = []
+    for marker in markerset.findall(".//Marker"):
+        name = marker.get("name")
+        location_text = marker.find("location").text.replace(",", ".")
+        location = list(map(float, location_text.split()))
+        markers.append({"name": name, "location": location})
+
+    return markers
+
+
 def do_scaling(path_to_scaling):
     opensim.ScaleTool(path_to_scaling).run()
     print("Scaling has been completed")
@@ -33,7 +54,7 @@ def adapt_scaling_xml(
 
     # Change the time range
     for item in root.iter("time_range"):
-        item.text = str(time_range[0]) + " " + str(time_range[1])
+        item.text = str(time_range[0]) + "," + str(time_range[1])
 
     # Change the output model file
     for item in root.iter("output_model_file"):
