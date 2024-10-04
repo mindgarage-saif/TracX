@@ -47,11 +47,13 @@ class Experiment:
 
     @staticmethod
     def list():
-        return [
-            name
-            for name in os.listdir(APP_PROJECTS)
-            if os.path.isdir(os.path.join(APP_PROJECTS, name))
-        ]
+        return sorted(
+            [
+                name
+                for name in os.listdir(APP_PROJECTS)
+                if os.path.isdir(os.path.join(APP_PROJECTS, name))
+            ]
+        )
 
     @staticmethod
     def open(name):
@@ -130,8 +132,9 @@ class Experiment:
                 print("Rotated videos already exist. Skipping rotation...")
 
             # Rename the videos directories to use the rotated videos
-            os.rename(self.videos_dir, self.videos_dir + "_original")
-            os.rename(rotated_dir, self.videos_dir)
+            if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
+                os.rename(self.videos_dir, self.videos_dir + "_original")
+                os.rename(rotated_dir, self.videos_dir)
 
         # Execute the 2D pose estimation
         print("Executing 2D pose estimatioan...")

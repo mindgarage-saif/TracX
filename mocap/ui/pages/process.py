@@ -1,26 +1,40 @@
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
+import os
 
+from PyQt6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+from mocap.constants import APP_ASSETS
 from mocap.core import Experiment
 
-from ..widgets.execute_button import MotionEstimationButton
-from ..widgets.inferencer_settings import InferencerSettings
-from ..widgets.setting_store import MotionEstimationParams
-from ..widgets.upload_layout import UploadLayout
-from ..widgets.visualizer_settings import VisualizerSettings
+from ..widgets import (
+    EmptyState,
+    MotionOptions,
+    PipelineParams,
+    SimulationOptions,
+    UploadLayout,
+    VideoList,
+)
 from .base import BasePage
 
 
 class ProcessingPage(BasePage):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
+        self.params = PipelineParams()
 
         # Create an empty state layout
-        self.emptyState = QWidget(self)
-        self.emptyState.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        self.emptyState = EmptyState(
+            self,
+            os.path.join(APP_ASSETS, "empty-state", "no-experiment-selected.png"),
+            "Select or create an experiment to get started",
         )
         self.innerLayout.addWidget(self.emptyState)
-        self.createEmptyStateUI()
 
         # Create the project details layout
         self.experimentUI = QWidget(self)
@@ -38,66 +52,69 @@ class ProcessingPage(BasePage):
         # Connect the sidebar event
         self.sidebar.onExperimentSelected = self.showExperiment
 
-    def createEmptyStateUI(self):
-        # Create a layout for the empty state
-        emptyStateLayout = QVBoxLayout(self.emptyState)
-        emptyStateLayout.setContentsMargins(0, 0, 0, 0)
-        emptyStateLayout.setSpacing(0)
-        self.emptyState.setLayout(emptyStateLayout)
-
-        # Add the empty state message
-        self.emptyStateMessage = QLabel("No project selected")
-        self.emptyStateMessage.setObjectName("EmptyStateMessage")
-        emptyStateLayout.addWidget(self.emptyStateMessage)
-
     def createExperimentUI(self):
         # Create a layout for the processing page
-        experimentUILayout = QVBoxLayout(self.experimentUI)
-        experimentUILayout.setContentsMargins(0, 0, 0, 0)
-        experimentUILayout.setSpacing(0)
-        self.experimentUI.setLayout(experimentUILayout)
-
-        settings = MotionEstimationParams()
+        self.experimentUILayout = QVBoxLayout(self.experimentUI)
+        self.experimentUILayout.setContentsMargins(0, 0, 0, 0)
+        self.experimentUILayout.setSpacing(0)
+        self.experimentUI.setLayout(self.experimentUILayout)
 
         # Inferencer and visualizer settings
-        uploadUI = UploadLayout(self, settings)
+        uploadUI = UploadLayout(self, self.params)
+        self.experimentUILayout.addWidget(uploadUI)
 
-        self.numVideosLabel = QLabel("Number of videos: 0")
-        experimentUILayout.addWidget(self.numVideosLabel)
+        self.videoListWidget = QWidget(self)
+        self.experimentUILayout.addWidget(self.videoListWidget)
 
-        motionSettings = InferencerSettings(self, settings)
-        simulationSettings = VisualizerSettings(self, settings)
-        motionButton = MotionEstimationButton(self, settings)
+        # Create a horizontal layout for the motion estimation settings
+        processingFrame = QWidget(self)
+        processingFrameLayout = QHBoxLayout(processingFrame)
+        processingFrameLayout.setContentsMargins(0, 0, 0, 0)
+        processingFrameLayout.setSpacing(8)
+        self.experimentUILayout.addWidget(processingFrame)
 
-        # Let layouts handle the dynamic sizing
-        simulationSettings.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
+        # Create two equal columns for the settings
+        column1 = QFrame(self)
+        column1.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )
-        motionSettings.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
-        )
+        column1Layout = QVBoxLayout(column1)
+        column1Layout.setContentsMargins(0, 0, 0, 0)
+        column1Layout.setSpacing(16)
 
-        # Add widgets to the layout
-        experimentUILayout.addWidget(uploadUI)
-        experimentUILayout.addWidget(simulationSettings)
-        experimentUILayout.addWidget(motionSettings)
-        experimentUILayout.addWidget(motionButton)
-        experimentUILayout.addStretch()
+        column2 = QFrame(self)
+        column2.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
+        )
+        column2Layout = QVBoxLayout(column2)
+        column2Layout.setContentsMargins(0, 0, 0, 0)
+        column2Layout.setSpacing(16)
+
+        # Add columns to the horizontal layout with equal stretch factors
+        processingFrameLayout.addWidget(column1, 1)  # Stretch factor 1
+        processingFrameLayout.addWidget(column2, 1)  # Stretch factor 1
+
+        # Add motion estimation settings in column 1
+        motionOptions = MotionOptions(self, self.params)
+        column1Layout.addWidget(motionOptions)
+
+        # Add visualizer settings in column 2
+        visualizationOptions = SimulationOptions(self, self.params)
+        column2Layout.addWidget(visualizationOptions)
 
     def showExperiment(self, name):
         try:
+            self.params.experiment_name = name
             self.experiment = Experiment(name, create=False)
             self.log(f"Loaded experiment: {self.experiment}")
 
-            self.numVideosLabel.setText(
-                f"Number of videos: {self.experiment.num_videos}"
-            )
+            # oldWidget = self.videoListWidget
+            # newWidget = VideoList(self, self.experiment.videos)
+            # self.experimentUILayout.replaceWidget(oldWidget, newWidget)
+            # self.videoListWidget = newWidget
 
             self.emptyState.hide()
             self.experimentUI.show()
 
         except Exception as e:
-            self.emptyState.show()
-            self.experimentUI.hide()
-            self.emptyStateMessage.setText(str(e))
             print(e)

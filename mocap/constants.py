@@ -18,3 +18,9 @@ OPENSIM_DIR = os.path.join(APP_ASSETS, "opensim", "Pose2Sim_Halpe26")
 # Define supported formats.
 SUPPORTED_VIDEO_FORMATS = ["mp4", "avi"]
 SUPPORTED_IMAGE_FORMATS = ["jpg", "jpeg", "png"]
+
+
+def create_directories():
+    """Create necessary directories."""
+    for directory in [APP_CACHE, APP_FILES, APP_RECORDINGS, APP_PROJECTS]:
+        os.makedirs(directory, exist_ok=True)

@@ -10,9 +10,10 @@ def create_experiment(
     calibration_file: str,
     experiment_name: Optional[str] = None,
 ) -> Experiment:
-    # Create a new project.
+    # Create or load the experiment.
+    create = experiment_name is None  # Create a new experiment if no name is provided.
     experiment_name = experiment_name or strftime("%Y%m%d_%H%M%S")
-    experiment = Experiment(experiment_name, create=True)
+    experiment = Experiment(experiment_name, create=create)
 
     # Add the video files.
     for video_file in video_files:

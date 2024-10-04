@@ -1,26 +1,35 @@
-from PyQt6.QtWidgets import QListWidget, QListWidgetItem, QVBoxLayout, QWidget
+from typing import Optional
+
+from PyQt6.QtWidgets import QListWidget, QListWidgetItem
 
 from mocap.core import Experiment
 
 
-class ExperimentList(QWidget):
-    def __init__(self, parent=None):
+class ExperimentList(QListWidget):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.layout = QVBoxLayout(self)
-        self._list_widget = QListWidget(self)
-        self.layout.addWidget(self._list_widget)
+        self.setSpacing(2)
+        self.currentItemChanged.connect(self.onSelectionChanged)
+        self.onItemSelected = None
 
-        self._list_widget.currentItemChanged.connect(self._on_selected)
-        self._list_widget.setSpacing(2)
+        # Refresh the list
+        self.refresh()
 
-        # Default callback
-        self.callback = lambda x: print(f"Selected: {x}")
+    @property
+    def experiments(self):
+        return Experiment.list()
 
-        for name in Experiment.list():
-            item = QListWidgetItem(self._list_widget)
+    def onSelectionChanged(self, current, previous):
+        if current and self.onItemSelected is not None:
+            self.onItemSelected(current.text())
+
+    def getSelection(self) -> Optional[str]:
+        currentItem = self._list_widget.currentItem()
+        return currentItem.text() if currentItem else None
+
+    def refresh(self):
+        self.clear()
+        for name in self.experiments:
+            item = QListWidgetItem(self)
             item.setText(name)
-            self._list_widget.addItem(item)
-
-    def _on_selected(self, current, previous):
-        if current:
-            self.callback(current.text())
+            self.addItem(item)

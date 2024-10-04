@@ -2,7 +2,6 @@ import logging
 
 from PyQt6.QtWidgets import (
     QApplication,
-    QFrame,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
@@ -84,15 +83,14 @@ class StudioWindow(QMainWindow):
             QSizePolicy.Policy.Expanding,
         )
         self.studioFrame.layout = QHBoxLayout(self.studioFrame)
+        self.studioFrame.layout.setContentsMargins(0, 0, 0, 0)
+        self.studioFrame.layout.setSpacing(PAD_X // 2)
         window.addWidget(self.studioFrame)
 
         # Create the sidebar
         sidebarWidth = int(width * 0.2)
         self.sidebar = Sidebar(self.studioFrame)
         self.sidebar.setFixedWidth(int(sidebarWidth))
-        self.sidebar.setMinimumHeight(
-            self.height() - self.appbar.height() - PAD_Y * 4 - 8,
-        )
         self.sidebar.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
@@ -103,15 +101,14 @@ class StudioWindow(QMainWindow):
             "record": RecordPage,
             "process": ProcessingPage,
         }
-        self.pageFrame = QFrame(self.studioFrame)
-        self.pageFrame.setMinimumHeight(
-            self.height() - self.appbar.height() - PAD_Y * 4 - 8,
-        )
+        self.pageFrame = QWidget(self.studioFrame)
         self.pageFrame.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
         self.pageFrame.layout = QHBoxLayout(self.pageFrame)
+        self.pageFrame.layout.setContentsMargins(0, 0, 0, 0)
+        self.pageFrame.layout.setSpacing(0)
         self.pageFrame.setLayout(self.pageFrame.layout)
         self.studioFrame.layout.addWidget(self.pageFrame)
 

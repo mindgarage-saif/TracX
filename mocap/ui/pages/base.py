@@ -10,8 +10,6 @@ class BasePage(QWidget):
         super().__init__(parent)
         self.statusBar = parent.statusBar()
         self.sidebar = parent.sidebar
-        self.setMinimumWidth(parent.width())
-        self.setMinimumHeight(parent.pageHeight())
 
         # Create an inner layout for the frame
         self.innerLayout = QHBoxLayout(self)

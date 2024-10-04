@@ -1,3 +1,5 @@
+from time import strftime
+
 from PyQt6.QtWidgets import (
     QFrame,
     QPushButton,
@@ -6,6 +8,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from mocap.core import Experiment
 
 from .camera_selector import CameraSelector
 from .experiment_list import ExperimentList
@@ -46,6 +50,9 @@ class Sidebar(QFrame):
         self.tabBar.currentChanged.connect(self.handleTabSelected)
 
     def handleTabSelected(self, index):
+        if index == 1:
+            self.experimentList.refresh()
+
         if self.onTabSelected:
             self.onTabSelected(index)
 
@@ -54,6 +61,9 @@ class Sidebar(QFrame):
 
     def recordTabUI(self):
         layout = QVBoxLayout()
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(16)
+
         cameras = CameraSelector(self)
         cameras.setCameraSelectedCallback(self.handleCamerasSelected)
         cameras.setSizePolicy(
@@ -64,21 +74,29 @@ class Sidebar(QFrame):
 
     def uploadTabUI(self):
         layout = QVBoxLayout()
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(16)
 
-        experimentList = ExperimentList(self)
-        experimentList.setSizePolicy(
+        self.experimentList = ExperimentList(self)
+        self.experimentList.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )
-        experimentList.callback = self.handleExperimentSelected
-        layout.addWidget(experimentList)
+        self.experimentList.onItemSelected = self.handleExperimentSelected
+        layout.addWidget(self.experimentList)
 
         createButton = QPushButton("Create Experiment")
         createButton.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
         )
+        createButton.clicked.connect(self.createExperiment)
         layout.addWidget(createButton)
 
         self.uploadTab.setLayout(layout)
+
+    def createExperiment(self):
+        name = strftime("%Y%m%d_%H%M%S")
+        Experiment(name, create=True)
+        self.experimentList.refresh()
 
     def setCamerasSelectedCallback(self, callback):
         self.onCamerasSelected = callback

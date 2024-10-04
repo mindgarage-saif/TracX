@@ -4,13 +4,15 @@ import sys
 from PyQt6.QtWidgets import QApplication
 from qt_material import apply_stylesheet
 
+from .constants import APP_NAME, create_directories
 from .ui.studio import StudioWindow
 
 
 class Studio(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
-        self.title = "MoCap Studio"
+        self.title = APP_NAME
+        create_directories()
 
     def sigint_handler(self, *args):
         """Handler for the SIGINT signal."""

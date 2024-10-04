@@ -38,7 +38,8 @@ def rotate_videos(video_list, output_dir, camera_parameters):
         elif rot == 90:
             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         else:
-            raise ValueError(f"Rotation angle {rot} not supported")
+            print(f"Rotation angle {rot} not supported")
+            continue
         frame_width = frame.shape[1]
         frame_height = frame.shape[0]
         # Get original video's width, height, and fps
@@ -131,9 +132,8 @@ def unrotate_pose2d(pose_dir, camera_parameters):
                         x2 = 1920 + np.array(keypoints[::3]) * -1
                         y2 = 1088 - np.array(keypoints[1::3])
                     else:
-                        raise ValueError(
-                            f"Rotation angle {rotation_angle} not supported"
-                        )
+                        print(f"Rotation angle {rotation_angle} not supported")
+                        continue
 
                     # Unrotate the points
                     points = np.array(list(zip(x2, y2)))
