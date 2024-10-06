@@ -1,7 +1,7 @@
 import os
 
 # Define application metadata.
-APP_NAME = "PoseTrack Studio"
+APP_NAME = "Movara3D"
 APP_NAME_SLUG = APP_NAME.lower().replace(" ", "-")
 APP_VERSION = "0.1.0"
 

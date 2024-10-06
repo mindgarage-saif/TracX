@@ -43,16 +43,13 @@ class SimulationOptions(Frame):
         self.stick = QRadioButton("Stick Figure", self)
         self.stick.setChecked(True)
         self.opensim = QRadioButton("OpenSim", self)
-        self.mixamo = QRadioButton("Mixamo", self)
         rowLayout.addWidget(self.stick)
         rowLayout.addWidget(self.opensim)
-        rowLayout.addWidget(self.mixamo)
         rowLayout.addStretch()
 
         self.backend = QButtonGroup(self)
         self.backend.addButton(self.stick)
         self.backend.addButton(self.opensim)
-        self.backend.addButton(self.mixamo)
 
         simulatorOptions = QWidget(self)
         simulatorOptions.setProperty("class", "empty")
