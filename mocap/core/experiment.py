@@ -1,5 +1,6 @@
 import os
 import shutil
+from distutils.dir_util import copy_tree
 from typing import Optional
 
 import cv2
@@ -11,6 +12,7 @@ from Pose2Sim.Utilities import bodykin_from_mot_osim
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
+from ..constants import OPENSIM_DIR
 from .motion import MotionSequence
 from .rotation import rotate_videos, unrotate_pose2d
 
@@ -242,9 +244,10 @@ class Experiment:
         pass
 
     def _visualize_opensim(self, motion_file, with_blender=False):
-        from distutils.dir_util import copy_tree
-
-        # copy_tree(os.path.join(opensim_dir,'geometry'), os.path.join(output,'Geometry'))
+        copy_tree(
+            os.path.join(OPENSIM_DIR, "..", "geometry"),
+            os.path.join(self.output_dir, "Geometry"),
+        )
         output, mot, scaled_model = create_opensim_vis(
             trc=motion_file,
             experiment_dir=self.path,

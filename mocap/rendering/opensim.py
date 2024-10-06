@@ -1,4 +1,5 @@
 import os
+import shutil
 import xml.etree.ElementTree as ET
 
 import opensim
@@ -48,9 +49,15 @@ def adapt_scaling_xml(
     tree = ET.parse(setup_file)
     root = tree.getroot()
 
+    # Copy trc file to the output directory
+    trc_file = os.path.abspath(trc_file)
+    trc_filename = os.path.basename(trc_file)
+    trc_output = os.path.join(output_dir, trc_filename)
+    shutil.copy(trc_file, trc_output)
+
     # Change path to the trc file
     for item in root.iter("marker_file"):
-        item.text = trc_file
+        item.text = trc_filename
 
     # Change the time range
     for item in root.iter("time_range"):
