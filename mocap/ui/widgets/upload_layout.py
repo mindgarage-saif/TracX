@@ -190,7 +190,7 @@ class ExperimentDataWidget(Frame):
         self.calibrationButton.clicked.connect(self.selectCalibrationFile)
         calibrationLayout.addWidget(self.calibrationButton)
 
-        self.onUpdate = lambda done: None
+        self.onUpdate = lambda status: None
 
     def setExperiment(self, experiment):
         """Set the experiment object.
@@ -210,10 +210,7 @@ class ExperimentDataWidget(Frame):
             try:
                 selected_file = file_dialog.selectedFiles()[0]
                 self.experiment.set_camera_parameters(selected_file)
-
-                # Show the selected calibration file
-                self.updateCalibrationFile(selected_file)
-                self.calibrationLabel.setText("Calibration file uploaded")
+                self.refreshUI()
             except ValueError as e:
                 self.calibrationLabel.setText(f"Error: {e}")
                 return

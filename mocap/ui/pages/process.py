@@ -111,10 +111,11 @@ class ProcessingPage(BasePage):
         # Connect the update event
         self.motionOptions.setEnabled(False)
         self.visualizationOptions.setEnabled(False)
-        self.experimentDataView.onUpdate = lambda done: self.motionOptions.setEnabled(
-            done
-        )
+        self.experimentDataView.onUpdate = self.onExperimentDataUploaded
         self.motionOptions.onUpdate = self.onMotionEstimated
+
+    def onExperimentDataUploaded(self, status):
+        self.motionOptions.setEnabled(status)
 
     def onMotionEstimated(self, status, result):
         self.visualizationOptions.setEnabled(status)
