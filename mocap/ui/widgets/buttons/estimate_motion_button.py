@@ -70,12 +70,22 @@ class EstimateMotionButton(QPushButton):
             self.execute_in_thread
         )  # Connect button click to start execution
         self.log_file = None  # Path to the log file
+        self.running = False  # Flag to track if the pipeline is running
 
     def execute_in_thread(self):
         """
         Initiates the long-running pipeline execution in a separate thread.
         """
         if self.worker_thread is None or not self.worker_thread.isRunning():
+            self.setEnabled(False)  # Disable the button while the pipeline is running
+            self.setText("Processing...")  # Update button text
+
+            def callback(success, result):
+                self.setEnabled(True)
+                self.setText("Process Videos")
+
+                self.callback(success, result)
+
             # Create a new worker and thread only if no thread is already running
             self.worker_thread = QThread()
             self.worker = Worker(
@@ -85,7 +95,7 @@ class EstimateMotionButton(QPushButton):
 
             # Connect signals
             self.worker_thread.started.connect(self.worker.run)
-            self.worker.finished.connect(self.callback)
+            self.worker.finished.connect(callback)
             self.worker.finished.connect(self.cleanup_thread)
             self.worker_thread.finished.connect(self.worker_thread.deleteLater)
 

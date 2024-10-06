@@ -11,8 +11,7 @@ class PipelineParams(edict):
         self.visualization_mode = "naive"
         self.visualization_args = edict()
 
-        # self.visualization_mode="opensim",
-        # self.visualization_args=dict(
-        #     openSim=settings["openSim"],
-        #     blender=settings["blender"],
-        # ),
+        # self.visualization_mode = "opensim"
+        # self.visualization_args = dict(
+        #     with_blender=False,
+        # )
