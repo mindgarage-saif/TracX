@@ -8,14 +8,18 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from ..config.constants import PAD_X, PAD_Y
+from .frame import Frame
 
-class SimulationOptions(QWidget):
+
+class SimulationOptions(Frame):
     def __init__(self, parent, params):
         super().__init__(parent)
         self.params = params
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
+        self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.innerLayout.setSpacing(0)
 
         # Section heading
@@ -31,15 +35,10 @@ class SimulationOptions(QWidget):
         self.innerLayout.addWidget(label)
 
         row = QWidget(self)
-        rowLayout = QHBoxLayout(row)
+        row.setProperty("class", "empty")
+        rowLayout = QVBoxLayout(row)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.addWidget(row)
-
-        # Backend
-        label = QLabel("Backend:", self)
-        label.setProperty("class", "h3")
-        label.setWordWrap(True)
-        rowLayout.addWidget(label)
 
         self.stick = QRadioButton("Stick Figure", self)
         self.stick.setChecked(True)
@@ -56,18 +55,15 @@ class SimulationOptions(QWidget):
         self.backend.addButton(self.mixamo)
 
         simulatorOptions = QWidget(self)
+        simulatorOptions.setProperty("class", "empty")
         self.simulatorOptions = QHBoxLayout(simulatorOptions)
         self.simulatorOptions.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.addWidget(simulatorOptions)
 
-        label = QLabel("Mode:", self)
-        label.setProperty("class", "h3")
-        label.setWordWrap(True)
-        self.simulatorOptions.addWidget(label)
-
         self.innerLayout.addStretch()
 
         buttonBar = QWidget(self)
+        buttonBar.setProperty("class", "empty")
         buttonBarLayout = QHBoxLayout(buttonBar)
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 

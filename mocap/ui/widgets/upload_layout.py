@@ -16,6 +16,8 @@ from PyQt6.QtWidgets import (
 from mocap.constants import MAX_VIDEOS, MIN_VIDEOS, SUPPORTED_VIDEO_FORMATS
 from mocap.core import Experiment
 
+from ..config.constants import PAD_X, PAD_Y
+from .frame import Frame
 from .video_list import VideoList
 
 
@@ -44,8 +46,9 @@ class VideoUploaderWidget(QFrame):
         layout.addWidget(self.label)
 
         self.preview = VideoList(self, preview_size=200)
+        self.preview.setFixedHeight(268)
         self.preview.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         self.preview.hide()
         layout.addWidget(self.preview)
@@ -113,7 +116,7 @@ class VideoUploaderWidget(QFrame):
             self.label.show()
 
 
-class ExperimentDataWidget(QFrame):
+class ExperimentDataWidget(Frame):
     """Widget for viewing and uploading experiment data.
 
     This widget allows users to upload experiment videos and camera calibration files using a
@@ -127,6 +130,7 @@ class ExperimentDataWidget(QFrame):
         super().__init__(parent)
 
         self.innerLayout = QVBoxLayout(self)
+        self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.setAcceptDrops(True)
 
         label = QLabel("Experiment Videos", self)
@@ -141,14 +145,16 @@ class ExperimentDataWidget(QFrame):
         info.setProperty("class", "body")
         info.setWordWrap(True)
         self.innerLayout.addWidget(info)
+        self.innerLayout.addSpacing(PAD_Y)
 
         # Create a placeholder for drag-and-drop area
         self.videoUploader = VideoUploaderWidget(self)
         self.videoUploader.onVideosSelected = self.handleVideosSelected
         self.innerLayout.addWidget(self.videoUploader)
-        self.innerLayout.addSpacing(8)
+        self.innerLayout.addSpacing(PAD_Y)
 
         calibrationSelection = QWidget(self)
+        calibrationSelection.setProperty("class", "empty")
         calibrationSelection.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
@@ -157,6 +163,7 @@ class ExperimentDataWidget(QFrame):
         self.innerLayout.addWidget(calibrationSelection)
 
         calibrationSelectionLabels = QWidget(self)
+        calibrationSelectionLabels.setProperty("class", "empty")
         calibrationSelectionLabels.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
         )
@@ -182,6 +189,8 @@ class ExperimentDataWidget(QFrame):
         self.calibrationButton = QPushButton("Upload Calibration File", self)
         self.calibrationButton.clicked.connect(self.selectCalibrationFile)
         calibrationLayout.addWidget(self.calibrationButton)
+
+        self.onUpdate = lambda done: None
 
     def setExperiment(self, experiment):
         """Set the experiment object.
@@ -241,7 +250,15 @@ class ExperimentDataWidget(QFrame):
             self.videoUploader.previewSelected([])
             self.videoUploader.setEnabled(True)
 
-        self.updateCalibrationFile(experiment.get_camera_parameters())
+        cameraParameters = experiment.get_camera_parameters()
+        self.updateCalibrationFile(cameraParameters)
+
+        if experimentVideos and cameraParameters:
+            self.setEnabled(False)
+            self.onUpdate(True)
+        else:
+            self.setEnabled(True)
+            self.onUpdate(False)
 
     def uploadFiles(self):
         """Handle the file upload logic."""

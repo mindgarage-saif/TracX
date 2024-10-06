@@ -76,6 +76,7 @@ class Experiment:
 
     @property
     def videos(self) -> list:
+        os.makedirs(self.videos_dir, exist_ok=True)
         return [
             os.path.join(self.videos_dir, name)
             for name in sorted(os.listdir(self.videos_dir))
@@ -167,7 +168,7 @@ class Experiment:
         # Restore the working directory
         os.chdir(cwd)
 
-    def _find_trc_file(self) -> Optional[str]:
+    def get_motion_file(self) -> Optional[str]:
         trc_files = [
             f
             for f in os.listdir(self.pose3d_dir)
@@ -176,6 +177,10 @@ class Experiment:
         if len(trc_files) == 0:
             return None
         return os.path.join(self.pose3d_dir, trc_files[0])
+
+    @property
+    def log_file(self):
+        return os.path.join(self.path, "logs.log")
 
     def _visualize_naive(self, motion_file):
         # Find FPS of the first camera video
@@ -262,8 +267,8 @@ class Experiment:
             **kwargs: Additional keyword arguments to pass to the visualization function for the selected mode.
                       See the documentation of the corresponding visualization function for more details.
         """
-        trc_file = self._find_trc_file()
-        if trc_file is None:
+        motion_file = self.get_motion_file()
+        if motion_file is None:
             raise ValueError(
                 "Call the .process() method first before visualizing the results."
             )
@@ -271,13 +276,13 @@ class Experiment:
         # Check the visualization mode
         supported_modes = ["naive", "mesh", "mixamo", "opensim"]
         if mode == "naive":
-            return self._visualize_naive(trc_file, **kwargs)
+            return self._visualize_naive(motion_file, **kwargs)
         elif mode == "mesh":
-            return self._visualize_mesh(trc_file, **kwargs)
+            return self._visualize_mesh(motion_file, **kwargs)
         elif mode == "mixamo":
-            return self._visualize_mixamo(trc_file, **kwargs)
+            return self._visualize_mixamo(motion_file, **kwargs)
         elif mode == "opensim":
-            return self._visualize_opensim(trc_file, **kwargs)
+            return self._visualize_opensim(motion_file, **kwargs)
         else:
             raise ValueError(
                 f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}"

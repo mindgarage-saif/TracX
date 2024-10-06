@@ -11,6 +11,8 @@ class VideoList(QWidget):
 
         # Create the main layout for the VideoList
         self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(0)
         self.setLayout(self.layout)
 
         # Create a scrollable area
@@ -19,6 +21,7 @@ class VideoList(QWidget):
         self.scroll_area.setVerticalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
+        self.scroll_area.setFixedHeight(268)
 
         # Create a container widget inside the scroll area
         self.scroll_widget = QWidget(self.scroll_area)
@@ -30,8 +33,6 @@ class VideoList(QWidget):
 
         # Add the scroll area to the main layout
         self.layout.addWidget(self.scroll_area)
-
-        self.layout.addStretch()
 
     def clear_list(self):
         # Clear the list of VideoPreviews

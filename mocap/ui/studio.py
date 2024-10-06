@@ -1,5 +1,6 @@
 import logging
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -10,6 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from ..constants import APP_NAME
 from .config.constants import PAD_X, PAD_Y
 from .pages import ProcessingPage, RecordPage
 from .widgets import AppBar, Sidebar
@@ -67,7 +69,7 @@ class StudioWindow(QMainWindow):
         # Layout
         window = QVBoxLayout(central_widget)
         window.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
-        window.setSpacing(0)
+        window.setSpacing(PAD_Y)
 
         # Create app bar
         self.appbar = AppBar(self, height=32)
@@ -84,7 +86,7 @@ class StudioWindow(QMainWindow):
         )
         self.studioFrame.layout = QHBoxLayout(self.studioFrame)
         self.studioFrame.layout.setContentsMargins(0, 0, 0, 0)
-        self.studioFrame.layout.setSpacing(PAD_X // 2)
+        self.studioFrame.layout.setSpacing(PAD_X)
         window.addWidget(self.studioFrame)
 
         # Create the sidebar
@@ -98,8 +100,8 @@ class StudioWindow(QMainWindow):
 
         # Add pages
         self.pages = {
-            "record": RecordPage,
             "process": ProcessingPage,
+            "record": RecordPage,
         }
         self.pageFrame = QWidget(self.studioFrame)
         self.pageFrame.setSizePolicy(
@@ -112,14 +114,13 @@ class StudioWindow(QMainWindow):
         self.pageFrame.setLayout(self.pageFrame.layout)
         self.studioFrame.layout.addWidget(self.pageFrame)
 
-        self.sidebar.onTabSelected = lambda index: self.changePage(
-            "record" if index == 0 else "process"
-        )
+        pages = list(self.pages.keys())
+        self.sidebar.onTabSelected = lambda index: self.changePage(pages[index])
 
         # Set the initial page
         self.page = None
         self.pageHistory = []
-        self.changePage("record")
+        self.changePage(pages[0])
 
     def changePage(self, page, *args, **kwagrs):
         # Remove existing page
@@ -148,7 +149,7 @@ class StudioWindow(QMainWindow):
         if (
             QMessageBox.question(
                 self,
-                "MoCap Studio",
+                APP_NAME,
                 "Are you sure you want to quit?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
@@ -164,3 +165,16 @@ class StudioWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key.Key_Escape:
+            self.close()
+
+        if e.key() == Qt.Key.Key_Backspace or e.key() == Qt.Key.Key_B:
+            self.back()
+
+        if e.key() == Qt.Key.Key_F11:
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()

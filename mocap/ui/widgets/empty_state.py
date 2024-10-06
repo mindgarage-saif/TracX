@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 
 class EmptyState(QWidget):
-    def __init__(self, parent: QWidget, icon: str, label: str) -> None:
+    def __init__(self, parent: QWidget, icon: str, label: str, size=300) -> None:
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -16,7 +16,7 @@ class EmptyState(QWidget):
 
         # Load and scale the icon, keeping the aspect ratio
         pixmap = QPixmap(icon)
-        pixmap = pixmap.scaledToWidth(300)
+        pixmap = pixmap.scaledToWidth(size)
 
         self.icon = QLabel(self)
         self.icon.setPixmap(pixmap)
@@ -25,10 +25,10 @@ class EmptyState(QWidget):
         layout.addWidget(self.icon)
 
         self.label = QLabel(label, self)
-        self.label.setProperty("class", "body")
+        self.label.setProperty("class", "h2")
         self.label.setWordWrap(True)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label.setFixedWidth(300)
+        self.label.setFixedWidth(size)
         self.label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
         layout.addWidget(self.label)
         layout.addStretch()

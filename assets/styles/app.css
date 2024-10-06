@@ -6,7 +6,8 @@ QPushButton {{
 
 .secondary_button {{
     color: {QTMATERIAL_SECONDARYTEXTCOLOR};
-    background-color: {QTMATERIAL_SECONDARYCOLOR};
+    background-color: {QTMATERIAL_SECONDARYLIGHTCOLOR};
+    border-color: {QTMATERIAL_SECONDARYLIGHTCOLOR};
 }}
 
 /* Large Buttons */
@@ -67,12 +68,6 @@ QLabel {{
     background-color: {QTMATERIAL_PRIMARYCOLOR};
 }}
 
-/* Inferencer Settings */
-#InferencerSettings {{
-    background-color: rgba(255, 255, 255, 100);
-    border-radius: 8px;
-}}
-
 /* Slider */
 QSlider {{
     background-color: transparent;
@@ -82,16 +77,14 @@ QSlider {{
 /* Recording Layout */
 #RecordingLayout {{
     background-color: black;
-    border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
-    border-radius: 8px;
-    padding: 8px;
-    color: {QTMATERIAL_PRIMARYCOLOR};
+    border: 2px solid {QTMATERIAL_PRIMARYLIGHTCOLOR};
+    color: white;
+    padding: 16px;
 }}
 
 #RecordingLayout QPushButton {{
     background-color: white;
     border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
-    border-radius: 8px;
     padding: 4px;
     color: {QTMATERIAL_PRIMARYCOLOR};
 }}
@@ -119,14 +112,6 @@ QSlider {{
     background-color: {QTMATERIAL_SECONDARYCOLOR};
 }}
 
-/* Drag & Drop */
-#DragDropWidget {{
-    background-color: transparent;
-    border: 2px dashed {QTMATERIAL_PRIMARYCOLOR};
-    border-radius: 8px;
-    padding: 8px;
-}}
-
 /* Visualizer Settings */
 #VisualizerSettings QSlider {{
     background-color: transparent;
@@ -136,4 +121,116 @@ QSlider {{
 #VisualizerSettings QCheckBox {{
     background-color: transparent;
     color: {QTMATERIAL_PRIMARYTEXTCOLOR};
+}}
+
+QFrame {{
+    border-radius: 16px;
+    border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
+}}
+
+QFrame * {{
+    border-radius: 16px;
+    border: initial;
+}}
+
+Frame {{
+    border-radius: 16px;
+    background-color: rgba(0, 0, 0, 100);
+    border: 2px solid {QTMATERIAL_PRIMARYCOLOR};
+}}
+
+Frame * {{
+    border-radius: 16px;
+    border: initial;
+}}
+
+QLabel {{
+    border: initial;
+}}
+
+QTabWidget {{
+    border-radius: 16px;
+}}
+
+QVBoxLayout {{
+    border-radius: 16px;
+}}
+
+QHBoxLayout {{
+    border-radius: 16px;
+}}
+
+/* Disabled Frame */
+Frame:disabled {{
+    background-color: rgba(0, 0, 0, 100);
+    border: 2px solid {QTMATERIAL_SECONDARYCOLOR};
+}}
+
+QPushButton {{
+    border-radius: 16px;
+}}
+
+/* Drag & Drop */
+#DragDropWidget {{
+    background-color: {QTMATERIAL_SECONDARYLIGHTCOLOR};
+    color: {QTMATERIAL_SECONDARYTEXTCOLOR};
+    padding: 16px;
+}}
+
+#DragDropWidget QScrollWidget {{
+    background-color: {QTMATERIAL_SECONDARYLIGHTCOLOR};
+    color: {QTMATERIAL_SECONDARYTEXTCOLOR};
+}}
+
+/* Scrollbars */
+QScrollBar:vertical {{
+    border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
+    background: {QTMATERIAL_SECONDARYCOLOR};
+    width: 10px;
+    margin: 0px 0px 0px 0px;
+}}
+
+QScrollBar::handle:vertical {{
+    background: {QTMATERIAL_SECONDARYLIGHTCOLOR};
+    min-height: 20px;
+}}
+
+QScrollBar::add-line:vertical {{
+    height: 0px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}}
+
+QScrollBar::sub-line:vertical {{
+    height: 0px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}}
+
+QScrollBar:horizontal {{
+    border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
+    background: {QTMATERIAL_SECONDARYCOLOR};
+    height: 10px;
+    margin: 0px 0px 0px 0px;
+}}
+
+QScrollBar::handle:horizontal {{
+    background: {QTMATERIAL_SECONDARYLIGHTCOLOR};
+    min-width: 20px;
+}}
+
+QScrollBar::add-line:horizontal {{
+    width: 0px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}}
+
+QScrollBar::sub-line:horizontal {{
+    width: 0px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}}
+
+.empty {{
+    background-color: transparent;
 }}

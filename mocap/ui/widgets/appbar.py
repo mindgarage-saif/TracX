@@ -1,5 +1,7 @@
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QWidget
 
+from mocap.constants import APP_NAME
+
 from ..config.constants import PAD_X, PAD_Y
 
 
@@ -27,7 +29,7 @@ class AppBar(QWidget):
         back.mousePressEvent = lambda event: parent.back()
 
         # Title
-        title = QLabel("MoCap Studio", self)
+        title = QLabel(APP_NAME, self)
         title.setObjectName("Title")
         title.setProperty("class", "h1")
         self.innerLayout.addWidget(title)

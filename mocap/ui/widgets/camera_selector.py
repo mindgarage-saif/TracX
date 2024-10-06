@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ...recording.utils import find_cameras
+from ..config.constants import PAD_X, PAD_Y
 
 
 class CameraItemWidget(QWidget):
@@ -19,7 +20,7 @@ class CameraItemWidget(QWidget):
 
         # Create a layout for the camera item
         layout = QHBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         # Create a checkbox to select this camera
         self.checkbox = QCheckBox()
@@ -27,9 +28,10 @@ class CameraItemWidget(QWidget):
 
         # Create labels for camera details
         camera_label = QLabel(
-            f"[CAM {camera_info['id']}] {camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)"
+            f"{camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)"
         )
         camera_label.setProperty("class", "body")
+        camera_label.setWordWrap(True)
 
         # Add the camera label to the layout
         layout.addWidget(camera_label)
@@ -67,16 +69,16 @@ class CameraSelector(QWidget):
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
         )
         self.innerLayout.addWidget(instructions)
-        self.innerLayout.addSpacing(16)
+        self.innerLayout.addSpacing(PAD_Y)
 
         # Show all cameras in a list with checkboxes, allowing multiple selection
         self.camera_list = QListWidget()
         self.camera_list.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding
         )
         self.camera_items = []
         self.innerLayout.addWidget(self.camera_list)
-        self.innerLayout.addSpacing(16)
+        self.innerLayout.addSpacing(PAD_Y)
 
         # Add refresh instructions
         refresh_instructions = QLabel(

@@ -10,10 +10,8 @@ class RecordPage(BasePage):
         super().__init__(parent)
 
         # Create the webcam view
-        webcamWidth = parent.width() - PAD_X * 5
         self.recordingLayout = RecordingLayout(
             self,
-            webcamWidth,
             on_frame_fn=self.process,
         )
         self.recordingLayout.setSizePolicy(
@@ -22,7 +20,7 @@ class RecordPage(BasePage):
         self.innerLayout.addWidget(self.recordingLayout)
 
         # Add camera selection callback
-        # self.sidebar.setCamerasSelectedCallback(self.onCamerasSelected)
+        parent.sidebar.setCamerasSelectedCallback(self.onCamerasSelected)
 
     def onCamerasSelected(self, camera_ids):
         self.recordingLayout.set_cameras(camera_ids)

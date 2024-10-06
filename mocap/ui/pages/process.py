@@ -1,9 +1,10 @@
 import os
+import shutil
 
 from PyQt6.QtWidgets import (
+    QFileDialog,
     QFrame,
     QHBoxLayout,
-    QLabel,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -12,9 +13,11 @@ from PyQt6.QtWidgets import (
 from mocap.constants import APP_ASSETS
 from mocap.core import Experiment
 
+from ..config.constants import PAD_X, PAD_Y
 from ..widgets import (
     EmptyState,
     ExperimentDataWidget,
+    LogsWidget,
     MotionOptions,
     PipelineParams,
     SimulationOptions,
@@ -61,7 +64,7 @@ class ProcessingPage(BasePage):
         # Inferencer and visualizer settings
         self.experimentDataView = ExperimentDataWidget(self)
         self.experimentUILayout.addWidget(self.experimentDataView)
-        self.experimentUILayout.addSpacing(8)
+        self.experimentUILayout.addSpacing(PAD_Y)
 
         self.videoListWidget = QWidget(self)
         self.experimentUILayout.addWidget(self.videoListWidget)
@@ -70,37 +73,72 @@ class ProcessingPage(BasePage):
         processingFrame = QWidget(self)
         processingFrameLayout = QHBoxLayout(processingFrame)
         processingFrameLayout.setContentsMargins(0, 0, 0, 0)
-        processingFrameLayout.setSpacing(8)
+        processingFrameLayout.setSpacing(PAD_X)
         self.experimentUILayout.addWidget(processingFrame)
 
         # Create two equal columns for the settings
         column1 = QFrame(self)
-        column1.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
-        )
+        column1.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         column1Layout = QVBoxLayout(column1)
         column1Layout.setContentsMargins(0, 0, 0, 0)
-        column1Layout.setSpacing(16)
+        column1Layout.setSpacing(PAD_Y)
 
         column2 = QFrame(self)
-        column2.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
-        )
+        column2.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         column2Layout = QVBoxLayout(column2)
         column2Layout.setContentsMargins(0, 0, 0, 0)
-        column2Layout.setSpacing(16)
+        column2Layout.setSpacing(PAD_Y)
+
+        self.logs_view = LogsWidget(self)
+        self.logs_view.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
+        )
 
         # Add columns to the horizontal layout with equal stretch factors
         processingFrameLayout.addWidget(column1, 1)  # Stretch factor 1
         processingFrameLayout.addWidget(column2, 1)  # Stretch factor 1
+        processingFrameLayout.addWidget(self.logs_view, 2)  # Stretch factor 2
 
         # Add motion estimation settings in column 1
-        motionOptions = MotionOptions(self, self.params)
-        column1Layout.addWidget(motionOptions)
+        self.motionOptions = MotionOptions(self, self.params)
+        self.motionOptions.downloadButton.clicked.connect(self.downloadMotionData)
+        column1Layout.addWidget(self.motionOptions)
 
         # Add visualizer settings in column 2
-        visualizationOptions = SimulationOptions(self, self.params)
-        column2Layout.addWidget(visualizationOptions)
+        self.visualizationOptions = SimulationOptions(self, self.params)
+        column2Layout.addWidget(self.visualizationOptions)
+
+        # Connect the update event
+        self.motionOptions.setEnabled(False)
+        self.visualizationOptions.setEnabled(False)
+        self.experimentDataView.onUpdate = lambda done: self.motionOptions.setEnabled(
+            done
+        )
+        self.motionOptions.onUpdate = self.onMotionEstimated
+
+    def onMotionEstimated(self, status, result):
+        self.visualizationOptions.setEnabled(status)
+        if not status:
+            self.showAlert(str(result), "Motion Estimation Failed")
+
+    def downloadMotionData(self):
+        try:
+            motionData = self.experiment.get_motion_file()
+            self.downloadFile(motionData)
+        except Exception as e:
+            self.showAlert(str(e), "Download Failed")
+
+    def downloadFile(self, file_path):
+        # Show a download dialog
+        file_dialog = QFileDialog(self)
+        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        file_dialog.selectFile(os.path.basename(file_path))
+
+        if file_dialog.exec():
+            save_path = file_dialog.selectedFiles()[0]
+            if save_path:
+                shutil.copyfile(file_path, save_path)
+                # TOOD: Show a success message
 
     def showExperiment(self, name):
         try:
@@ -112,6 +150,14 @@ class ProcessingPage(BasePage):
             self.experimentDataView.videoUploader.previewSelected(
                 self.experiment.videos
             )
+
+            hasMotionData = self.experiment.get_motion_file() is not None
+            self.motionOptions.estimateButton.setEnabled(not hasMotionData)
+            self.motionOptions.downloadButton.setEnabled(hasMotionData)
+            self.visualizationOptions.setEnabled(hasMotionData)
+
+            self.motionOptions.estimateButton.log_file = self.experiment.log_file
+            self.logs_view.start_log_streaming(self.experiment.log_file)
 
             self.emptyState.hide()
             self.experimentUI.show()

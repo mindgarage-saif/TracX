@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 from ...recording import CameraController
 from .camera_view import CameraView
 from .control_panel import ControlPanel
+from .empty_state import EmptyState
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,6 @@ class RecordingLayout(QFrame):
     def __init__(
         self,
         parent,
-        parentWidth,
         on_frame_fn=None,
         cameras=None,
     ):
@@ -41,9 +41,15 @@ class RecordingLayout(QFrame):
         self.innerLayout.setSpacing(0)
 
         # Placeholder label for "No Cameras Selected"
-        self.noCamerasLabel = QLabel("No Cameras Selected", self)
-        self.noCamerasLabel.setStyleSheet("color: #FFFFFF; font-size: 20px;")
-        self.noCamerasLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.noCamerasLabel = EmptyState(
+            self,
+            "assets/empty-state/no-camera-selected.png",
+            "No Cameras Selected",
+            size=512,
+        )
+        self.noCamerasLabel.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.innerLayout.addWidget(self.noCamerasLabel)
 
         # Grid layout for webcam views
@@ -53,17 +59,16 @@ class RecordingLayout(QFrame):
         self.gridLayout.setSpacing(16)
         self.gridWidget.setLayout(self.gridLayout)
         self.innerLayout.addWidget(self.gridWidget)
+        self.gridWidget.hide()
 
         self.cam_views = []
-        self.innerLayout.addStretch()
 
         # Create the control panel, add after the camera grid
         self.controlPanel = ControlPanel(self.controller, parent=parent)
         self.innerLayout.addWidget(self.controlPanel)
 
         # If cameras are provided at initialization, populate the grid
-        if self.cameras:
-            self.set_cameras(self.cameras)
+        self.set_cameras(self.cameras)
 
     def set_cameras(self, cameras):
         """Sets the cameras dynamically and creates the grid layout."""
@@ -74,8 +79,12 @@ class RecordingLayout(QFrame):
         # Hide the "No Cameras Selected" label if cameras are available
         if camera_ids:
             self.noCamerasLabel.hide()
+            self.gridWidget.show()
+            self.controlPanel.show()
         else:
             self.noCamerasLabel.show()
+            self.gridWidget.hide()
+            self.controlPanel.hide()
             return
 
         num_cameras = min(len(camera_ids), 10)
