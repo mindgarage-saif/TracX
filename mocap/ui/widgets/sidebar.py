@@ -1,5 +1,3 @@
-from time import strftime
-
 from PyQt6.QtWidgets import (
     QFrame,
     QLabel,
@@ -9,10 +7,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
-from mocap.core import Experiment
 from mocap.ui.config.constants import PAD_X, PAD_Y
 
 from .camera_selector import CameraSelector
+from .dialogs import CreateExperimentDialog
 from .experiment_list import ExperimentList
 
 
@@ -113,8 +111,11 @@ class Sidebar(QFrame):
         self.uploadTab.setLayout(layout)
 
     def createExperiment(self):
-        name = strftime("%Y%m%d_%H%M%S")
-        Experiment(name, create=True)
+        dialog = CreateExperimentDialog(self)
+        dialog.setMinimumSize(300, 100)
+        dialog.setModal(True)
+        dialog.exec()
+
         self.experimentList.refresh()
 
     def setCamerasSelectedCallback(self, callback):
