@@ -64,8 +64,10 @@ class AppBar(QWidget):
         QMessageBox.about(
             self,
             "About " + APP_NAME + " v" + APP_VERSION,
-            f"{APP_NAME} is a tool for recording and processing motion capture data for research purposes. "
-            + "It is developed by the German Research Center for Artificial Intelligence (DFKI) in Kaiserslautern, Germany.",
+            f"{APP_NAME} is a sophisticated tool designed for recording and processing motion capture data, primarily aimed at advancing research in the field of biomechanics and human motion analysis. "
+            + "Developed by the German Research Center for Artificial Intelligence (DFKI) in Kaiserslautern, Germany, it integrates state-of-the-art algorithms and user-friendly interfaces to facilitate high-precision data acquisition and analysis."
+            + "\n\n"
+            + f"The name {APP_NAME} is derived from 'Positura Animata', which translates to 'animated posture' in Latin, reflecting the tool's focus on capturing and analyzing dynamic human postures."
         )
 
     def showSettingsDialog(self):
