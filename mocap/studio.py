@@ -1,3 +1,4 @@
+import locale
 import signal
 import sys
 
@@ -12,6 +13,7 @@ class Studio(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
         self.title = APP_NAME
+        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
         create_directories()
 
     def sigint_handler(self, *args):

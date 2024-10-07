@@ -1,9 +1,31 @@
 import os
+import shutil
 import xml.etree.ElementTree as ET
 
 import opensim
 
 from mocap.constants import OPENSIM_DIR
+
+
+def parse_osim_file(file_path):
+    """
+    Parse the osim file to extract marker names and locations.
+    """
+    tree = ET.parse(file_path)
+    root = tree.getroot()
+
+    markerset = root.find(".//MarkerSet")
+    if markerset is None:
+        raise ValueError("MarkerSet not found in the file")
+
+    markers = []
+    for marker in markerset.findall(".//Marker"):
+        name = marker.get("name")
+        location_text = marker.find("location").text.replace(",", ".")
+        location = list(map(float, location_text.split()))
+        markers.append({"name": name, "location": location})
+
+    return markers
 
 
 def do_scaling(path_to_scaling):
@@ -27,13 +49,19 @@ def adapt_scaling_xml(
     tree = ET.parse(setup_file)
     root = tree.getroot()
 
+    # Copy trc file to the output directory
+    trc_file = os.path.abspath(trc_file)
+    trc_filename = os.path.basename(trc_file)
+    trc_output = os.path.join(output_dir, trc_filename)
+    shutil.copy(trc_file, trc_output)
+
     # Change path to the trc file
     for item in root.iter("marker_file"):
-        item.text = trc_file
+        item.text = trc_filename
 
     # Change the time range
     for item in root.iter("time_range"):
-        item.text = str(time_range[0]) + " " + str(time_range[1])
+        item.text = str(time_range[0]) + "," + str(time_range[1])
 
     # Change the output model file
     for item in root.iter("output_model_file"):

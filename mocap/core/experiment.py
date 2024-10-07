@@ -1,5 +1,6 @@
 import os
 import shutil
+from distutils.dir_util import copy_tree
 from typing import Optional
 
 import cv2
@@ -9,8 +10,10 @@ from Pose2Sim import Pose2Sim
 from Pose2Sim.Utilities import bodykin_from_mot_osim
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
-from mocap.rendering import create_opensim_vis, export_naive_vis
+from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
+from ..constants import OPENSIM_DIR
+from .motion import MotionSequence
 from .rotation import rotate_videos, unrotate_pose2d
 
 
@@ -21,7 +24,7 @@ class Experiment:
         self.videos_dir = os.path.join(self.path, "videos")
         self.pose2d_dir = os.path.join(self.path, "pose")
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
-        self.output_dir = os.path.join(self.path, "vis")
+        self.output_dir = os.path.join(self.path, "output")
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
             self.calibration_dir, "camera_parameters.qca.txt"
@@ -75,11 +78,12 @@ class Experiment:
 
     @property
     def videos(self) -> list:
+        os.makedirs(self.videos_dir, exist_ok=True)
         return [
             os.path.join(self.videos_dir, name)
             for name in sorted(os.listdir(self.videos_dir))
             if os.path.isfile(os.path.join(self.videos_dir, name))
-            and name.split(".")[-1].lower() in SUPPORTED_VIDEO_FORMATS
+            and os.path.splitext(name)[-1].lower() in SUPPORTED_VIDEO_FORMATS
         ]
 
     @property
@@ -88,7 +92,7 @@ class Experiment:
 
     def add_video(self, video_path, move=False) -> bool:
         video_name = os.path.basename(video_path)
-        video_fmt = video_name.split(".")[-1].lower()
+        video_fmt = os.path.splitext(video_name)[-1].lower()
         if video_fmt not in SUPPORTED_VIDEO_FORMATS:
             return False
 
@@ -111,10 +115,12 @@ class Experiment:
 
         shutil.copy(params_file, self.calibration_file)
 
+    def get_camera_parameters(self):
+        return self.calibration_file if os.path.exists(self.calibration_file) else None
+
     def process(
         self,
         correct_rotation=True,
-        do_synchronization=False,
         use_marker_augmentation=False,
     ):
         # Change the working directory to the project directory.
@@ -153,8 +159,6 @@ class Experiment:
         print("Triangulating 2D poses to 3D...")
         Pose2Sim.calibration()
         Pose2Sim.personAssociation()
-        if do_synchronization:
-            Pose2Sim.synchronization()
         Pose2Sim.triangulation()
         Pose2Sim.filtering()
         if use_marker_augmentation:
@@ -163,7 +167,7 @@ class Experiment:
         # Restore the working directory
         os.chdir(cwd)
 
-    def _find_trc_file(self) -> Optional[str]:
+    def get_motion_file(self) -> Optional[str]:
         trc_files = [
             f
             for f in os.listdir(self.pose3d_dir)
@@ -173,7 +177,17 @@ class Experiment:
             return None
         return os.path.join(self.pose3d_dir, trc_files[0])
 
+    @property
+    def log_file(self):
+        return os.path.join(self.path, "logs.log")
+
     def _visualize_naive(self, motion_file):
+        # Create a side-by-side visualization using OpenCV
+        # path = os.path.join(self.output_dir, "animation.mp4")
+        animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
+        if os.path.exists(animation_file):
+            return animation_file
+
         # Find FPS of the first camera video
         video_file = self.videos[0]
         video = cv2.VideoCapture(video_file)
@@ -182,47 +196,48 @@ class Experiment:
 
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        export_naive_vis(motion_file, animation_file, fps=fps)
+        motion_data = MotionSequence.from_pose2sim_trc(motion_file)
+        renderer = StickFigureRenderer(motion_data, animation_file)
+        renderer.render()
 
-        # Create a side-by-side visualization using OpenCV
-        path = os.path.join(self.output_dir, "side_by_side.mp4")
+        return animation_file
 
-        # Read the animation video
-        anim = cv2.VideoCapture(animation_file)
+        # # Read the animation video
+        # anim = cv2.VideoCapture(animation_file)
 
-        # Read the original video
-        video = cv2.VideoCapture(video_file)
+        # # Read the original video
+        # video = cv2.VideoCapture(video_file)
 
-        # Get the video dimensions
-        width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        size = (width * 2, height)
+        # # Get the video dimensions
+        # width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # size = (width * 2, height)
 
-        # Create the output video
-        out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
+        # # Create the output video
+        # out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
 
-        while True:
-            ret1, frame1 = video.read()
-            ret2, frame2 = anim.read()
+        # while True:
+        #     ret1, frame1 = video.read()
+        #     ret2, frame2 = anim.read()
 
-            if not ret1 or not ret2:
-                break
+        #     if not ret1 or not ret2:
+        #         break
 
-            frame1 = cv2.resize(frame1, (width, height))
-            frame2 = cv2.resize(frame2, (width, height))
+        #     frame1 = cv2.resize(frame1, (width, height))
+        #     frame2 = cv2.resize(frame2, (width, height))
 
-            # Concatenate the frames
-            frame = cv2.hconcat([frame1, frame2])
+        #     # Concatenate the frames
+        #     frame = cv2.hconcat([frame1, frame2])
 
-            # Write the frame
-            out.write(frame)
+        #     # Write the frame
+        #     out.write(frame)
 
-        # Release the video objects
-        video.release()
-        anim.release()
-        out.release()
+        # # Release the video objects
+        # video.release()
+        # anim.release()
+        # out.release()
 
-        return path
+        # return path
 
     def _visualize_mesh(self, motion_file):
         pass
@@ -231,6 +246,10 @@ class Experiment:
         pass
 
     def _visualize_opensim(self, motion_file, with_blender=False):
+        copy_tree(
+            os.path.join(OPENSIM_DIR, "..", "geometry"),
+            os.path.join(self.output_dir, "Geometry"),
+        )
         output, mot, scaled_model = create_opensim_vis(
             trc=motion_file,
             experiment_dir=self.path,
@@ -253,8 +272,8 @@ class Experiment:
             **kwargs: Additional keyword arguments to pass to the visualization function for the selected mode.
                       See the documentation of the corresponding visualization function for more details.
         """
-        trc_file = self._find_trc_file()
-        if trc_file is None:
+        motion_file = self.get_motion_file()
+        if motion_file is None:
             raise ValueError(
                 "Call the .process() method first before visualizing the results."
             )
@@ -262,13 +281,13 @@ class Experiment:
         # Check the visualization mode
         supported_modes = ["naive", "mesh", "mixamo", "opensim"]
         if mode == "naive":
-            return self._visualize_naive(trc_file, **kwargs)
+            return self._visualize_naive(motion_file, **kwargs)
         elif mode == "mesh":
-            return self._visualize_mesh(trc_file, **kwargs)
+            return self._visualize_mesh(motion_file, **kwargs)
         elif mode == "mixamo":
-            return self._visualize_mixamo(trc_file, **kwargs)
+            return self._visualize_mixamo(motion_file, **kwargs)
         elif mode == "opensim":
-            return self._visualize_opensim(trc_file, **kwargs)
+            return self._visualize_opensim(motion_file, **kwargs)
         else:
             raise ValueError(
                 f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}"

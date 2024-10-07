@@ -1,20 +1,20 @@
-import threading
+from mocap.ui.tasks import EstimateMotionTask
 
-from PyQt6.QtWidgets import QPushButton, QWidget
-
-from mocap.core.pipeline import execute_pipeline
+from .task_button import BaseTaskButton
 
 
-def run_in_thread(target_function, *args, **kwargs):
-    thread = threading.Thread(target=target_function, args=args, kwargs=kwargs)
-    thread.start()
+class EstimateMotionButton(BaseTaskButton):
+    def __init__(self, task_config, callback):
+        super().__init__("Estimate Motion", EstimateMotionTask, task_config, callback)
 
+    def on_start(self):
+        super().on_start()
+        self.setText("Processing...")
 
-class EstimateMotionButton(QPushButton):
-    def __init__(self, parent: QWidget, params) -> None:
-        super().__init__("Estimate Motion", parent)
-        self.params = params
-        self.clicked.connect(self.execute)
-
-    def execute(self):
-        run_in_thread(execute_pipeline, **self.params)
+    def on_finish(self, status, result):
+        super().on_finish(status, result)
+        self.setText("Estimate Motion")
+        if status:
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)

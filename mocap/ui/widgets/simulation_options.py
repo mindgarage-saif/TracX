@@ -2,81 +2,96 @@ from PyQt6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QRadioButton,
     QVBoxLayout,
     QWidget,
 )
 
+from mocap.ui.tasks import VisualizeTaskConfig
 
-class SimulationOptions(QWidget):
-    def __init__(self, parent, params):
+from ..config.constants import PAD_X, PAD_Y
+from .buttons import OpenSimButton, VisualizeMotionButton
+from .frame import Frame
+
+
+class SimulationOptions(Frame):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.params = params
+        self.params = VisualizeTaskConfig()
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
+        self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.innerLayout.setSpacing(0)
 
         # Section heading
-        heading = QLabel("Visualization", self)
+        heading = QLabel("Simulation", self)
         heading.setProperty("class", "h1")
         self.innerLayout.addWidget(heading)
         self.innerLayout.addSpacing(16)
 
-        # Backend
-        label = QLabel("Simulation Options", self)
+        # Scaling Settings
+        label = QLabel("OpenSim Scaling", self)
         label.setProperty("class", "h2")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
 
         row = QWidget(self)
-        rowLayout = QHBoxLayout(row)
+        row.setProperty("class", "empty")
+        rowLayout = QVBoxLayout(row)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.addWidget(row)
-
-        # Backend
-        label = QLabel("Backend:", self)
-        label.setProperty("class", "h3")
-        label.setWordWrap(True)
-        rowLayout.addWidget(label)
 
         self.stick = QRadioButton("Stick Figure", self)
         self.stick.setChecked(True)
         self.opensim = QRadioButton("OpenSim", self)
-        self.mixamo = QRadioButton("Mixamo", self)
         rowLayout.addWidget(self.stick)
         rowLayout.addWidget(self.opensim)
-        rowLayout.addWidget(self.mixamo)
+        rowLayout.addSpacing(PAD_Y)
+
+        # Inverse Kinematics Settings
+        label = QLabel("Inverse Kinematics", self)
+        label.setProperty("class", "h2")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
         rowLayout.addStretch()
 
         self.backend = QButtonGroup(self)
         self.backend.addButton(self.stick)
         self.backend.addButton(self.opensim)
-        self.backend.addButton(self.mixamo)
 
         simulatorOptions = QWidget(self)
+        simulatorOptions.setProperty("class", "empty")
         self.simulatorOptions = QHBoxLayout(simulatorOptions)
         self.simulatorOptions.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.addWidget(simulatorOptions)
 
-        label = QLabel("Mode:", self)
-        label.setProperty("class", "h3")
-        label.setWordWrap(True)
-        self.simulatorOptions.addWidget(label)
-
         self.innerLayout.addStretch()
 
         buttonBar = QWidget(self)
+        buttonBar.setProperty("class", "empty")
         buttonBarLayout = QHBoxLayout(buttonBar)
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 
         # Create Button
-        createButton = QPushButton("Visualize", self)
-        buttonBarLayout.addWidget(createButton)
+        self.createButton = VisualizeMotionButton(
+            self.params, self.onVisualizationsCreated
+        )
+        buttonBarLayout.addWidget(self.createButton)
 
-        downloadButton = QPushButton("Save Visualization", self)
-        downloadButton.setEnabled(False)
-        buttonBarLayout.addWidget(downloadButton)
+        self.opensim_config = VisualizeTaskConfig()
+        self.opensim_config.visualization_mode = "opensim"
+        self.opensim_config.visualization_args = dict(
+            with_blender=False,
+        )
+        self.downloadButton = OpenSimButton(self.opensim_config, self.saveVisualizations)
+        buttonBarLayout.addWidget(self.downloadButton)
 
         self.innerLayout.addWidget(buttonBar)
+
+    def onVisualizationsCreated(self, status, result):
+        pass
+
+    def saveVisualizations(self, status, result):
+        print("Saving visualizations:", status, result)

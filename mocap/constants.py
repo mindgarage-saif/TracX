@@ -1,7 +1,7 @@
 import os
 
 # Define application metadata.
-APP_NAME = "PoseTrack Studio"
+APP_NAME = "Posimata3D"
 APP_NAME_SLUG = APP_NAME.lower().replace(" ", "-")
 APP_VERSION = "0.1.0"
 
@@ -16,8 +16,12 @@ APP_PROJECTS = os.path.join(APP_FILES, "Projects")
 OPENSIM_DIR = os.path.join(APP_ASSETS, "opensim", "Pose2Sim_Halpe26")
 
 # Define supported formats.
-SUPPORTED_VIDEO_FORMATS = ["mp4", "avi"]
-SUPPORTED_IMAGE_FORMATS = ["jpg", "jpeg", "png"]
+SUPPORTED_VIDEO_FORMATS = [".mp4", ".avi", ".mov"]
+SUPPORTED_IMAGE_FORMATS = [".jpg", ".jpeg", ".png"]
+
+# Other constants.
+MIN_VIDEOS = 3
+MAX_VIDEOS = 15
 
 
 def create_directories():
