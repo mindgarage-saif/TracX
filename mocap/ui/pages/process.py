@@ -145,6 +145,7 @@ class ProcessingPage(BasePage):
         try:
             self.motionOptions.params.experiment_name = name
             self.visualizationOptions.params.experiment_name = name
+            self.visualizationOptions.opensim_config.experiment_name = name
             self.experiment = Experiment(name, create=False)
             self.log(f"Loaded experiment: {self.experiment}")
 
@@ -160,6 +161,7 @@ class ProcessingPage(BasePage):
 
             self.motionOptions.estimateButton.log_file = self.experiment.log_file
             self.visualizationOptions.createButton.log_file = self.experiment.log_file
+            self.visualizationOptions.downloadButton.log_file = self.experiment.log_file
             self.logs_view.start_log_streaming(self.experiment.log_file)
 
             self.emptyState.hide()

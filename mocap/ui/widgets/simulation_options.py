@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QRadioButton,
     QVBoxLayout,
     QWidget,
@@ -11,7 +10,7 @@ from PyQt6.QtWidgets import (
 from mocap.ui.tasks import VisualizeTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
-from .buttons import VisualizeMotionButton
+from .buttons import OpenSimButton, VisualizeMotionButton
 from .frame import Frame
 
 
@@ -81,8 +80,12 @@ class SimulationOptions(Frame):
         )
         buttonBarLayout.addWidget(self.createButton)
 
-        self.downloadButton = QPushButton("Get OpenSim Files", self)
-        self.downloadButton.clicked.connect(self.saveVisualizations)
+        self.opensim_config = VisualizeTaskConfig()
+        self.opensim_config.visualization_mode = "opensim"
+        self.opensim_config.visualization_args = dict(
+            with_blender=False,
+        )
+        self.downloadButton = OpenSimButton(self.opensim_config, self.saveVisualizations)
         buttonBarLayout.addWidget(self.downloadButton)
 
         self.innerLayout.addWidget(buttonBar)
@@ -90,6 +93,5 @@ class SimulationOptions(Frame):
     def onVisualizationsCreated(self, status, result):
         pass
 
-    def saveVisualizations(self):
-        print("Saving visualizations")
-        pass
+    def saveVisualizations(self, status, result):
+        print("Saving visualizations:", status, result)

@@ -11,8 +11,8 @@ class EstimateMotionButton(BaseTaskButton):
         super().on_start()
         self.setText("Processing...")
 
-    def on_finished(self, status, result):
-        super().on_finished(status, result)
+    def on_finish(self, status, result):
+        super().on_finish(status, result)
         self.setText("Estimate Motion")
         if status:
             self.setEnabled(False)
