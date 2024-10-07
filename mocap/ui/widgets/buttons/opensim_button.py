@@ -1,8 +1,8 @@
 import os
 import shutil
 
-
 from PyQt6.QtWidgets import QFileDialog
+
 from mocap.ui.tasks import VisualizeMotionTask
 
 from .task_button import BaseTaskButton
@@ -10,7 +10,9 @@ from .task_button import BaseTaskButton
 
 class OpenSimButton(BaseTaskButton):
     def __init__(self, task_config, callback):
-        super().__init__("Get OpenSim Files", VisualizeMotionTask, task_config, callback)
+        super().__init__(
+            "Get OpenSim Files", VisualizeMotionTask, task_config, callback
+        )
 
     def on_start(self):
         super().on_start()
@@ -27,10 +29,13 @@ class OpenSimButton(BaseTaskButton):
         # Zip the output directory
         output_dir = os.path.abspath(output_dir)
         parent_dir = os.path.dirname(output_dir)
-        output_zip = parent_dir + f"{self.task.config.experiment_name}-opensim.zip"
+        output_zip = os.path.join(
+            parent_dir, f"{self.task.config.experiment_name}-opensim"
+        )
         shutil.make_archive(output_zip, "zip", output_dir)
 
         # Open a file dialog to save the zip file
+        output_zip += ".zip"
         file_dialog = QFileDialog(self)
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         file_dialog.selectFile(os.path.basename(output_zip))
