@@ -85,7 +85,9 @@ class SimulationOptions(Frame):
         self.opensim_config.visualization_args = dict(
             with_blender=False,
         )
-        self.downloadButton = OpenSimButton(self.opensim_config, self.saveVisualizations)
+        self.downloadButton = OpenSimButton(
+            self.opensim_config, self.saveVisualizations
+        )
         buttonBarLayout.addWidget(self.downloadButton)
 
         self.innerLayout.addWidget(buttonBar)
