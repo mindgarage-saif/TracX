@@ -24,7 +24,7 @@ class Experiment:
         self.videos_dir = os.path.join(self.path, "videos")
         self.pose2d_dir = os.path.join(self.path, "pose")
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
-        self.output_dir = os.path.join(self.path, "vis")
+        self.output_dir = os.path.join(self.path, "output")
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
             self.calibration_dir, "camera_parameters.qca.txt"
@@ -121,7 +121,6 @@ class Experiment:
     def process(
         self,
         correct_rotation=True,
-        do_synchronization=False,
         use_marker_augmentation=False,
     ):
         # Change the working directory to the project directory.
@@ -160,8 +159,6 @@ class Experiment:
         print("Triangulating 2D poses to 3D...")
         Pose2Sim.calibration()
         Pose2Sim.personAssociation()
-        if do_synchronization:
-            Pose2Sim.synchronization()
         Pose2Sim.triangulation()
         Pose2Sim.filtering()
         if use_marker_augmentation:
@@ -185,6 +182,12 @@ class Experiment:
         return os.path.join(self.path, "logs.log")
 
     def _visualize_naive(self, motion_file):
+        # Create a side-by-side visualization using OpenCV
+        # path = os.path.join(self.output_dir, "animation.mp4")
+        animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
+        if os.path.exists(animation_file):
+            return animation_file
+
         # Find FPS of the first camera video
         video_file = self.videos[0]
         video = cv2.VideoCapture(video_file)
@@ -197,45 +200,44 @@ class Experiment:
         renderer = StickFigureRenderer(motion_data, animation_file)
         renderer.render()
 
-        # Create a side-by-side visualization using OpenCV
-        path = os.path.join(self.output_dir, "side_by_side.mp4")
+        return animation_file
 
-        # Read the animation video
-        anim = cv2.VideoCapture(animation_file)
+        # # Read the animation video
+        # anim = cv2.VideoCapture(animation_file)
 
-        # Read the original video
-        video = cv2.VideoCapture(video_file)
+        # # Read the original video
+        # video = cv2.VideoCapture(video_file)
 
-        # Get the video dimensions
-        width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        size = (width * 2, height)
+        # # Get the video dimensions
+        # width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # size = (width * 2, height)
 
-        # Create the output video
-        out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
+        # # Create the output video
+        # out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
 
-        while True:
-            ret1, frame1 = video.read()
-            ret2, frame2 = anim.read()
+        # while True:
+        #     ret1, frame1 = video.read()
+        #     ret2, frame2 = anim.read()
 
-            if not ret1 or not ret2:
-                break
+        #     if not ret1 or not ret2:
+        #         break
 
-            frame1 = cv2.resize(frame1, (width, height))
-            frame2 = cv2.resize(frame2, (width, height))
+        #     frame1 = cv2.resize(frame1, (width, height))
+        #     frame2 = cv2.resize(frame2, (width, height))
 
-            # Concatenate the frames
-            frame = cv2.hconcat([frame1, frame2])
+        #     # Concatenate the frames
+        #     frame = cv2.hconcat([frame1, frame2])
 
-            # Write the frame
-            out.write(frame)
+        #     # Write the frame
+        #     out.write(frame)
 
-        # Release the video objects
-        video.release()
-        anim.release()
-        out.release()
+        # # Release the video objects
+        # video.release()
+        # anim.release()
+        # out.release()
 
-        return path
+        # return path
 
     def _visualize_mesh(self, motion_file):
         pass

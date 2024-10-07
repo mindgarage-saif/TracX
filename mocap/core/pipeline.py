@@ -32,7 +32,6 @@ def execute_pipeline(
     video_files: List[str],
     calibration_file: str,
     correct_rotation=True,
-    do_synchronization=False,
     use_marker_augmentation=False,
     visualization_mode="opensim",
     visualization_args=dict(),
@@ -44,7 +43,6 @@ def execute_pipeline(
         video_files (List[str]): List of paths to video files.
         calibration_file (str): Path to the camera calibration file.
         correct_rotation (bool, optional): Whether to rotate the 2D poses. Defaults to False.
-        do_synchronization (bool, optional): Whether to run synchronization. Defaults to False.
         use_marker_augmentation (bool, optional): Whether to use marker augmentation. Defaults to False.
         opensim (bool, optional): Whether to run OpenSim processing. Defaults to True.
         blender (bool, optional): Whether to run Blender processing. Defaults to False.
@@ -68,16 +66,21 @@ def execute_pipeline(
         print(f"Created {experiment} with {experiment.num_videos} video(s)")
     else:
         experiment = Experiment(experiment_name, create=False)
-        print(f"Loaded {experiment} with {experiment.num_videos} video(s)")
-    print(f"Experiment configuration: {json.dumps(experiment.cfg, indent=4)}")
+        print(
+            f"Loaded experiment '{experiment.name}' with {experiment.num_videos} video(s)"
+        )
+    print(f"Experiment configuration: {json.dumps(experiment.cfg, indent=2)}")
 
+    print("Processing experiment data...")
     experiment.process(
         correct_rotation=correct_rotation,
-        do_synchronization=do_synchronization,
         use_marker_augmentation=use_marker_augmentation,
     )
 
+    print("Visualizing 3D motion...")
     experiment.visualize(
         mode=visualization_mode,
         **visualization_args,
     )
+
+    print("Pipeline execution complete.")

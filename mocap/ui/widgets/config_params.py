@@ -6,7 +6,6 @@ class PipelineParams(edict):
         self.video_files = []
         self.calibration_file = None
         self.correct_rotation = False
-        self.do_synchronization = False
         self.use_marker_augmentation = False
         self.visualization_mode = "naive"
         self.visualization_args = edict()

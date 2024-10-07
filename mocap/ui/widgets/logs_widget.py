@@ -107,7 +107,7 @@ class LogsWidget(QWidget):
         # Append the new text to the log display
         texts = self.log_display.toPlainText().split("\n")
         texts.append(text)
-        text = "\n".join(texts[-10:])  # Limit the number of lines displayed
+        text = "\n".join(texts[-100:])  # Limit the number of lines displayed
 
         self.log_display.setText(text)
         self.log_display.verticalScrollBar().setValue(

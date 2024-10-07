@@ -8,14 +8,17 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from mocap.ui.tasks import VisualizeTaskConfig
+
 from ..config.constants import PAD_X, PAD_Y
+from .buttons import VisualizeMotionButton
 from .frame import Frame
 
 
 class SimulationOptions(Frame):
-    def __init__(self, parent, params):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.params = params
+        self.params = VisualizeTaskConfig()
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
@@ -23,13 +26,13 @@ class SimulationOptions(Frame):
         self.innerLayout.setSpacing(0)
 
         # Section heading
-        heading = QLabel("Visualization", self)
+        heading = QLabel("Simulation", self)
         heading.setProperty("class", "h1")
         self.innerLayout.addWidget(heading)
         self.innerLayout.addSpacing(16)
 
-        # Backend
-        label = QLabel("Simulation Options", self)
+        # Scaling Settings
+        label = QLabel("OpenSim Scaling", self)
         label.setProperty("class", "h2")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
@@ -45,6 +48,14 @@ class SimulationOptions(Frame):
         self.opensim = QRadioButton("OpenSim", self)
         rowLayout.addWidget(self.stick)
         rowLayout.addWidget(self.opensim)
+        rowLayout.addSpacing(PAD_Y)
+
+        # Inverse Kinematics Settings
+        label = QLabel("Inverse Kinematics", self)
+        label.setProperty("class", "h2")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
         rowLayout.addStretch()
 
         self.backend = QButtonGroup(self)
@@ -65,11 +76,20 @@ class SimulationOptions(Frame):
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 
         # Create Button
-        createButton = QPushButton("Visualize", self)
-        buttonBarLayout.addWidget(createButton)
+        self.createButton = VisualizeMotionButton(
+            self.params, self.onVisualizationsCreated
+        )
+        buttonBarLayout.addWidget(self.createButton)
 
-        downloadButton = QPushButton("Save Visualization", self)
-        downloadButton.setEnabled(False)
-        buttonBarLayout.addWidget(downloadButton)
+        self.downloadButton = QPushButton("Get OpenSim Files", self)
+        self.downloadButton.clicked.connect(self.saveVisualizations)
+        buttonBarLayout.addWidget(self.downloadButton)
 
         self.innerLayout.addWidget(buttonBar)
+
+    def onVisualizationsCreated(self, status, result):
+        pass
+
+    def saveVisualizations(self):
+        print("Saving visualizations")
+        pass

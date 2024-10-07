@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 
 from mocap.constants import APP_ASSETS
 from mocap.core import Experiment
+from mocap.ui.tasks import MotionTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
 from ..widgets import (
@@ -19,7 +20,6 @@ from ..widgets import (
     ExperimentDataWidget,
     LogsWidget,
     MotionOptions,
-    PipelineParams,
     SimulationOptions,
 )
 from .base import BasePage
@@ -28,7 +28,7 @@ from .base import BasePage
 class ProcessingPage(BasePage):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.params = PipelineParams()
+        self.params = MotionTaskConfig()
 
         # Create an empty state layout
         self.emptyState = EmptyState(
@@ -100,12 +100,12 @@ class ProcessingPage(BasePage):
         processingFrameLayout.addWidget(self.logs_view, 2)  # Stretch factor 2
 
         # Add motion estimation settings in column 1
-        self.motionOptions = MotionOptions(self, self.params)
+        self.motionOptions = MotionOptions(self)
         self.motionOptions.downloadButton.clicked.connect(self.downloadMotionData)
         column1Layout.addWidget(self.motionOptions)
 
         # Add visualizer settings in column 2
-        self.visualizationOptions = SimulationOptions(self, self.params)
+        self.visualizationOptions = SimulationOptions(self)
         column2Layout.addWidget(self.visualizationOptions)
 
         # Connect the update event
@@ -143,7 +143,8 @@ class ProcessingPage(BasePage):
 
     def showExperiment(self, name):
         try:
-            self.params.experiment_name = name
+            self.motionOptions.params.experiment_name = name
+            self.visualizationOptions.params.experiment_name = name
             self.experiment = Experiment(name, create=False)
             self.log(f"Loaded experiment: {self.experiment}")
 
@@ -158,6 +159,7 @@ class ProcessingPage(BasePage):
             self.visualizationOptions.setEnabled(hasMotionData)
 
             self.motionOptions.estimateButton.log_file = self.experiment.log_file
+            self.visualizationOptions.createButton.log_file = self.experiment.log_file
             self.logs_view.start_log_streaming(self.experiment.log_file)
 
             self.emptyState.hide()
