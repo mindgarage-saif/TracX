@@ -210,7 +210,6 @@ class ProcessingPage(BasePage):
 
     def showExperiment(self, name, est_type):
         try:
-            print(name, est_type)
             self.motionOptions.params.experiment_name = name
             self.visualizationOptions.params.experiment_name = name
             self.visualizationOptions.opensim_config.experiment_name = name
