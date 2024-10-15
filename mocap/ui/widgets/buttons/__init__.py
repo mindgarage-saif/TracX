@@ -1,3 +1,4 @@
 from .estimate_motion_button import EstimateMotionButton
+from .estimate_monocular_motion_button import EstimateMonocularMotionButton
 from .opensim_button import OpenSimButton
 from .visualize_motion_button import VisualizeMotionButton

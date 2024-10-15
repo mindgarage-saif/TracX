@@ -55,8 +55,8 @@ class Sidebar(QFrame):
         if self.onTabSelected:
             self.onTabSelected(index)
 
-    def handleExperimentSelected(self, experiment):
-        self.onExperimentSelected(experiment)
+    def handleExperimentSelected(self, experiment,est_type):
+        self.onExperimentSelected(experiment,est_type)
 
     def recordTabUI(self):
         layout = QVBoxLayout()

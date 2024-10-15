@@ -1,6 +1,6 @@
 import json
 
-from mocap.core import Experiment
+from mocap.core import Experiment,ExperimentMonocular
 
 from .base_task import BaseTask, TaskConfig
 
@@ -17,7 +17,35 @@ class MotionTaskConfig(TaskConfig):
             use_marker_augmentation=False,
         )
 
+class EstimateMotionMonocularTask(BaseTask):
+    """
+    Task for estimating motion.
+    """
 
+    def __init__(self, config: MotionTaskConfig):
+        super().__init__(config)
+
+    def _execute_impl(self):
+        # Read task configuration
+        experiment_name = self.config.experiment_name
+        correct_rotation = self.config.correct_rotation
+        use_marker_augmentation = self.config.use_marker_augmentation
+
+        # Initialize the experiment
+        print("Loading experiment...")
+        experiment = ExperimentMonocular(experiment_name, create=False)
+        print(
+            f"'{experiment.name}' has {experiment.num_videos} video(s) with configuration:"
+        )
+        print(f"{json.dumps(experiment.cfg, indent=2)}")
+
+        print("Estimating motion...")
+        experiment.process_mocular(
+            mode='lightweight',
+            correct_rotation=correct_rotation
+        )
+
+        print("Motion estimation complete")
 class EstimateMotionTask(BaseTask):
     """
     Task for estimating motion.

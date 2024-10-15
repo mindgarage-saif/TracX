@@ -31,9 +31,9 @@ def get_camera_hardware(cam_id):
             value = line.split("=")[1]
             info[key] = value
     return {
-        "manufacturer": info["ID_VENDOR"].replace("_", " "),
-        "model": info["ID_MODEL"].replace("_", " ") + f" {info['ID_MODEL_ID']}",
-        "serial": info["ID_SERIAL"].replace("_", " "),
+        # "manufacturer": info["ID_VENDOR"].replace("_", " "),
+        # "model": info["ID_MODEL"].replace("_", " ") + f" {info['ID_MODEL_ID']}",
+        # "serial": info["ID_SERIAL"].replace("_", " "),
     }
 
 

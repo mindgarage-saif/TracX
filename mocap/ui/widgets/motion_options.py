@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 from mocap.ui.tasks import MotionTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
-from .buttons import EstimateMotionButton
+from .buttons import EstimateMotionButton, EstimateMonocularMotionButton
 from .frame import Frame
 
 
@@ -106,6 +106,8 @@ class MotionOptions(Frame):
         # Create Button
         self.estimateButton = EstimateMotionButton(self.params, self.onMotionEstimated)
         buttonBarLayout.addWidget(self.estimateButton)
+        self.estimateMoncularButton = EstimateMonocularMotionButton(self.params, self.onMotionEstimated)
+        buttonBarLayout.addWidget(self.estimateMoncularButton)
 
         self.downloadButton = QPushButton("Download Motion", self)
         self.downloadButton.setEnabled(False)

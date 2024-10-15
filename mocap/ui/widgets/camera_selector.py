@@ -27,14 +27,14 @@ class CameraItemWidget(QWidget):
         layout.addWidget(self.checkbox)
 
         # Create labels for camera details
-        camera_label = QLabel(
-            f"{camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)"
-        )
-        camera_label.setProperty("class", "body")
-        camera_label.setWordWrap(True)
+        # camera_label = QLabel(
+        #     f"{camera_info['manufacturer']} {camera_info['model']} ({camera_info['width']}x{camera_info['height']} @ {camera_info['fps']} FPS)"
+        # )
+        # camera_label.setProperty("class", "body")
+        # camera_label.setWordWrap(True)
 
-        # Add the camera label to the layout
-        layout.addWidget(camera_label)
+        # # Add the camera label to the layout
+        # layout.addWidget(camera_label)
 
         # Add a stretch to push the items to the left
         layout.addStretch()
