@@ -18,6 +18,7 @@ from ..config.constants import PAD_X, PAD_Y
 from ..widgets import (
     EmptyState,
     ExperimentDataWidget,
+    ExperimentMonocularDataWidget,
     LogsWidget,
     MotionOptions,
     SimulationOptions,
@@ -69,8 +70,8 @@ class ProcessingPage(BasePage):
         self.experimentMonocularUI.setLayout(self.experimentMonocularUILayout)
 
         # Inferencer and visualizer settings
-        # self.experimentDataView = ExperimentDataWidget(self)
-        # self.experimentUILayout.addWidget(self.experimentDataView)
+        self.experimentDataView = ExperimentMonocularDataWidget(self)
+        self.experimentMonocularUILayout.addWidget(self.experimentDataView)
         self.experimentMonocularUILayout.addSpacing(PAD_Y)
 
         self.videoListWidget = QWidget(self)
@@ -118,7 +119,7 @@ class ProcessingPage(BasePage):
         # Connect the update event
         self.motionOptions.setEnabled(False)
         self.visualizationOptions.setEnabled(False)
-        #self.experimentDataView.onUpdate = self.onExperimentDataUploaded
+        self.experimentDataView.onUpdate = self.onExperimentDataUploaded
         self.motionOptions.onUpdate = self.onMotionEstimated
 
     def createExperimentUI(self):
