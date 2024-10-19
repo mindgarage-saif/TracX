@@ -28,37 +28,37 @@ def create_experiment(
     return experiment
 
 
-def execute_pipeline_mocular(
-        video_files: List[str],
-        experiment_name: Optional[str] = None,
-):
-    """Run the full pipeline for a given set of video files and calibration file.
+# def execute_pipeline_mocular(
+#         video_files: List[str],
+#         experiment_name: Optional[str] = None,
+# ):
+#     """Run the full pipeline for a given set of video files and calibration file.
 
-    Args:
-        video_files (List[str]): List of paths to video files.
-        experiment_name (Optional[str], optional): Name of the experiment. Defaults to None.
+#     Args:
+#         video_files (List[str]): List of paths to video files.
+#         experiment_name (Optional[str], optional): Name of the experiment. Defaults to None.
 
-    Raises:
-        ValueError: If the config file is invalid or not a .toml file.
+#     Raises:
+#         ValueError: If the config file is invalid or not a .toml file.
 
-    Note:
-        Assumes camera calibration to be in QCA camera format. It doesn't matter if it is in XML file
-        format or txt file format. But internally it has to be in QCA format.
-    """
-    # Initialize the experiment
-    print("Initializing experiment...")
-    if experiment_name is None:
-        experiment: Experiment = create_experiment(
-            video_files,
-            experiment_name=experiment_name,
-        )
-        print(f"Created {experiment} with {experiment.num_videos} video(s)")
-    else:
-        experiment = Experiment(experiment_name, create=False)
-    print(f"Experiment configuration: {json.dumps(experiment.cfg, indent=2)}")
+#     Note:
+#         Assumes camera calibration to be in QCA camera format. It doesn't matter if it is in XML file
+#         format or txt file format. But internally it has to be in QCA format.
+#     """
+#     # Initialize the experiment
+#     print("Initializing experiment...")
+#     if experiment_name is None:
+#         experiment: Experiment = create_experiment(
+#             video_files,
+#             experiment_name=experiment_name,
+#         )
+#         print(f"Created {experiment} with {experiment.num_videos} video(s)")
+#     else:
+#         experiment = Experiment(experiment_name, create=False)
+#     print(f"Experiment configuration: {json.dumps(experiment.cfg, indent=2)}")
 
-    print("Processing experiment data...")
-    experiment.process_mocular()
+#     print("Processing experiment data...")
+#     experiment.process_mocular()
 
 
 def execute_pipeline(

@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 from mocap.ui.tasks import MotionTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
-from .buttons import EstimateMotionButton, EstimateMonocularMotionButton
+from .buttons import EstimateMotionButton
 from .frame import Frame
 
 
@@ -33,7 +33,7 @@ class MotionOptions(Frame):
         self.innerLayout.addSpacing(16)
 
         # Backend
-        label = QLabel("Select a Model", self)
+        label = QLabel("Select a Model for 2D estimation", self)
         label.setToolTip(
             "Select the model for 2D pose estimation. Lightweight is faster but less accurate. Performance is slower but more accurate."
         )
@@ -106,8 +106,6 @@ class MotionOptions(Frame):
         # Create Button
         self.estimateButton = EstimateMotionButton(self.params, self.onMotionEstimated)
         buttonBarLayout.addWidget(self.estimateButton)
-        self.estimateMoncularButton = EstimateMonocularMotionButton(self.params, self.onMotionEstimated)
-        buttonBarLayout.addWidget(self.estimateMoncularButton)
 
         self.downloadButton = QPushButton("Download Motion", self)
         self.downloadButton.setEnabled(False)

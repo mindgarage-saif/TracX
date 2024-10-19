@@ -19,7 +19,18 @@ class MotionRenderer:
         self.ylimits = self.motion_data.get_ylimits()
         self.zlimits = self.motion_data.get_zlimits()
 
-    def init_view(self, ax):
+    def get_difference(self,minimum,maximum):
+        # minimum can be negative and maximum can also be negative
+        # if minimum is negative and maximum is positive, then the difference is maximum
+
+        if minimum < 0 and maximum < 0:
+            return abs(minimum) - abs(maximum)
+        elif minimum < 0 and maximum > 0:
+            return abs(minimum) + maximum
+        else:
+            return maximum - minimum
+
+    def init_view(self, ax, **kwargs):
         """Set the axes limits for the plot.
 
         Args:
@@ -29,11 +40,14 @@ class MotionRenderer:
         y_min, y_max = self.ylimits
         z_min, z_max = self.zlimits
 
-        x_diff = x_max - x_min
-        y_diff = y_max - y_min
-        z_diff = z_max - z_min
-
-        max_diff = max(x_diff, y_diff) * 0.75
+        x_diff = self.get_difference(x_min,x_max)
+        y_diff = self.get_difference(y_min,y_max)
+        z_diff = self.get_difference(z_min,z_max)
+        if "monocular" in kwargs:
+            max_diff = max(x_diff, y_diff,z_diff) * 0.75
+        else:
+            max_diff = max(x_diff, y_diff) * 0.75
+        
 
         x_center = (x_min + x_max) / 2
         y_center = (y_min + y_max) / 2
@@ -43,14 +57,20 @@ class MotionRenderer:
         x_max = x_center + max_diff / 2
         y_min = y_center - max_diff / 2
         y_max = y_center + max_diff / 2
-        z_min = 0
-        z_max = max_diff
+        if "monocular" in kwargs:
+            z_min = z_center - max_diff / 2
+            z_max = z_center + max_diff / 2
+        else:
+            z_min = 0
+            z_max = max_diff
 
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.set_zlim(z_min, z_max)
-
-        ax.view_init(elev=15, azim=75)
+        elev = kwargs.get("elev", 15)
+        azim = kwargs.get("azim", 75)
+        vertical_axis = kwargs.get("vertical_axis", "z")
+        ax.view_init(elev=elev, azim=azim,vertical_axis=vertical_axis)
 
     def render_frame(
         self,
@@ -65,6 +85,7 @@ class MotionRenderer:
             skeleton (BaseSkeleton): The skeleton to render with the frame's pose.
             metadata (Dict): Additional metadata for the frame.
         """
+        print("Rendering frame2")
         raise NotImplementedError
 
     def render(self):

@@ -66,7 +66,7 @@ def estimation_3d(keypoints_dir,out_put,MODEL,res_w=1920, res_h=1080):
         with open(json_file, 'r') as f:
             data = json.load(f)
         keypoints = np.array(data['people'][0]['pose_keypoints_2d']).reshape(-1, 3)
-        data_2d = np.array(keypoints[[19,11,13,15,12,14,16,18,0,17,5,7,9,6,8,10],:2],dtype=np.float32)
+        data_2d = np.array(keypoints[[19,12,14,16,11,13,15,18,0,17,5,7,9,6,8,10],:2],dtype=np.float32)
         input2 = normalize_data(data_2d,res_w,res_h)
         input2 = input2.reshape(1,-1)
         onnx_input = {

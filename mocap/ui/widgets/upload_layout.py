@@ -145,25 +145,25 @@ class ExperimentMonocularDataWidget(Frame):
         self.innerLayout.addWidget(self.videoUploader)
         self.innerLayout.addSpacing(PAD_Y)
 
-        calibrationSelection = QWidget(self)
-        calibrationSelection.setProperty("class", "empty")
-        calibrationSelection.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        calibrationLayout = QHBoxLayout(calibrationSelection)
-        calibrationLayout.setContentsMargins(0, 0, 0, 0)
-        self.innerLayout.addWidget(calibrationSelection)
+        # calibrationSelection = QWidget(self)
+        # calibrationSelection.setProperty("class", "empty")
+        # calibrationSelection.setSizePolicy(
+        #     QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        # )
+        # calibrationLayout = QHBoxLayout(calibrationSelection)
+        # calibrationLayout.setContentsMargins(0, 0, 0, 0)
+        # self.innerLayout.addWidget(calibrationSelection)
 
-        calibrationSelectionLabels = QWidget(self)
-        calibrationSelectionLabels.setProperty("class", "empty")
-        calibrationSelectionLabels.setSizePolicy(
-            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
-        )
-        calibrationSelectionLabelsLayout = QVBoxLayout(calibrationSelectionLabels)
-        calibrationSelectionLabelsLayout.setContentsMargins(0, 0, 0, 0)
-        calibrationSelectionLabelsLayout.setSpacing(0)
-        calibrationLayout.addWidget(calibrationSelectionLabels)
-        calibrationLayout.addStretch()
+        # calibrationSelectionLabels = QWidget(self)
+        # calibrationSelectionLabels.setProperty("class", "empty")
+        # calibrationSelectionLabels.setSizePolicy(
+        #     QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        # )
+        # calibrationSelectionLabelsLayout = QVBoxLayout(calibrationSelectionLabels)
+        # calibrationSelectionLabelsLayout.setContentsMargins(0, 0, 0, 0)
+        # calibrationSelectionLabelsLayout.setSpacing(0)
+        # calibrationLayout.addWidget(calibrationSelectionLabels)
+        # calibrationLayout.addStretch()
 
         self.onUpdate = lambda status: None
 
@@ -199,10 +199,10 @@ class ExperimentMonocularDataWidget(Frame):
             self.videoUploader.previewSelected([])
             self.videoUploader.setEnabled(True)
 
-        cameraParameters = experiment.get_camera_parameters()
-        self.updateCalibrationFile(cameraParameters)
+        #cameraParameters = experiment.get_camera_parameters()
+        #self.updateCalibrationFile(cameraParameters)
 
-        if experimentVideos and cameraParameters:
+        if experimentVideos:
             self.setEnabled(False)
             self.onUpdate(True)
         else:

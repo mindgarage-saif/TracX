@@ -124,21 +124,21 @@ class Experiment:
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
     
-    def process_mocular(self, mode,correct_rotation):
-        if correct_rotation:
-            rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
-            if not os.path.exists(rotated_dir):
-                rotate_videos(self.videos, rotated_dir, self.calibration_file)
-            else:
-                print("Rotated videos already exist. Skipping rotation...")
+    # def process_mocular(self, mode,correct_rotation):
+    #     if correct_rotation:
+    #         rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
+    #         if not os.path.exists(rotated_dir):
+    #             rotate_videos(self.videos, rotated_dir, self.calibration_file)
+    #         else:
+    #             print("Rotated videos already exist. Skipping rotation...")
 
-            # Rename the videos directories to use the rotated videos
-            if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
-                os.rename(self.videos_dir, self.videos_dir + "_original")
-                os.rename(rotated_dir, self.videos_dir)
-        video_list = os.listdir(self.videos_dir)
-        video_path = os.path.join(self.videos_dir,video_list[0])
-        moncular_estimation(video_path, mode, self.pose2d_dir,self.pose3d_dir)
+    #         # Rename the videos directories to use the rotated videos
+    #         if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
+    #             os.rename(self.videos_dir, self.videos_dir + "_original")
+    #             os.rename(rotated_dir, self.videos_dir)
+    #     video_list = os.listdir(self.videos_dir)
+    #     video_path = os.path.join(self.videos_dir,video_list[0])
+    #     moncular_estimation(video_path, mode, self.pose2d_dir,self.pose3d_dir)
     def process(
         self,
         correct_rotation=True,

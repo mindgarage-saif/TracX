@@ -1,4 +1,6 @@
 from .base_task import BaseTask, TaskConfig
-from .estimate_motion_task import EstimateMotionTask, MotionTaskConfig, EstimateMotionMonocularTask
+from .estimate_motion_task import EstimateMotionTask, MotionTaskConfig
+from .estimate_motion_monocular_task import EstimateMotionMonocularTask, MonocularMotionTaskConfig
 from .task_runner import TaskRunner
 from .visualize_motion_task import VisualizeMotionTask, VisualizeTaskConfig
+from .visualize_motion_monocular_task import VisualizeMotionMonocularTask, VisualizeMonocularTaskConfig

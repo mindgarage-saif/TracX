@@ -15,7 +15,7 @@ from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from ..constants import OPENSIM_DIR
 from .motion import MotionSequence
-from .rotation import rotate_videos, unrotate_pose2d
+from .rotation import rotate_video_monocular
 
 
 class ExperimentMonocular:
@@ -26,6 +26,7 @@ class ExperimentMonocular:
         self.pose2d_dir = os.path.join(self.path, "pose")
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
         self.config_file = os.path.join(self.path, "Config.toml")
+        self.output_dir = os.path.join(self.path, "output")
         self.MODEL = ort.InferenceSession(model_path,providers=['CPUExecutionProvider'])
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
@@ -90,6 +91,7 @@ class ExperimentMonocular:
         os.makedirs(self.videos_dir, exist_ok=True)
         os.makedirs(self.pose2d_dir, exist_ok=True)
         os.makedirs(self.pose3d_dir, exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
 
     @property
     def videos(self) -> list:
@@ -125,11 +127,11 @@ class ExperimentMonocular:
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
     
-    def process_mocular(self, mode,correct_rotation):
+    def process_monocular(self, mode,correct_rotation,rotation):
         if correct_rotation:
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
-                rotate_videos(self.videos, rotated_dir, self.calibration_file)
+                rotate_video_monocular(self.videos, rotated_dir, rotation)
             else:
                 print("Rotated videos already exist. Skipping rotation...")
 
@@ -147,7 +149,7 @@ class ExperimentMonocular:
         pose_3d = [
             f
             for f in os.listdir(self.pose3d_dir)
-            if f.endswith("3d.json")
+            if f.endswith("data.json")
         ]
         if len(pose_3d) == 0:
             return None
@@ -160,7 +162,7 @@ class ExperimentMonocular:
     def _visualize_naive(self, motion_file):
         # Create a side-by-side visualization using OpenCV
         # path = os.path.join(self.output_dir, "animation.mp4")
-        raise NotImplementedError
+
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         if os.path.exists(animation_file):
             return animation_file
@@ -173,8 +175,8 @@ class ExperimentMonocular:
 
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        motion_data = MotionSequence.from_pose2sim_trc(motion_file)
-        renderer = StickFigureRenderer(motion_data, animation_file)
+        motion_data = MotionSequence.from_monocular_json(motion_file,fps)
+        renderer = StickFigureRenderer(motion_data, animation_file,monocular=True,elev=-165,azim=155,vertical_axis="y")
         renderer.render()
 
         return animation_file
@@ -217,29 +219,13 @@ class ExperimentMonocular:
         # return path
 
     def _visualize_mesh(self, motion_file):
-        pass
+        raise NotImplementedError("OpenSim visualization is not yet supported.")
 
     def _visualize_mixamo(self, motion_file):
-        pass
+        raise NotImplementedError("OpenSim visualization is not yet supported.")
 
     def _visualize_opensim(self, motion_file, with_blender=False):
-        copy_tree(
-            os.path.join(OPENSIM_DIR, "..", "geometry"),
-            os.path.join(self.output_dir, "Geometry"),
-        )
-        output, mot, scaled_model = create_opensim_vis(
-            trc=motion_file,
-            experiment_dir=self.path,
-            scaling_time_range=[0.5, 1.0],
-            ik_time_range=None,
-        )
-
-        if with_blender:
-            bodykin_from_mot_osim.bodykin_from_mot_osim_func(
-                mot, scaled_model, os.path.join(output, "bodykin.csv")
-            )
-
-        return output, mot, scaled_model
+        raise NotImplementedError("OpenSim visualization is not yet supported.")
 
     def visualize(self, mode="naive", **kwargs):
         """Visualize the results of the experiment.

@@ -3,8 +3,8 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 
-from .skeletons import BaseSkeleton, Halpe26Skeleton, TheiaSkeleton
-
+from .skeletons import BaseSkeleton, Halpe26Skeleton, TheiaSkeleton,MonocularSkeleton
+import json
 
 def get_range(vals):
     """Get the minimum and maximum values of a list of values, ignoring outliers.
@@ -53,6 +53,25 @@ def df_from_trc(trc_path):
         trc_path, sep="\t", skiprows=5, index_col=False, header=None, names=labels_FTXYZ
     )
     return header, data
+
+index_to_bodypart_for_monocular = {
+    0:"Hip",
+    1:"RHip",
+    2:"RKnee",
+    3:"RAnkle",
+    4:"LHip",
+    5:"LKnee",
+    6:"LAnkle",
+    7:"Neck",
+    8:"Nose",
+    9:"Head",
+    10:"LShoulder",
+    11:"LElbow",
+    12:"LWrist",
+    13:"RShoulder",
+    14:"RElbow",
+    15:"RWrist",
+    }
 
 
 class MotionSequence:
@@ -179,4 +198,20 @@ class MotionSequence:
 
             motion.set_frame(frame_idx, pose)
 
+        return motion
+    
+    @staticmethod
+    def from_monocular_json(path: str,fps):
+        # Load the JSON file
+        with open(path, "r") as file:
+            data = json.load(file)
+
+        skeleton = MonocularSkeleton()
+        motion = MotionSequence(skeleton, fps)
+        for frame_idx in range(len(data.keys())):
+            pose = {}
+            for i in range(0,len(data[str(frame_idx)])):
+                j_name = index_to_bodypart_for_monocular[i]
+                pose[j_name] = (data[str(frame_idx)][i][0],data[str(frame_idx)][i][1],data[str(frame_idx)][i][2])
+            motion.set_frame(frame_idx, pose)
         return motion

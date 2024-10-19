@@ -21,7 +21,9 @@ from ..widgets import (
     ExperimentMonocularDataWidget,
     LogsWidget,
     MotionOptions,
+    MotionOptionsMonocular,
     SimulationOptions,
+    SimulationOptionsMonocular,
 )
 from .base import BasePage
 
@@ -70,8 +72,8 @@ class ProcessingPage(BasePage):
         self.experimentMonocularUI.setLayout(self.experimentMonocularUILayout)
 
         # Inferencer and visualizer settings
-        self.experimentDataView = ExperimentMonocularDataWidget(self)
-        self.experimentMonocularUILayout.addWidget(self.experimentDataView)
+        self.experimentDataViewMonocular = ExperimentMonocularDataWidget(self)
+        self.experimentMonocularUILayout.addWidget(self.experimentDataViewMonocular)
         self.experimentMonocularUILayout.addSpacing(PAD_Y)
 
         self.videoListWidget = QWidget(self)
@@ -97,30 +99,30 @@ class ProcessingPage(BasePage):
         column2Layout.setContentsMargins(0, 0, 0, 0)
         column2Layout.setSpacing(PAD_Y)
 
-        self.logs_view = LogsWidget(self)
-        self.logs_view.setSizePolicy(
+        self.logs_viewMonocular = LogsWidget(self)
+        self.logs_viewMonocular.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )
 
         # Add columns to the horizontal layout with equal stretch factors
         processingFrameLayout.addWidget(column1, 1)  # Stretch factor 1
         processingFrameLayout.addWidget(column2, 1)  # Stretch factor 1
-        processingFrameLayout.addWidget(self.logs_view, 2)  # Stretch factor 2
+        processingFrameLayout.addWidget(self.logs_viewMonocular, 2)  # Stretch factor 2
 
         # Add motion estimation settings in column 1
-        self.motionOptions = MotionOptions(self)
-        self.motionOptions.downloadButton.clicked.connect(self.downloadMotionData)
-        column1Layout.addWidget(self.motionOptions)
+        self.motionOptionsMonocular = MotionOptionsMonocular(self)
+        self.motionOptionsMonocular.downloadButton.clicked.connect(self.downloadMotionData)
+        column1Layout.addWidget(self.motionOptionsMonocular)
 
         # Add visualizer settings in column 2
-        self.visualizationOptions = SimulationOptions(self)
-        column2Layout.addWidget(self.visualizationOptions)
+        self.visualizationOptionsMonocular = SimulationOptionsMonocular(self)
+        column2Layout.addWidget(self.visualizationOptionsMonocular)
 
         # Connect the update event
-        self.motionOptions.setEnabled(False)
-        self.visualizationOptions.setEnabled(False)
-        self.experimentDataView.onUpdate = self.onExperimentDataUploaded
-        self.motionOptions.onUpdate = self.onMotionEstimated
+        self.motionOptionsMonocular.setEnabled(False)
+        self.visualizationOptionsMonocular.setEnabled(False)
+        self.experimentDataViewMonocular.onUpdate = self.onExperimentMonocularDataUploaded
+        self.motionOptionsMonocular.onUpdate = self.onMotionMoncularEstimated
 
     def createExperimentUI(self):
         # Create a layout for the processing page
@@ -185,8 +187,16 @@ class ProcessingPage(BasePage):
     def onExperimentDataUploaded(self, status):
         self.motionOptions.setEnabled(status)
 
+    def onExperimentMonocularDataUploaded(self, status):
+        self.motionOptionsMonocular.setEnabled(status)
+
     def onMotionEstimated(self, status, result):
         self.visualizationOptions.setEnabled(status)
+        if not status:
+            self.showAlert(str(result), "Motion Estimation Failed")
+
+    def onMotionMoncularEstimated(self, status, result):
+        self.visualizationOptionsMonocular.setEnabled(status)
         if not status:
             self.showAlert(str(result), "Motion Estimation Failed")
 
@@ -211,29 +221,41 @@ class ProcessingPage(BasePage):
 
     def showExperiment(self, name, est_type):
         try:
-            self.motionOptions.params.experiment_name = name
-            self.visualizationOptions.params.experiment_name = name
-            self.visualizationOptions.opensim_config.experiment_name = name
             if est_type == "pose2sim":
+                self.motionOptions.params.experiment_name = name
+                self.visualizationOptions.params.experiment_name = name
+                self.visualizationOptions.opensim_config.experiment_name = name
                 self.experiment = Experiment(name, create=False)
+                self.experimentDataView.setExperiment(self.experiment)
+                self.experimentDataView.videoUploader.previewSelected(
+                    self.experiment.videos
+                )
+                hasMotionData = self.experiment.get_motion_file() is not None
+                self.motionOptions.estimateButton.setEnabled(not hasMotionData)
+                self.motionOptions.downloadButton.setEnabled(hasMotionData)
+                self.visualizationOptions.setEnabled(hasMotionData)
+
+                self.motionOptions.estimateButton.log_file = self.experiment.log_file
+                self.visualizationOptions.createButton.log_file = self.experiment.log_file
+                self.visualizationOptions.downloadButton.log_file = self.experiment.log_file
+                self.logs_view.start_log_streaming(self.experiment.log_file)
             else:
+                self.motionOptionsMonocular.params.experiment_name = name
+                self.visualizationOptionsMonocular.params.experiment_name = name
                 self.experiment = ExperimentMonocular(name, create=False)
+                self.experimentDataViewMonocular.setExperiment(self.experiment)
+                self.experimentDataViewMonocular.videoUploader.previewSelected(
+                    self.experiment.videos
+                )
+                hasMotionData = self.experiment.get_motion_file() is not None
+                self.motionOptionsMonocular.estimateMoncularButton.setEnabled(not hasMotionData)
+                self.motionOptionsMonocular.downloadButton.setEnabled(hasMotionData)
+                self.visualizationOptionsMonocular.setEnabled(hasMotionData)
+
+                self.motionOptionsMonocular.estimateMoncularButton.log_file = self.experiment.log_file
+                self.visualizationOptionsMonocular.createButton.log_file = self.experiment.log_file
+                self.logs_viewMonocular.start_log_streaming(self.experiment.log_file)
             self.log(f"Loaded experiment: {self.experiment}")
-
-            self.experimentDataView.setExperiment(self.experiment)
-            self.experimentDataView.videoUploader.previewSelected(
-                self.experiment.videos
-            )
-
-            hasMotionData = self.experiment.get_motion_file() is not None
-            self.motionOptions.estimateButton.setEnabled(not hasMotionData)
-            self.motionOptions.downloadButton.setEnabled(hasMotionData)
-            self.visualizationOptions.setEnabled(hasMotionData)
-
-            self.motionOptions.estimateButton.log_file = self.experiment.log_file
-            self.visualizationOptions.createButton.log_file = self.experiment.log_file
-            self.visualizationOptions.downloadButton.log_file = self.experiment.log_file
-            self.logs_view.start_log_streaming(self.experiment.log_file)
 
             self.emptyState.hide()
             if est_type == "pose2sim":
