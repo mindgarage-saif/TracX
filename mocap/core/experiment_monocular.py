@@ -19,7 +19,7 @@ from .rotation import rotate_video_monocular
 
 
 class ExperimentMonocular:
-    def __init__(self, name, create=True, base_dir=APP_PROJECTS,model_path = r"C:\Users\Jeremias\Downloads\basline_model_MB.onnx") -> None:
+    def __init__(self, name, create=True, base_dir=APP_PROJECTS,model_path = r"basline_model_MB.onnx") -> None:
         self.name = name
         self.path = os.path.abspath(os.path.join(base_dir, name))
         self.videos_dir = os.path.join(self.path, "videos")
@@ -141,6 +141,7 @@ class ExperimentMonocular:
                 os.rename(rotated_dir, self.videos_dir)
         video_list = os.listdir(self.videos_dir)
         video_path = os.path.join(self.videos_dir,video_list[0])
+        print(mode)
         res_w,res_h,fps = estimation_2d(video_path, mode, self.pose2d_dir,self.device,self.backend)
         estimation_3d(self.pose2d_dir,self.pose3d_dir,self.MODEL,res_w,res_h)
     

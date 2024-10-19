@@ -80,7 +80,6 @@ def estimation_3d(keypoints_dir,out_put,MODEL,res_w=1920, res_h=1080):
         json.dump(data_3d_dic,f)
 
 def estimation_2d(video_path,mode = 'lightweight',json_output_dir = '',device = 'cpu',backend = 'auto'):
-    print("Estimation 2d")
     video_name_wo_ext = os.path.basename(video_path).split(".")[0]
     ModelClass = BodyWithFeet
     try:
@@ -105,8 +104,6 @@ def estimation_2d(video_path,mode = 'lightweight',json_output_dir = '',device = 
     frame_idx = 0
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = cap.get(cv2.CAP_PROP_FPS)
-
-    #plt.ion()
     with tqdm(total=total_frames, desc=f'Processing {os.path.basename(video_path)}') as pbar:
         while cap.isOpened():
             success, frame = cap.read()
@@ -119,6 +116,10 @@ def estimation_2d(video_path,mode = 'lightweight',json_output_dir = '',device = 
             pbar.update(1)
     cap.release()
     return res_w, res_h ,fps
+
+
+
+
 def moncular_estimation(video_path, mode = 'lightweight',json_output_dir = '',pose3d_dir=''):
     try:
         if torch.cuda.is_available() and 'CUDAExecutionProvider' in ort.get_available_providers():

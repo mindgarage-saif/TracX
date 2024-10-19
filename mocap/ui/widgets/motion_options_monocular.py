@@ -64,6 +64,7 @@ class MotionOptionsMonocular(Frame):
         self.modelWidgetLayout.addWidget(self.lightweightMode)
         self.modelWidgetLayout.addWidget(self.balancedMode)
         self.modelWidgetLayout.addWidget(self.performanceMode)
+        self.model.buttonClicked.connect(self.model_changed)
 
         # Correct Options
         self.innerLayout.addSpacing(16)
