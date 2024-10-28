@@ -203,7 +203,8 @@ opensim_bin_path = 'C:\OpenSim 4.4\bin'
 #                                      print(f'{pre}{node.name} id={node.id}')
 [pose.CUSTOM]
 name = "CHip"
-id = "19"
+id = 40
+
   [[pose.CUSTOM.children]]
   name = "RHip"
   id = 12
@@ -215,13 +216,14 @@ id = "19"
         id = 16
            [[pose.CUSTOM.children.children.children.children]]
            name = "RBigToe"
-           id = 21
+           id = 19
               [[pose.CUSTOM.children.children.children.children.children]]
               name = "RSmallToe"
-              id = 23
+              id = 21
            [[pose.CUSTOM.children.children.children.children]]
            name = "RHeel"
-           id = 25
+           id = 23
+
   [[pose.CUSTOM.children]]
   name = "LHip"
   id = 11
@@ -233,37 +235,88 @@ id = "19"
         id = 15
            [[pose.CUSTOM.children.children.children.children]]
            name = "LBigToe"
-           id = 20
+           id = 18
               [[pose.CUSTOM.children.children.children.children.children]]
               name = "LSmallToe"
-              id = 22
+              id = 20
            [[pose.CUSTOM.children.children.children.children]]
            name = "LHeel"
-           id = 24
+           id = 22
+
   [[pose.CUSTOM.children]]
-  name = "Neck"
-  id = 18
+  name = "Spine_Lumba5"
+  id = 40
      [[pose.CUSTOM.children.children]]
-     name = "Head"
-     id = 17
+     name = "Spine_Lumba4"
+     id = 39
         [[pose.CUSTOM.children.children.children]]
-        name = "Nose"
-        id = 0
-     [[pose.CUSTOM.children.children]]
-     name = "RShoulder"
-     id = 6
-        [[pose.CUSTOM.children.children.children]]
-        name = "RElbow"
-        id = 8
+        name = "Spine_Lumba3"
+        id = 38
            [[pose.CUSTOM.children.children.children.children]]
-           name = "RWrist"
-           id = 10
-     [[pose.CUSTOM.children.children]]
-     name = "LShoulder"
-     id = 5
-        [[pose.CUSTOM.children.children.children]]
-        name = "LElbow"
-        id = 7
-           [[pose.CUSTOM.children.children.children.children]]
-           name = "LWrist"
-           id = 9
+           name = "Spine_Lumba2"
+           id = 37
+              [[pose.CUSTOM.children.children.children.children.children]]
+              name = "Spine_Lumba1"
+              id = 36
+                 [[pose.CUSTOM.children.children.children.children.children.children]]
+                 name = "Thoracic12"
+                 id = 35
+                    [[pose.CUSTOM.children.children.children.children.children.children.children]]
+                    name = "Thoracic11"
+                    id = 34
+                       [[pose.CUSTOM.children.children.children.children.children.children.children.children]]
+                       name = "Thoracic10"
+                       id = 33
+                          [[pose.CUSTOM.children.children.children.children.children.children.children.children.children]]
+                          name = "Thoracic9"
+                          id = 32
+                             [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children]]
+                             name = "Thoracic8"
+                             id = 31
+                                [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children]]
+                                name = "Thoracic7"
+                                id = 30
+                                   [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                   name = "Thoracic6"
+                                   id = 29
+                                      [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                      name = "Thoracic5"
+                                      id = 28
+                                         [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                         name = "Thoracic4"
+                                         id = 27
+                                            [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                            name = "Thoracic3"
+                                            id = 26
+                                               [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                               name = "Thoracic2"
+                                               id = 25
+                                                  [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                  name = "Thoracic1"
+                                                  id = 24
+                                                        [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                        name = "Head"
+                                                        id = 17
+                                                           [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                           name = "Nose"
+                                                           id = 0
+
+                                                        [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                        name = "RShoulder"
+                                                        id = 6
+                                                           [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                           name = "RElbow"
+                                                           id = 8
+                                                              [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                              name = "RWrist"
+                                                              id = 10
+
+                                                        [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                        name = "LShoulder"
+                                                        id = 5
+                                                           [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                           name = "LElbow"
+                                                           id = 7
+                                                              [[pose.CUSTOM.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children.children]]
+                                                              name = "LWrist"
+                                                              id = 9

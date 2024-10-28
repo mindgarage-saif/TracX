@@ -87,12 +87,11 @@ class BaseSkeleton:
         self.joints = [Joint(name) for name in joint_names]
         self.feet_joints = []
         self.connections = []
-        for connection in connections:
+        for i,connection in enumerate(connections):
             joint1 = self.get_joint(connection[0])
             joint2 = self.get_joint(connection[1])
             if not joint1 or not joint2:
                 raise ValueError(f"Invalid connection: {connection}")
-
             self.connections.append((joint1, joint2))
 
     def set_feet_joints(self, feet_joints: List[str]):
@@ -119,7 +118,6 @@ class BaseSkeleton:
         for joint in self.joints:
             if joint.name == name:
                 return joint
-
         return None
 
     def get_joint_names(self):
