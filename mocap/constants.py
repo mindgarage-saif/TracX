@@ -20,7 +20,7 @@ SUPPORTED_VIDEO_FORMATS = [".mp4", ".avi", ".mov"]
 SUPPORTED_IMAGE_FORMATS = [".jpg", ".jpeg", ".png"]
 
 # Other constants.
-MIN_VIDEOS = 3
+MIN_VIDEOS = 1
 MAX_VIDEOS = 15
 
 

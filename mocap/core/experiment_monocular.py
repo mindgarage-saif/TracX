@@ -2,35 +2,52 @@ import os
 import shutil
 from distutils.dir_util import copy_tree
 from typing import Optional
+import onnxruntime as ort
+import torch
 import json
 import cv2
 import toml
 from easydict import EasyDict as edict
-from Pose2Sim import Pose2Sim
-from Pose2Sim.Utilities import bodykin_from_mot_osim
-from mocap.core.monocular_pipeline import moncular_estimation
+from mocap.core.monocular_pipeline import moncular_estimation,estimation_2d,estimation_3d
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from ..constants import OPENSIM_DIR
 from .motion import MotionSequence
-from .rotation import rotate_videos, unrotate_pose2d
+from .rotation import rotate_video_monocular
 
 
-class Experiment:
-    def __init__(self, name, create=True, base_dir=APP_PROJECTS) -> None:
+class ExperimentMonocular:
+    def __init__(self, name, create=True, base_dir=APP_PROJECTS,model_path = r"basline_model_MB.onnx") -> None:
         self.name = name
         self.path = os.path.abspath(os.path.join(base_dir, name))
         self.videos_dir = os.path.join(self.path, "videos")
         self.pose2d_dir = os.path.join(self.path, "pose")
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
+        self.config_file = os.path.join(self.path, "Config.toml")
         self.output_dir = os.path.join(self.path, "output")
+        self.MODEL = ort.InferenceSession(model_path,providers=['CPUExecutionProvider'])
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
             self.calibration_dir, "camera_parameters.qca.txt"
         )
-        self.config_file = os.path.join(self.path, "Config.toml")
+        try:
+            if torch.cuda.is_available() and 'CUDAExecutionProvider' in ort.get_available_providers():
+                self.device = 'cuda'
+                self.backend = 'onnxruntime'
+            else:
+                raise 
+        except:
+            try:
+                if 'MPSExecutionProvider' in ort.get_available_providers() or 'CoreMLExecutionProvider' in ort.get_available_providers():
+                    self.device = 'mps'
+                    self.backend = 'onnxruntime'
+                else:
+                    raise
+            except:
+                self.device = 'cpu'
+                self.backend = 'openvino'
 
         if create:
             try:
@@ -51,11 +68,6 @@ class Experiment:
 
     @staticmethod
     def list():
-        if os.path.exists(os.path.join(APP_PROJECTS, "experiments.json")):
-            with open(os.path.join(APP_PROJECTS, "experiments.json"), "r") as f:
-                data = json.load(f)
-            return sorted(data["experiments"],key = lambda x: x['name'])
-        return []
         return sorted(
             [
                 name
@@ -80,7 +92,6 @@ class Experiment:
         os.makedirs(self.pose2d_dir, exist_ok=True)
         os.makedirs(self.pose3d_dir, exist_ok=True)
         os.makedirs(self.output_dir, exist_ok=True)
-        os.makedirs(self.calibration_dir, exist_ok=True)
 
     @property
     def videos(self) -> list:
@@ -113,48 +124,14 @@ class Experiment:
     def has_videos(self):
         return self.num_videos > 0
 
-    def set_camera_parameters(self, params_file):
-        if params_file.split(".")[-1].lower() != "xml":
-            raise ValueError(
-                "Invalid calibration file format. We except a Qualisys calibration file in XML format."
-            )
-
-        shutil.copy(params_file, self.calibration_file)
-
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
     
-    # def process_mocular(self, mode,correct_rotation):
-    #     if correct_rotation:
-    #         rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
-    #         if not os.path.exists(rotated_dir):
-    #             rotate_videos(self.videos, rotated_dir, self.calibration_file)
-    #         else:
-    #             print("Rotated videos already exist. Skipping rotation...")
-
-    #         # Rename the videos directories to use the rotated videos
-    #         if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
-    #             os.rename(self.videos_dir, self.videos_dir + "_original")
-    #             os.rename(rotated_dir, self.videos_dir)
-    #     video_list = os.listdir(self.videos_dir)
-    #     video_path = os.path.join(self.videos_dir,video_list[0])
-    #     moncular_estimation(video_path, mode, self.pose2d_dir,self.pose3d_dir)
-    def process(
-        self,
-        correct_rotation=True,
-        use_marker_augmentation=False,
-    ):
-        # Change the working directory to the project directory.
-        cwd = os.getcwd()
-        os.chdir(self.path)
-
-        if not self.has_videos():
-            raise ValueError("No videos found in the project directory.")
-
+    def process_monocular(self, mode,correct_rotation,rotation):
         if correct_rotation:
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
-                rotate_videos(self.videos, rotated_dir, self.calibration_file)
+                rotate_video_monocular(self.videos, rotated_dir, rotation)
             else:
                 print("Rotated videos already exist. Skipping rotation...")
 
@@ -162,41 +139,22 @@ class Experiment:
             if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
                 os.rename(self.videos_dir, self.videos_dir + "_original")
                 os.rename(rotated_dir, self.videos_dir)
-
-        # Execute the 2D pose estimation
-        print("Executing 2D pose estimatioan...")
-        Pose2Sim.poseEstimation()
-
-        # Unrotate the 2D poses
-        if correct_rotation:
-            # Restore the original videos
-            os.rename(self.videos_dir, self.videos_dir + "_rotated")
-            os.rename(self.videos_dir + "_original", self.videos_dir)
-
-            print("Rotating 2D poses back...")
-            unrotate_pose2d(self.pose2d_dir, self.calibration_file)
-
-        # Triangulate the 2D poses to 3D
-        print("Triangulating 2D poses to 3D...")
-        Pose2Sim.calibration()
-        Pose2Sim.personAssociation()
-        Pose2Sim.triangulation()
-        Pose2Sim.filtering()
-        if use_marker_augmentation:
-            Pose2Sim.markerAugmentation()
-
-        # Restore the working directory
-        os.chdir(cwd)
+        video_list = os.listdir(self.videos_dir)
+        video_path = os.path.join(self.videos_dir,video_list[0])
+        print(mode)
+        res_w,res_h,fps = estimation_2d(video_path, mode, self.pose2d_dir,self.device,self.backend)
+        estimation_3d(self.pose2d_dir,self.pose3d_dir,self.MODEL,res_w,res_h)
+    
 
     def get_motion_file(self) -> Optional[str]:
-        trc_files = [
+        pose_3d = [
             f
             for f in os.listdir(self.pose3d_dir)
-            if f.endswith("_filt_butterworth.trc")
+            if f.endswith("data.json")
         ]
-        if len(trc_files) == 0:
+        if len(pose_3d) == 0:
             return None
-        return os.path.join(self.pose3d_dir, trc_files[0])
+        return os.path.join(self.pose3d_dir, pose_3d[0])
 
     @property
     def log_file(self):
@@ -205,6 +163,7 @@ class Experiment:
     def _visualize_naive(self, motion_file):
         # Create a side-by-side visualization using OpenCV
         # path = os.path.join(self.output_dir, "animation.mp4")
+
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         if os.path.exists(animation_file):
             return animation_file
@@ -217,8 +176,8 @@ class Experiment:
 
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        motion_data = MotionSequence.from_pose2sim_trc(motion_file)
-        renderer = StickFigureRenderer(motion_data, animation_file)
+        motion_data = MotionSequence.from_monocular_json(motion_file,fps)
+        renderer = StickFigureRenderer(motion_data, animation_file,monocular=True,elev=-165,azim=155,vertical_axis="y")
         renderer.render()
 
         return animation_file
@@ -261,29 +220,13 @@ class Experiment:
         # return path
 
     def _visualize_mesh(self, motion_file):
-        pass
+        raise NotImplementedError("OpenSim visualization is not yet supported.")
 
     def _visualize_mixamo(self, motion_file):
-        pass
+        raise NotImplementedError("OpenSim visualization is not yet supported.")
 
     def _visualize_opensim(self, motion_file, with_blender=False):
-        copy_tree(
-            os.path.join(OPENSIM_DIR, "..", "geometry"),
-            os.path.join(self.output_dir, "Geometry"),
-        )
-        output, mot, scaled_model = create_opensim_vis(
-            trc=motion_file,
-            experiment_dir=self.path,
-            scaling_time_range=[0.5, 1.0],
-            ik_time_range=None,
-        )
-
-        if with_blender:
-            bodykin_from_mot_osim.bodykin_from_mot_osim_func(
-                mot, scaled_model, os.path.join(output, "bodykin.csv")
-            )
-
-        return output, mot, scaled_model
+        raise NotImplementedError("OpenSim visualization is not yet supported.")
 
     def visualize(self, mode="naive", **kwargs):
         """Visualize the results of the experiment.

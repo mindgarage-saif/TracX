@@ -33,7 +33,7 @@ class MotionOptions(Frame):
         self.innerLayout.addSpacing(16)
 
         # Backend
-        label = QLabel("Select a Model", self)
+        label = QLabel("Select a Model for 2D estimation", self)
         label.setToolTip(
             "Select the model for 2D pose estimation. Lightweight is faster but less accurate. Performance is slower but more accurate."
         )

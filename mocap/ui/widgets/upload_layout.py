@@ -24,7 +24,7 @@ from .video_list import VideoList
 class VideoUploaderWidget(QFrame):
     """Widget for uploading experiment videos."""
 
-    def __init__(self, parent: QWidget) -> None:
+    def __init__(self, parent: QWidget,MIN_Videos = MIN_VIDEOS,MAX_Videos=MAX_VIDEOS) -> None:
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -35,9 +35,10 @@ class VideoUploaderWidget(QFrame):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setFixedHeight(300)
         self.setAcceptDrops(True)
-
+        self.Min_vid = MIN_Videos
+        self.Max_vid = MAX_Videos
         self.label = QLabel(
-            f"Select or drop {MIN_VIDEOS}-{MAX_VIDEOS} videos here", self
+            f"Select or drop {self.Min_vid}-{self.Max_vid} videos here", self
         )
         self.label.setProperty("class", "body")
         self.label.setWordWrap(True)
@@ -107,13 +108,111 @@ class VideoUploaderWidget(QFrame):
             fmt = os.path.splitext(file)[1]
             return fmt.lower() in SUPPORTED_VIDEO_FORMATS and os.path.isfile(file)
 
-        files = [f for f in files if isVideoFile(f)][:MAX_VIDEOS]
-        if len(files) >= MIN_VIDEOS:
+        files = [f for f in files if isVideoFile(f)][:self.Max_vid]
+        if len(files) >= self.Min_vid:
             self.label.hide()
             self.onVideosSelected(files)
         else:
-            self.label.setText(f"Select at least {MIN_VIDEOS} videos")
+            self.label.setText(f"Select at least {self.Min_vid} videos")
             self.label.show()
+
+
+class ExperimentMonocularDataWidget(Frame):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+
+        self.innerLayout = QVBoxLayout(self)
+        self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
+        self.setAcceptDrops(True)
+
+        label = QLabel("Experiment Video", self)
+        label.setProperty("class", "h3")
+        label.setWordWrap(True)
+        self.innerLayout.addWidget(label)
+
+        info = QLabel(
+            "Select 1 video of a motion sequence to estimate 3D human poses.",
+            self,
+        )
+        info.setProperty("class", "body")
+        info.setWordWrap(True)
+        self.innerLayout.addWidget(info)
+        self.innerLayout.addSpacing(PAD_Y)
+
+        # Create a placeholder for drag-and-drop area
+        self.videoUploader = VideoUploaderWidget(self,1,1)
+        self.videoUploader.onVideosSelected = self.handleVideosSelected
+        self.innerLayout.addWidget(self.videoUploader)
+        self.innerLayout.addSpacing(PAD_Y)
+
+        # calibrationSelection = QWidget(self)
+        # calibrationSelection.setProperty("class", "empty")
+        # calibrationSelection.setSizePolicy(
+        #     QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        # )
+        # calibrationLayout = QHBoxLayout(calibrationSelection)
+        # calibrationLayout.setContentsMargins(0, 0, 0, 0)
+        # self.innerLayout.addWidget(calibrationSelection)
+
+        # calibrationSelectionLabels = QWidget(self)
+        # calibrationSelectionLabels.setProperty("class", "empty")
+        # calibrationSelectionLabels.setSizePolicy(
+        #     QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        # )
+        # calibrationSelectionLabelsLayout = QVBoxLayout(calibrationSelectionLabels)
+        # calibrationSelectionLabelsLayout.setContentsMargins(0, 0, 0, 0)
+        # calibrationSelectionLabelsLayout.setSpacing(0)
+        # calibrationLayout.addWidget(calibrationSelectionLabels)
+        # calibrationLayout.addStretch()
+
+        self.onUpdate = lambda status: None
+
+    def setExperiment(self, experiment):
+        """Set the experiment object.
+
+        Args:
+            experiment (Experiment): The experiment object.
+        """
+        self.experiment = experiment
+        self.refreshUI()
+
+
+    def handleVideosSelected(self, selectedVideos):
+        """Handle the selected videos."""
+        for video in selectedVideos:
+            if os.path.exists(video):
+                self.experiment.add_video(video)
+
+        self.refreshUI()
+
+    def refreshUI(self):
+        """Display the selected experiment."""
+        experiment: Experiment = self.experiment
+        if experiment is None:
+            return
+
+        experimentVideos = experiment.videos
+        if experimentVideos:
+            self.videoUploader.previewSelected(experimentVideos)
+            self.videoUploader.setEnabled(False)
+        else:
+            self.videoUploader.previewSelected([])
+            self.videoUploader.setEnabled(True)
+
+        #cameraParameters = experiment.get_camera_parameters()
+        #self.updateCalibrationFile(cameraParameters)
+
+        if experimentVideos:
+            self.setEnabled(False)
+            self.onUpdate(True)
+        else:
+            self.setEnabled(True)
+            self.onUpdate(False)
+
+    def uploadFiles(self):
+        """Handle the file upload logic."""
+        for video in self.selectedVideos:
+            self.experiment.add_video(video)
 
 
 class ExperimentDataWidget(Frame):
