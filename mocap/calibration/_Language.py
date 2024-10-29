@@ -3,8 +3,7 @@ import gettext
 
 class Mixin:
     def _(self, origin="missing"):
-        aim = self.gt(origin)
-        return aim
+        return self.gt(origin)
 
     def set_language(self):
         if self.language == "en":

@@ -186,10 +186,6 @@ class MotionOptions(Frame):
     def toggleMarkerAugmentation(self):
         self.params.use_marker_augmentation, self.markerAugmentationCheckbox.isChecked()
 
-    def model_changed(self, index):
-        # change the model
-        self.params.model = index_to_model[index]
-
     def sekelton_optins_changed(self, index):
         if index == 0:
             self.modelH26Widget.setVisible(True)

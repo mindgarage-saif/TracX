@@ -33,9 +33,8 @@ def get_range(vals):
     # Return the minimum and maximum of the filtered X coordinates
     if bounded_vals:
         return min(bounded_vals), max(bounded_vals)
-    else:
-        # In case all points are filtered out, return the min and max of the original data
-        return min(vals), max(vals)
+    # In case all points are filtered out, return the min and max of the original data
+    return min(vals), max(vals)
 
 
 def df_from_trc(trc_path):
@@ -230,7 +229,7 @@ class MotionSequence:
         motion = MotionSequence(skeleton, fps)
         for frame_idx in range(len(data.keys())):
             pose = {}
-            for i in range(0, len(data[str(frame_idx)])):
+            for i in range(len(data[str(frame_idx)])):
                 j_name = index_to_bodypart_for_monocular[i]
                 pose[j_name] = (
                     data[str(frame_idx)][i][0],

@@ -192,7 +192,9 @@ class Mixin:
                 images[j].append(
                     Image.fromarray(
                         self.project_detected_features(
-                            j, selection, forExtrinsics=True
+                            j,
+                            selection,
+                            forExtrinsics=True,
                         ),
                     ),
                 )
@@ -376,8 +378,7 @@ class Mixin:
         # create heatmap of the normalized picture. Check:
         # https://stackoverflow.com/questions/10965417/how-to-convert-numpy-
         # array-to-pil-image-applying-matplotlib-colormap
-        im = np.uint8(cm.jet(grid) * 255)
-        return im
+        return np.uint8(cm.jet(grid) * 255)
 
     def show_moving_features(self, camera, index):
         """Function to represent new desired feature position after click."""
@@ -416,12 +417,10 @@ class Mixin:
         im3[:, :, 0] = im
         im3[:, :, 1] = im
         im3[:, :, 2] = im
+
         # check if the projection is from intrinsics or from intrinsics and
         # extrinsics (from the other camera)
-        if forExtrinsics:
-            projections = self.projected_stereo
-        else:
-            projections = self.projected
+        projections = self.projected_stereo if forExtrinsics else self.projected
 
         # plot projection mesh of features using  red lines
         if projections[camera]:
@@ -490,10 +489,7 @@ class Mixin:
 
         The selected bar is red, the others are blue.
         """
-        if k == 0:
-            index = self.index.get()
-        else:
-            index = self.index_corner.get()
+        index = self.index.get() if k == 0 else self.index_corner.get()
         for j in range(self.n_cameras):
             # TODO maybe save old index?
             if self.r_error[j]:

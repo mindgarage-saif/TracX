@@ -23,9 +23,8 @@ def get_range(vals, iqr_factor=2.5):
     # Return the minimum and maximum of the filtered X coordinates
     if bounded_vals:
         return min(bounded_vals), max(bounded_vals)
-    else:
-        # In case all points are filtered out, return the min and max of the original data
-        return min(vals), max(vals)
+    # In case all points are filtered out, return the min and max of the original data
+    return min(vals), max(vals)
 
 
 class Joint:

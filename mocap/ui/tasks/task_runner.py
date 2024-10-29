@@ -39,7 +39,7 @@ class TaskRunner(QObject):
         if self.log_file_path:
             try:
                 # Open the log file in append mode
-                log_handler = open(self.log_file_path, "a")
+                log_handler = open(self.log_file_path, "a")  # noqa: SIM115
 
                 # Redirect stdout and stderr to the log file
                 sys.stdout = log_handler

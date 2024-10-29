@@ -125,8 +125,10 @@ class LogsWidget(QWidget):
         )
         if save_path:
             with open(self.log_file_path) as log_file:
-                with open(save_path, "w") as save_file:
-                    save_file.write(log_file.read())
+                logs = log_file.read()
+
+            with open(save_path, "w") as save_file:
+                save_file.write(logs)
 
     def on_log_file_changed(self):
         # Triggered when the file watcher detects changes to the log file

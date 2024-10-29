@@ -115,7 +115,7 @@ def store_npy_halpe26_to_trc(npy_path, trc_path, out_put, header_info, from_refe
     header = readTrc_header(trc_path, header_info, from_reference)
 
     q_prime = pd.DataFrame(data.reshape(data.shape[0], -1))
-    q_prime.index = np.array(range(0, frame_num)) + 1
+    q_prime.index = np.array(range(frame_num)) + 1
     q_prime.insert(0, "t", q_prime.index / frame_rate)
     new_trc_path = out_put
     print(f"Writing to {new_trc_path}")

@@ -22,6 +22,7 @@ def get_one_combination(n, r):
         sample = list(item)
         sample.sort()
         return sample
+    return None
 
 
 def get_all_combinations(n, r):
@@ -72,5 +73,4 @@ def float2StringVar(string, value, decimals=5):
 def get_indices_to_average(rms, percentile=75):
     """Function to obtain array indices within percentile."""
     rms_max = np.percentile(rms, percentile)
-    indices = [i for i, v in enumerate(rms) if v < rms_max]
-    return indices
+    return [i for i, v in enumerate(rms) if v < rms_max]

@@ -26,10 +26,9 @@ class MotionRenderer:
 
         if minimum < 0 and maximum < 0:
             return abs(minimum) - abs(maximum)
-        elif minimum < 0 and maximum > 0:
+        if minimum < 0 and maximum > 0:
             return abs(minimum) + maximum
-        else:
-            return maximum - minimum
+        return maximum - minimum
 
     def init_view(self, ax, **kwargs):
         """Set the axes limits for the plot.

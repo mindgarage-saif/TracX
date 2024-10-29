@@ -147,11 +147,11 @@ class Mixin:
                     s = self.samples[counter]
 
                 # select the object points of the sample
-                op = list(self.objpoints[i] for i in s)
+                op = [self.objpoints[i] for i in s]
                 ip, c, d = [], [], []
                 for j in range(self.n_cameras):
                     # select the object points of the sample for each camera
-                    ip.append(list(self.imgpoints[j][i] for i in s))
+                    ip.append([self.imgpoints[j][i] for i in s])
                     c.append(np.eye(3, dtype=np.float32))
                     d.append(np.zeros((5, 1), dtype=np.float32))
 
@@ -424,8 +424,7 @@ class Mixin:
                         self.btn_export.config(state="disable")
                         self.btn_export2.config(state="disable")
                         break
-                    else:
-                        self.label_status_l[4][1].config(text="\u2714")
+                    self.label_status_l[4][1].config(text="\u2714")
 
         self.update = True  # Update bool activated
 

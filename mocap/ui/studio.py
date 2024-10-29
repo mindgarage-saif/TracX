@@ -147,7 +147,7 @@ class StudioWindow(QMainWindow):
         return self.pageFrame.height() - PAD_Y * 2
 
     def confirmExit(self):
-        if (
+        return (
             QMessageBox.question(
                 self,
                 APP_NAME,
@@ -156,10 +156,7 @@ class StudioWindow(QMainWindow):
                 QMessageBox.StandardButton.No,
             )
             == QMessageBox.StandardButton.Yes
-        ):
-            return True
-        else:
-            return False
+        )
 
     def closeEvent(self, event):
         if self.confirmExit():

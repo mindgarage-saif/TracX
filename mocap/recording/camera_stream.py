@@ -81,7 +81,8 @@ class CameraStream:
                 break
             time.sleep(
                 max(
-                    0, (1 / self.sample_rate) - (time.time() - self._last_capture_time)
+                    0,
+                    (1 / self.sample_rate) - (time.time() - self._last_capture_time),
                 ),
             )
         self.release()

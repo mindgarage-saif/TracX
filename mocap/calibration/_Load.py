@@ -102,27 +102,26 @@ class Mixin:
             # clear status check
             self.label_status_l[j + 1][1].config(text="")
             return
-        else:
-            self.l_load_files[j].config(
-                text=self.load_files[j][0].rsplit("/", 1)[1],
-                fg="black",
-            )
-            f = open(self.load_files[j][0])
+        self.l_load_files[j].config(
+            text=self.load_files[j][0].rsplit("/", 1)[1],
+            fg="black",
+        )
+        with open(self.load_files[j][0]) as f:
             a = f.read()
-            if j <= 1:
-                self.camera_matrix[j], self.dist_coefs[j] = datastring.string2intrinsic(
-                    a,
-                )
-            else:
-                self.R_stereo, self.T_stereo = datastring.string2extrinsic(a)
-            # update status check
-            self.label_status_l[j + 1][1].config(text="\u2714")
-            if j == 2:
-                self.label_status_l[3][0].config(text=self._("3. Loading Extrinsics"))
-            self.rms = [0, 0, 0]
-            self.reset_error()
-            self.updateCameraParametersGUI()
-            self.loadBarError([0, 1])
+        if j <= 1:
+            self.camera_matrix[j], self.dist_coefs[j] = datastring.string2intrinsic(
+                a,
+            )
+        else:
+            self.R_stereo, self.T_stereo = datastring.string2extrinsic(a)
+        # update status check
+        self.label_status_l[j + 1][1].config(text="\u2714")
+        if j == 2:
+            self.label_status_l[3][0].config(text=self._("3. Loading Extrinsics"))
+        self.rms = [0, 0, 0]
+        self.reset_error()
+        self.updateCameraParametersGUI()
+        self.loadBarError([0, 1])
 
     def add_file(self, typeof):
         """Function to add files to the session."""
@@ -135,7 +134,7 @@ class Mixin:
                 )
             return
         # for stereo mode, checks if the folders have the same number of valid files
-        elif self.m_stereo and len(file_names_2D_points) % 2 != 0:
+        if self.m_stereo and len(file_names_2D_points) % 2 != 0:
             self.popup_importing_fails(
                 self._(
                     "\nThe number of files per folder has to be the same for each camera.\n",
@@ -159,10 +158,9 @@ class Mixin:
                 l_msg.configure(text=message)
                 file_name_2D_points = file_names_2D_points[i]
                 j = 0
-                if self.m_stereo:
-                    # this corresponds to the right camera
-                    if i >= len(file_names_2D_points) / 2:
-                        j = 1
+                # this corresponds to the right camera
+                if self.m_stereo and i >= len(file_names_2D_points) / 2:
+                    j = 1
                 # checks if images isn't repeated
                 if file_name_2D_points not in self.paths[j]:
                     if ".txt" not in self.valid_files:

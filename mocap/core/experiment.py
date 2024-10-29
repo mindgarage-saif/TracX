@@ -329,16 +329,15 @@ class Experiment:
         supported_modes = ["naive", "mesh", "mixamo", "opensim"]
         if mode == "naive":
             return self._visualize_naive(motion_file, **kwargs)
-        elif mode == "mesh":
+        if mode == "mesh":
             return self._visualize_mesh(motion_file, **kwargs)
-        elif mode == "mixamo":
+        if mode == "mixamo":
             return self._visualize_mixamo(motion_file, **kwargs)
-        elif mode == "opensim":
+        if mode == "opensim":
             return self._visualize_opensim(motion_file, **kwargs)
-        else:
-            raise ValueError(
-                f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}",
-            )
+        raise ValueError(
+            f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}",
+        )
 
     def __str__(self):
         return f"Experiment(name={self.name}, path={self.path})"

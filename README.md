@@ -73,7 +73,7 @@ mocap-studio
 
 Detailed instructions for the video recording can be found [here](./docs/recording.md) and for the 3D motion capture [here](./docs/motion.md).
 
-## Contributing 
+## Contributing
 
 Contributions are very welcome. Open a fresh issue to start a discussion around a feature idea or a bug.
 
@@ -104,12 +104,12 @@ Please use the following BibTeX entry to cite this repository:
 For Pose2Sim and the calibration tool, we also recommend citing the following papers:
 
 ```bibtex
-@Article{Pagnon_2022_JOSS, 
-  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel}, 
-  TITLE = {Pose2Sim: An open-source Python package for multiview markerless kinematics}, 
-  JOURNAL = {Journal of Open Source Software}, 
+@Article{Pagnon_2022_JOSS,
+  AUTHOR = {Pagnon, David and Domalain, Mathieu and Reveret, Lionel},
+  TITLE = {Pose2Sim: An open-source Python package for multiview markerless kinematics},
+  JOURNAL = {Journal of Open Source Software},
   YEAR = {2022},
-  DOI = {10.21105/joss.04362}, 
+  DOI = {10.21105/joss.04362},
   URL = {https://joss.theoj.org/papers/10.21105/joss.04362}
  }
 

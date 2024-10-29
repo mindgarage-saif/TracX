@@ -32,7 +32,7 @@ class VisualizeMotionTask(BaseTask):
         visualization_args = self.config.visualization_args
 
         if experiment_name is None:
-            return
+            return None
 
         print("Visualizing 3D motion...")
         experiment = Experiment(experiment_name, create=False)

@@ -1489,7 +1489,7 @@
 							<translation>-0.020500000000000001 0.40200000000000002 0</translation>
 							<!--Orientation offset (in radians) of this frame in its parent frame, expressed as a frame-fixed x-y-z rotation sequence.-->
 							<orientation>-0 0 -0</orientation>
-						</PhysicalOffsetFrame> 
+						</PhysicalOffsetFrame>
 						<PhysicalOffsetFrame name="torso_geom_frame_20">
 							<!--The geometry used to display the axes of this Frame.-->
 							<FrameGeometry name="frame_geometry">

@@ -173,6 +173,4 @@ class Calibration:
 
         # Convert points from homogeneous to Euclidean coordinates
         points3D = points4D_hom[:3] / points4D_hom[3]
-        points3D = points3D.T  # (N, 3) array of 3D points
-
-        return points3D
+        return points3D.T  # (N, 3) array of 3D points

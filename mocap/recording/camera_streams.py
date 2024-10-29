@@ -26,10 +26,7 @@ def get_recommended_fps(frame_rates):
     smallest_fps = min(frame_rates)
 
     # Find the maximum even number <= smallest_fps
-    if smallest_fps % 2 == 0:
-        recommended_fps = smallest_fps
-    else:
-        recommended_fps = smallest_fps - 1
+    recommended_fps = smallest_fps if smallest_fps % 2 == 0 else smallest_fps - 1
 
     if recommended_fps < 1:
         raise ValueError("No valid even frame rate found.")

@@ -42,7 +42,6 @@ def save_to_openpose(json_file_path, keypoints, scores):
     """
     # Prepare keypoints with confidence scores for JSON output
     nb_detections = len(keypoints)
-    # print('results: ', keypoints, scores)
     detections = []
     for i in range(nb_detections):  # nb of detected people
         keypoints_with_confidence_i = []
@@ -86,29 +85,15 @@ def estimation_3d(keypoints, MODEL, res_w=1920, res_h=1080):
         [19, 11, 13, 15, 12, 14, 16, 18, 0, 17, 5, 7, 9, 6, 8, 10],
         :,
     ]
-    # print(data_2d.shape)
-    # x = np.array(data_2d[0::3])
-    # y = np.array(data_2d[1::3])
-
     input2 = np.array(data_2d, dtype=np.float32)
 
     input2 = normalize_data(input2, res_w, res_h)
     input2 = input2.reshape(1, -1)
-    print(type(input2), input2.dtype)
     onnx_input = {"l_x_": input2}
 
     output = MODEL.run(None, onnx_input)
-    # print(output)
     res = output[0][0].reshape(1, -1)
-    print(res.shape)
-    # outputs_unnorm = unNormalizeData(res, data_mean3d, data_std3d)
-    res = res.reshape(16, 3)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.scatter(res[:,0],res[:,1],res[:,2])
-    # ax.set_aspect('equal')
-    # plt.show()
-    return res
+    return res.reshape(16, 3)
 
 
 def estimation_2d(video_path, mode="lightweight", json_output_dir=""):
@@ -176,11 +161,7 @@ def estimation_2d(video_path, mode="lightweight", json_output_dir=""):
             success, frame = cap.read()
             if not success:
                 break
-            # cv2.imshow('frame', frame)
-            # cv2.waitKey(1)
             keypoints, scores = pose_tracker(frame)
-            # json_file_path = os.path.join(json_output_dir, f'{video_name_wo_ext}_{frame_idx:06d}.json')
-            print("keypoints: ", keypoints.shape)
             keypoints_3d = estimation_3d(keypoints, MODEL, res_w, res_h)
             ax.clear()
             ax.scatter(keypoints_3d[:, 2], keypoints_3d[:, 0], keypoints_3d[:, 1])
@@ -193,11 +174,8 @@ def estimation_2d(video_path, mode="lightweight", json_output_dir=""):
             ax.set_aspect("equal")
             ax.view_init(azim=-93, elev=-170)
 
-            # plt.show()
-            # raise
             plt.draw()
             plt.pause(fram_pause)
-            # save_to_openpose(json_file_path, keypoints, scores)
             frame_idx += 1
             pbar.update(1)
     cap.release()

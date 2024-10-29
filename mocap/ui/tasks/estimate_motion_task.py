@@ -63,6 +63,5 @@ class EstimateMotionTask(BaseTask):
         file["pose"]["pose_model"] = skeleton
         file["pose"]["mode"] = mode
         file["personAssociation"]["single_person"]["tracked_keypoint"] = trackedpoint
-        f = open(path, "w")
-        toml.dump(file, f)
-        f.close()
+        with open(path, "w") as f:
+            toml.dump(file, f)

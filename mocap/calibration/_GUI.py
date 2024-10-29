@@ -232,9 +232,7 @@ class Mixin:
                 if self.label_msg[j].cget("text"):
                     return
             # if 3d points aren't initialized
-            if self.object_pattern is None:
-                return
-            elif not self.object_pattern.any():
+            if self.object_pattern is None or not self.object_pattern.any():
                 return
 
         # checks

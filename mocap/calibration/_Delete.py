@@ -57,11 +57,10 @@ class Mixin:
                 del self.detected_features[j][index[0]]
                 if self.projected[j]:  # check if projection data exists
                     del self.projected[j][index[0]]
-                if j == 1:
-                    # check if stereo projection data exists
-                    if self.projected_stereo[0]:
-                        del self.projected_stereo[0][index[0]]
-                        del self.projected_stereo[1][index[0]]
+                # check if stereo projection data exists
+                if j == 1 and self.projected_stereo[0]:
+                    del self.projected_stereo[0][index[0]]
+                    del self.projected_stereo[1][index[0]]
                 # barchar
                 if self.r_error[j]:  # check if reprojection error data exists
                     del self.r_error[j][index[0]]

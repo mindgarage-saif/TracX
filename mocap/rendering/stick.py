@@ -99,7 +99,7 @@ class StickFigureRenderer(MotionRenderer):
             )
 
         # Draw joints.
-        joints = np.array([pos for pos in skeleton.get_pose().values()])
+        joints = np.array(list(skeleton.get_pose().values()))
         ax.scatter(
             joints[:, 0],
             joints[:, 1],

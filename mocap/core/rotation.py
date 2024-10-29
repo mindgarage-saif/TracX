@@ -195,27 +195,11 @@ def unrotate_pose2d(pose_dir, camera_parameters):
 
                     # Unrotate the points
                     points = np.array(list(zip(x2, y2)))
-                    if rotation_angle == 90:
-                        rotated_keypoints = [
-                            coord
-                            for i in range(len(points))
-                            for coord in [
-                                points[i][0],
-                                points[i][1],
-                                c[i],
-                            ]
-                        ]
-                    elif rotation_angle == 180:
-                        rotated_keypoints = [
-                            coord
-                            for i in range(len(points))
-                            for coord in [
-                                points[i][0],
-                                points[i][1],
-                                c[i],
-                            ]
-                        ]
-                    elif rotation_angle == 270:
+                    if (
+                        rotation_angle == 90
+                        or rotation_angle == 180
+                        or rotation_angle == 270
+                    ):
                         rotated_keypoints = [
                             coord
                             for i in range(len(points))

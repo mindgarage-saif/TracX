@@ -581,8 +581,7 @@ def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
     )
 
     ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
-    rot_mat = ident + sin * K + (1 - cos) * torch.bmm(K, K)
-    return rot_mat
+    return ident + sin * K + (1 - cos) * torch.bmm(K, K)
 
 
 if __name__ == "__main__":

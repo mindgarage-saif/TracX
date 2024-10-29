@@ -27,7 +27,7 @@ def averageQuaternions(Q):
 
 
 def q_to_R(q):
-    R = np.array(
+    return np.array(
         [
             [
                 1 - 2 * q[1] ** 2 - 2 * q[2] ** 2,
@@ -46,7 +46,6 @@ def q_to_R(q):
             ],
         ],
     )
-    return R
 
 
 def R_to_q(R):
@@ -54,8 +53,7 @@ def R_to_q(R):
     q_v = np.array([[R[2, 1] - R[1, 2]], [R[0, 2] - R[2, 0]], [R[1, 0] - R[0, 1]]]) / (
         4 * q_r
     )
-    q = np.append(q_v, q_r)
-    return q
+    return np.append(q_v, q_r)
 
 
 def averageMatrix(R):
