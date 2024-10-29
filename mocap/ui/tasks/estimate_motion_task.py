@@ -3,8 +3,9 @@ import json
 from mocap.core import Experiment,ExperimentMonocular
 
 from .base_task import BaseTask, TaskConfig
-
-
+import os
+from mocap.constants import APP_PROJECTS
+import toml
 class MotionTaskConfig(TaskConfig):
     """
     Configuration class for motion estimation tasks.
@@ -15,6 +16,9 @@ class MotionTaskConfig(TaskConfig):
             experiment_name=None,
             correct_rotation=False,
             use_marker_augmentation=False,
+            mode = "lightweight",
+            skeleton = "HALPE_26",
+            trackedpoint = "Neck"
         )
 class EstimateMotionTask(BaseTask):
     """
@@ -29,7 +33,13 @@ class EstimateMotionTask(BaseTask):
         experiment_name = self.config.experiment_name
         correct_rotation = self.config.correct_rotation
         use_marker_augmentation = self.config.use_marker_augmentation
-
+        self.path = os.path.abspath(os.path.join(APP_PROJECTS, experiment_name))
+        config_path = os.path.join(self.path, "Config.toml")
+        mode = self.config.mode
+        skeleton = self.config.skeleton
+        trackedpoint = self.config.trackedpoint
+        self.change_config(config_path,mode,skeleton,trackedpoint=trackedpoint)
+        custom_model = skeleton == "CUSTOM"
         # Initialize the experiment
         print("Loading experiment...")
         experiment = Experiment(experiment_name, create=False)
@@ -42,6 +52,16 @@ class EstimateMotionTask(BaseTask):
         experiment.process(
             correct_rotation=correct_rotation,
             use_marker_augmentation=use_marker_augmentation,
+            custom_model=custom_model,
         )
 
         print("Motion estimation complete")
+    
+    def change_config(self,path,mode,skeleton,trackedpoint):
+        file = toml.load(path)
+        file['pose']['pose_model'] = skeleton
+        file['pose']['mode'] = mode
+        file["personAssociation"]["single_person"]["tracked_keypoint"] = trackedpoint
+        f = open(path, "w")
+        toml.dump(file, f)
+        f.close()

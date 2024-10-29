@@ -8,7 +8,7 @@ import toml
 from easydict import EasyDict as edict
 from Pose2Sim import Pose2Sim
 from Pose2Sim.Utilities import bodykin_from_mot_osim
-from mocap.core.monocular_pipeline import moncular_estimation
+from mocap.core.pipeline_est2dCustom import estimation_2d_custom
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
@@ -16,12 +16,13 @@ from mocap.rendering import StickFigureRenderer, create_opensim_vis
 from ..constants import OPENSIM_DIR
 from .motion import MotionSequence
 from .rotation import rotate_videos, unrotate_pose2d
-
+import toml
 
 class Experiment:
     def __init__(self, name, create=True, base_dir=APP_PROJECTS) -> None:
         self.name = name
         self.path = os.path.abspath(os.path.join(base_dir, name))
+        self.config_file = os.path.join(self.path, "Config.toml")
         self.videos_dir = os.path.join(self.path, "videos")
         self.pose2d_dir = os.path.join(self.path, "pose")
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
@@ -143,6 +144,7 @@ class Experiment:
         self,
         correct_rotation=True,
         use_marker_augmentation=False,
+        custom_model = False,
     ):
         # Change the working directory to the project directory.
         cwd = os.getcwd()
@@ -165,7 +167,10 @@ class Experiment:
 
         # Execute the 2D pose estimation
         print("Executing 2D pose estimatioan...")
-        Pose2Sim.poseEstimation()
+        if custom_model:
+            estimation_2d_custom(self.videos_dir, pose_model_path=r"C:\Users\Jeremias\Downloads\td-cc_rtmpose-l_coco41-384x288_float32.onnx",json_output_dir=self.pose2d_dir)
+        else:
+            Pose2Sim.poseEstimation()
 
         # Unrotate the 2D poses
         if correct_rotation:
@@ -179,7 +184,12 @@ class Experiment:
         # Triangulate the 2D poses to 3D
         print("Triangulating 2D poses to 3D...")
         Pose2Sim.calibration()
-        Pose2Sim.personAssociation()
+        try:
+            # Pose2Sim.synchronization()
+            Pose2Sim.personAssociation()
+        except Exception as e:
+            print(e)
+            raise e
         Pose2Sim.triangulation()
         Pose2Sim.filtering()
         if use_marker_augmentation:
@@ -201,10 +211,14 @@ class Experiment:
     @property
     def log_file(self):
         return os.path.join(self.path, "logs.log")
+    def read_skeleton(self):
+        file = toml.load(self.config_file)
+        return file["pose"]['pose_model']
 
     def _visualize_naive(self, motion_file):
         # Create a side-by-side visualization using OpenCV
         # path = os.path.join(self.output_dir, "animation.mp4")
+        print(self.output_dir)
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         if os.path.exists(animation_file):
             return animation_file
@@ -214,10 +228,10 @@ class Experiment:
         video = cv2.VideoCapture(video_file)
         fps = video.get(cv2.CAP_PROP_FPS)
         video.release()
-
+        skeleton = self.read_skeleton()
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        motion_data = MotionSequence.from_pose2sim_trc(motion_file)
+        motion_data = MotionSequence.from_pose2sim_trc(motion_file,skeleton)
         renderer = StickFigureRenderer(motion_data, animation_file)
         renderer.render()
 

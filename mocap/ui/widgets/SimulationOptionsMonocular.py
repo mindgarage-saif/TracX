@@ -15,7 +15,7 @@ from .frame import Frame
 
 
 class SimulationOptionsMonocular(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent,):
         super().__init__(parent)
         self.params = VisualizeTaskConfig()
 

@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 
-from .skeletons import BaseSkeleton, Halpe26Skeleton, TheiaSkeleton,MonocularSkeleton
+from .skeletons import BaseSkeleton, Halpe26Skeleton, TheiaSkeleton,MonocularSkeleton,Halpe2617Skeleton
 import json
 
 def get_range(vals):
@@ -162,10 +162,9 @@ class MotionSequence:
         return motion
 
     @staticmethod
-    def from_pose2sim_trc(path: str):
+    def from_pose2sim_trc(path: str,skeleton_name="HALPE_26"):
         if not path.endswith(".trc"):
             raise ValueError("Input file must be a .trc file.")
-
         header, data = df_from_trc(path)
         bodyparts = np.array([d[:-2] for d in data.columns[2::3]])
 
@@ -173,6 +172,7 @@ class MotionSequence:
 
         # Aggregate data for each frame
         for bp in bodyparts:
+            print(bp)
             bp_X = bp + "_X"
             bp_Y = bp + "_Y"
             bp_Z = bp + "_Z"
@@ -186,7 +186,10 @@ class MotionSequence:
                 zs = np.concatenate((zs, np.array(data[bp_Z]).reshape(-1, 1)), axis=1)
 
         # Initialize the motion object
-        skeleton = Halpe26Skeleton()
+        if skeleton_name == "HALPE_26":
+            skeleton = Halpe26Skeleton()
+        elif skeleton_name == "CUSTOM":
+            skeleton = Halpe2617Skeleton()
         fps = int(header["DataRate"])
         motion = MotionSequence(skeleton, fps)
 

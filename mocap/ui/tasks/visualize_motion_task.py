@@ -13,6 +13,8 @@ class VisualizeTaskConfig(TaskConfig):
             experiment_name=None,
             visualization_mode="naive",
             visualization_args=dict(),
+
+            # skeleton=motion_config.skeleton if motion_config is not None else None,
             # visualization_mode = "opensim",
             # visualization_args = dict(
             #     with_blender=False,
@@ -27,7 +29,6 @@ class VisualizeMotionTask(BaseTask):
 
     def __init__(self, config: VisualizeTaskConfig):
         super().__init__(config)
-
     def execute(self):
         # Read task configuration
         experiment_name = self.config.experiment_name
