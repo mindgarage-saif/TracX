@@ -1,72 +1,42 @@
 import threading
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from .camera_stream import CameraStream
 
 
-def get_recommended_fps(frame_rates):
+class CameraStreams(QObject):
     """
-    Returns the maximum even number less than or equal to the smallest frame rate in the list.
-
-    Args:
-        frame_rates (List[int]): A list of frame rates from different cameras.
-
-    Returns:
-        int: The recommended frame rate.
-
-    Raises:
-        ValueError: If the input list is empty or contains non-integer values.
+    Captures frames from multiple cameras and emits synchronized frames.
     """
-    if not frame_rates:
-        raise ValueError("The frame_rates list is empty.")
 
-    if not all(isinstance(fps, int) for fps in frame_rates):
-        raise ValueError("All frame rates must be integers.")
+    frames_captured = pyqtSignal(list)
+    error_occurred = pyqtSignal(str)
 
-    smallest_fps = min(frame_rates)
-
-    # Find the maximum even number <= smallest_fps
-    if smallest_fps % 2 == 0:
-        recommended_fps = smallest_fps
-    else:
-        recommended_fps = smallest_fps - 1
-
-    if recommended_fps < 1:
-        raise ValueError("No valid even frame rate found.")
-
-    return recommended_fps
-
-
-class CameraStreams:
     def __init__(
         self,
-        sources: Union[int, List[int], Tuple[int]] = 0,
-        sample_rate: Optional[float] = None,
+        sources: Union[int, List[int], Tuple[int]],
         sync_delta: Optional[float] = None,
     ):
-        """
-        Initialize synchronized capture for multiple cameras.
-
-        Args:
-            sources (Union[int, List[int], Tuple[int]]): Camera source IDs.
-            sample_rate (float): Desired sample rate in frames per second.
-            sync_delta (float): Maximum allowed time difference between frames for synchronization.
-        """
-        # Normalize sources to a list
-        if isinstance(sources, int):
-            sources = [sources]
-        elif isinstance(sources, tuple):
-            sources = list(sources)
-        elif not isinstance(sources, list):
-            raise ValueError("Sources must be an int, list, or tuple of ints.")
-
-        if sample_rate is None:
-            sample_rate = get_recommended_fps(
-                [CameraStream(s).frame_rate for s in sources]
-            )
+        super().__init__()
 
         self.sources = sources
-        self.sample_rate = sample_rate
+        # Initialize CameraStream instances for each source
+        try:
+            self.cams: Dict[int, CameraStream] = {
+                s[0]: CameraStream(s[0]) for s in sources
+            }
+
+            # All cameras should have the same frame rate
+            frame_rate = self.cams[sources[0][0]].frame_rate
+            if not all(cam.frame_rate == frame_rate for cam in self.cams.values()):
+                raise ValueError("All cameras must have the same frame rate")
+
+            self.sample_rate = frame_rate
+        except ValueError as e:
+            self.error_occurred.emit(str(e))
+            self.cams = {}
 
         # Determine sync_delta if not provided
         if sync_delta is None:
@@ -76,99 +46,70 @@ class CameraStreams:
         else:
             self.sync_delta = sync_delta
 
-        # Initialize VideoCapture instances for each source
-        self.cams: Dict[int, CameraStream] = {
-            s: CameraStream(s, sample_rate) for s in sources
-        }
-
         # Buffers to store frames from each camera
-        self.buffers: Dict[int, List[Tuple[float, Any]]] = {s: [] for s in sources}
+        self.buffers: Dict[int, List[Tuple[float, Any]]] = {s[0]: [] for s in sources}
 
-        # Flags and counters
-        self.capture_frames = True
+        # Flags
         self.running = False
 
         # Synchronization primitives
         self.lock = threading.Lock()
         self.sync_condition = threading.Condition(self.lock)
 
-        # Signal handlers
-        self._video_started_handler = None
-        self._video_stopped_handler = None
-        self._video_finished_handler = None
-        self._frame_captured_handler = None
-
-    # Signal connection methods
-    def on_start(self, handler: Callable[[], None]):
-        self._video_started_handler = handler
-
-    def on_stop(self, handler: Callable[[], None]):
-        self._video_stopped_handler = handler
-
-    def on_finish(self, handler: Callable[[], None]):
-        self._video_finished_handler = handler
-
-    def on_frame(self, handler: Callable[[Dict[int, Any]], None]):
-        """
-        Handler receives a dictionary mapping camera IDs to frames.
-
-        Args:
-            handler (Callable[[Dict[int, Any]], None]): Function to handle synchronized frames.
-        """
-        self._frame_captured_handler = handler
-
-    def resolution(self, cam_id):
-        for idx, cam in self.cams.items():
-            if idx == cam_id:
-                return cam.resolution
-        return (640, 480)
-
-    def start_capture(self):
-        # Register event handlers for each camera
+        # Connect camera frame signals to the handler
         for cam_id, cam in self.cams.items():
-            cam.on_frame(
-                lambda ret, frame, timestamp, cam_id=cam_id: self._on_captured_frame(
-                    ret, frame, timestamp, cam_id
+            cam.frame_captured.connect(
+                lambda frame, timestamp, cid=cam_id: self.on_captured_frame(
+                    frame, timestamp, cid
                 )
             )
 
-        # Call the video started handler
-        if self._video_started_handler:
-            self._video_started_handler()
+    def resolution(self, cam_id: int) -> Tuple[int, int]:
+        """
+        Returns the resolution of the camera with the given ID.
+        """
+        return self.cams[cam_id].resolution
 
-        # Start all cameras
+    @pyqtSlot()
+    def start(self):
+        """
+        Starts all camera streams.
+        """
+        if self.running:
+            return
+        self.running = True
         for cam in self.cams.values():
             cam.start()
 
-    def stop_capture(self):
-        # Stop all cameras
+    @pyqtSlot()
+    def stop(self):
+        """
+        Stops all camera streams.
+        """
+        if not self.running:
+            return
+        self.running = False
         for cam in self.cams.values():
             cam.stop()
 
-        # Call the video stopped handler
-        if self._video_stopped_handler:
-            self._video_stopped_handler()
-
-        # Call the video finished handler
-        if self._video_finished_handler:
-            self._video_finished_handler()
-
-    def _on_captured_frame(self, ret: bool, frame: Any, timestamp: float, cam_id: int):
+    @pyqtSlot(object, float, int)
+    def on_captured_frame(self, frame: Any, timestamp: float, cam_id: int):
+        """
+        Handles frames captured from individual cameras.
+        """
         with self.sync_condition:
-            if not self.capture_frames:
+            if not self.running:
                 return
 
-            if ret and frame is not None:
+            if frame is not None:
                 self.buffers[cam_id].append((timestamp, frame))
-                self._check_sync()
+                self.check_sync()
 
-    def _check_sync(self):
+    def check_sync(self):
         """
-        Attempt to synchronize frames from all cameras.
+        Attempts to synchronize frames from all cameras.
         """
-        while self.capture_frames and all(
-            len(buffer) > 0 for buffer in self.buffers.values()
-        ):
+        while self.running and all(len(buffer) > 0 for buffer in self.buffers.values()):
             # Extract the earliest timestamp from each buffer
             current_frames = {
                 cam_id: buffer[0] for cam_id, buffer in self.buffers.items()
@@ -187,45 +128,17 @@ class CameraStreams:
                     buffer.pop(0)[1] for buffer in self.buffers.values()
                 ]
 
-                # Invoke the frame captured handler
-                if self._frame_captured_handler:
-                    self._frame_captured_handler(synchronized_frames)
+                self.frames_captured.emit(synchronized_frames)
             else:
-                # Find cameras that are behind the target_time
+                # Discard outdated frames
                 for cam_id, (timestamp, _) in current_frames.items():
                     if timestamp < target_time - self.sync_delta:
-                        # Discard the outdated frame
                         self.buffers[cam_id].pop(0)
-
-                # If any buffer was updated, re-evaluate synchronization
-                # This ensures that the loop continues if synchronization can now be achieved
-                continue
-
-            # Notify the worker thread
-            self.sync_condition.notify_all()
-
-    def start(self):
-        """
-        Start the synchronized capture in a separate thread.
-        """
-        if not self.running:
-            self.running = True
-            self.worker_thread = threading.Thread(target=self._worker, daemon=True)
-            self.worker_thread.start()
-
-    def _worker(self):
-        """
-        Worker thread to manage the capture process.
-        """
-        self.start_capture()
-        with self.sync_condition:
-            while self.capture_frames:
-                self.sync_condition.wait()  # Wait until notified by _check_sync
-        self.stop_capture()
+                # Continue checking in case synchronization is now possible
 
     def release(self):
         """
-        Release all resources.
+        Releases all camera resources.
         """
         for cam in self.cams.values():
             cam.release()

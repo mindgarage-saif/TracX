@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ...recording import CameraController
+from ...recording.controller_widget import ControllerWidget
 from .camera_view import CameraView
 from .control_panel import ControlPanel
 from .empty_state import EmptyState
@@ -29,7 +30,7 @@ class RecordingLayout(QFrame):
         self.statusBar = parent.statusBar
         self.on_frame_fn = on_frame_fn
         self.cameras = cameras or []
-        self.controller = CameraController()
+        self.controller = ControllerWidget()
         self.controller.on_frame_fn = self.on_frame_fn
 
         self.setObjectName("RecordingLayout")

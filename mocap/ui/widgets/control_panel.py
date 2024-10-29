@@ -34,8 +34,8 @@ class ControlPanel(QWidget):
         self.startButton.clicked.connect(callback)
 
     def onStart(self):
-        self.controller.toggle_start()
-        if self.controller._is_started:
+        self.controller.toggle_capture()
+        if self.controller._camera.running:
             self.statusBar.showMessage(f"Webcam started: {self.controller._camera_id}")
             self.startButton.setText("Stop")
             self.startButton.setStyleSheet(stopButtonStyle)
