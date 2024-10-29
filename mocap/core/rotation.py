@@ -77,8 +77,8 @@ def rotate_videos(video_list, output_dir, camera_parameters):
         # Release the VideoCapture and VideoWriter objects
         cap.release()
 
-def rotate_video_monocular(video_list, output_dir, rotation):
 
+def rotate_video_monocular(video_list, output_dir, rotation):
     for video in video_list:
         video_name = os.path.basename(video)
         rot = rotation
@@ -136,9 +136,6 @@ def rotate_video_monocular(video_list, output_dir, rotation):
         cap.release()
 
 
-
-
-
 def unrotate_pose2d(pose_dir, camera_parameters):
     # Rename the original directory and create a new directory
     rotated_dir = pose_dir + "_rotated"
@@ -171,7 +168,7 @@ def unrotate_pose2d(pose_dir, camera_parameters):
 
         rotation_angle = get_rotation(name, rotation_dict)
         for file in pose_files:
-            with open(os.path.join(rotated, file), "r") as f:
+            with open(os.path.join(rotated, file)) as f:
                 data = json.load(f)
                 for i in range(len(data["people"])):
                     # Extract the 'pose_keypoints_2d' data for the first person

@@ -94,7 +94,8 @@ class StudioWindow(QMainWindow):
         self.sidebar = Sidebar(self.studioFrame)
         self.sidebar.setFixedWidth(int(sidebarWidth))
         self.sidebar.setSizePolicy(
-            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
         )
         self.studioFrame.layout.addWidget(self.sidebar)
 

@@ -61,5 +61,5 @@ class Halpe26Skeleton(BaseSkeleton):
                 "LBigToe",
                 "LSmallToe",
                 "LHeel",
-            ]
+            ],
         )

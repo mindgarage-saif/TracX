@@ -36,7 +36,7 @@ def vis_json_mmpose(baseDir, xml_path, path_to_vid, rot: bool = True):
             continue
         p += 1
         json_path = os.path.join(baseDir, filename)
-        with open(json_path, "r") as file:
+        with open(json_path) as file:
             data = json.load(file)
             x = []
             y = []
@@ -49,12 +49,12 @@ def vis_json_mmpose(baseDir, xml_path, path_to_vid, rot: bool = True):
                     if rotation_angle == "270":
                         y2 = np.array(key_points[:, 0])
                         x2 = width - np.array(
-                            key_points[:, 1]
+                            key_points[:, 1],
                         )  # static 1920 for width of image
                     elif rotation_angle == "90":
                         x2 = np.array(key_points[:, 1])
                         y2 = height - np.array(
-                            key_points[:, 0]
+                            key_points[:, 0],
                         )  # static 1088 for height of image
                     elif rotation_angle == "180":
                         x2 = width + np.array(key_points[:, 0]) * -1
@@ -103,7 +103,10 @@ if __name__ == "__main__":
         help="Path to the video",
     )
     argsparser.add_argument(
-        "--rot", default=True, type=bool, help="Whether to rotate the keypoints"
+        "--rot",
+        default=True,
+        type=bool,
+        help="Whether to rotate the keypoints",
     )
     args = argsparser.parse_args()
     vis_json_mmpose(args.root_dir, args.xml_path, args.vid_path, args.rot)

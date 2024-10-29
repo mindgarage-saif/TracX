@@ -6,22 +6,19 @@ from .base_task import BaseTask, TaskConfig
 
 
 class MonocularMotionTaskConfig(TaskConfig):
-    """
-    Configuration class for motion estimation tasks.
-    """
+    """Configuration class for motion estimation tasks."""
 
     def __init__(self):
         super().__init__(
-            rotation = 90,
+            rotation=90,
             experiment_name=None,
             correct_rotation=False,
             model="lightweight",
         )
 
+
 class EstimateMotionMonocularTask(BaseTask):
-    """
-    Task for estimating motion.
-    """
+    """Task for estimating motion."""
 
     def __init__(self, config: MonocularMotionTaskConfig):
         super().__init__(config)
@@ -35,7 +32,7 @@ class EstimateMotionMonocularTask(BaseTask):
         print("Loading experiment...")
         experiment = ExperimentMonocular(experiment_name, create=False)
         print(
-            f"'{experiment.name}' has {experiment.num_videos} video(s) with configuration:"
+            f"'{experiment.name}' has {experiment.num_videos} video(s) with configuration:",
         )
         print(f"{json.dumps(experiment.cfg, indent=2)}")
 

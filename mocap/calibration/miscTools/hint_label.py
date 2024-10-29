@@ -7,7 +7,6 @@ import tkinter as tk
 
 
 class MyHintLabel(tk.Toplevel):
-
     def __init__(self, message, auto_clear=False, wait_popup=True):
         """Init hint."""
         self.message = message
@@ -36,7 +35,11 @@ class MyHintLabel(tk.Toplevel):
         tk.Toplevel.__init__(self)
         self.overrideredirect(True)
         self.message_label = tk.Label(
-            self, compound="left", text=self.message, bg="#EFEFFF", fg="#9A1046"
+            self,
+            compound="left",
+            text=self.message,
+            bg="#EFEFFF",
+            fg="#9A1046",
         )
 
         self.message_label.pack()
@@ -49,7 +52,7 @@ class MyHintLabel(tk.Toplevel):
             self.ypos = self.winfo_pointery()
             self.geometry(
                 "+%d+%d"
-                % (self.xpos + self.TIP_X_OFFSET, self.ypos + self.TIP_Y_OFFSET)
+                % (self.xpos + self.TIP_X_OFFSET, self.ypos + self.TIP_Y_OFFSET),
             )
             self.attributes("-alpha", 0.85)
         except (tk.TclError, RuntimeError):

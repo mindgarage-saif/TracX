@@ -25,10 +25,11 @@ class Mixin:
             if self.n_total.get() > 0:
                 for j in range(self.n_cameras):
                     t_choose = self._(
-                        "Please select a folder for image points of each pose for camera "
+                        "Please select a folder for image points of each pose for camera ",
                     )
                     path_folder = filedialog.askdirectory(
-                        parent=self.master, title=t_choose + str(j + 1)
+                        parent=self.master,
+                        title=t_choose + str(j + 1),
                     )
                     if path_folder != "":
                         for index in range(len(self.paths[j])):
@@ -56,7 +57,8 @@ class Mixin:
                 f = open(filename, "w")
                 if j < 2:
                     c_string = datastring.instrinsic2string(
-                        self.camera_matrix[j], self.dist_coefs[j]
+                        self.camera_matrix[j],
+                        self.dist_coefs[j],
                     )
                     f.write(c_string)
                 else:

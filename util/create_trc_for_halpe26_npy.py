@@ -1,10 +1,7 @@
 import argparse
-import os
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from mpl_toolkits.mplot3d import Axes3D  # This import registers the 3D projection
 
 """
 Some code snippets where taken from the Pose2Sim repository https://github.com/perfanalytics/pose2sim
@@ -21,7 +18,7 @@ def createDic(list):
 def readTrc_header(path_to_trc, header_info=None, from_reference=False):
     print("reading trc file")
     if from_reference:
-        with open(path_to_trc, "r") as trc_file:
+        with open(path_to_trc) as trc_file:
             lines = trc_file.readlines()
             header = lines[:5]
             print(len(header))
@@ -45,7 +42,7 @@ def readTrc_header(path_to_trc, header_info=None, from_reference=False):
             "\t\t" + "\t".join([f"X{i+1}\tY{i+1}\tZ{i+1}" for i in range(22)]) + "\n"
         )
         print(
-            [header_line_0, header_line_1, header_line_2, header_line_3, header_line_4]
+            [header_line_0, header_line_1, header_line_2, header_line_3, header_line_4],
         )
         return [
             header_line_0,
@@ -57,7 +54,7 @@ def readTrc_header(path_to_trc, header_info=None, from_reference=False):
 
 
 def readTrc(path_to_3d_joints):
-    with open(path_to_3d_joints, "r") as trc_file:
+    with open(path_to_3d_joints) as trc_file:
         lines = trc_file.readlines()
         joints = []
         joint_names = lines[3].split("\t")[2:]  # remove empty string
@@ -142,26 +139,44 @@ if __name__ == "__main__":
         help="Path to the trc file",
     )
     argsp.add_argument(
-        "--header_info", default=False, type=bool, help="Header information"
+        "--header_info",
+        default=False,
+        type=bool,
+        help="Header information",
     )
     argsp.add_argument(
-        "--from_reference", default=False, type=bool, help="Read from reference"
+        "--from_reference",
+        default=False,
+        type=bool,
+        help="Read from reference",
     )
     argsp.add_argument(
-        "--file_name", default="Generic_Name.trc", type=str, help="File name"
+        "--file_name",
+        default="Generic_Name.trc",
+        type=str,
+        help="File name",
     )
     argsp.add_argument("--data_rate", default=60, type=int, help="Data rate")
     argsp.add_argument("--frame_rate", default=60, type=int, help="Frame rate")
     argsp.add_argument(
-        "--og_data_rate", default=60, type=int, help="Original data rate"
+        "--og_data_rate",
+        default=60,
+        type=int,
+        help="Original data rate",
     )
     argsp.add_argument(
-        "--num_of_frames", default=1800, type=int, help="Number of frames"
+        "--num_of_frames",
+        default=1800,
+        type=int,
+        help="Number of frames",
     )
     argsp.add_argument("--strat_frame", default=0, type=int, help="Start frame")
     argsp.add_argument("--end_frame", default=1799, type=int, help="End frame")
     argsp.add_argument(
-        "--out_put", default="Generic_Name.trc", type=str, help="Output file name"
+        "--out_put",
+        default="Generic_Name.trc",
+        type=str,
+        help="Output file name",
     )
     args = argsp.parse_args()
     if args.header_info:
@@ -203,7 +218,11 @@ if __name__ == "__main__":
             "end_frame": end_frame,
         }
     store_npy_halpe26_to_trc(
-        args.npy_path, args.trc_path, args.out_put, header_info, args.from_reference
+        args.npy_path,
+        args.trc_path,
+        args.out_put,
+        header_info,
+        args.from_reference,
     )
 
     #     file_name = header_info.file_name

@@ -79,19 +79,18 @@ class Mixin:
                 else:
                     self.index.set(index[0])
                     self.listbox.yview(index[0])
+            # if there are images, set the first one as selected
+            elif self.n_total.get():
+                self.index.set(0)
             else:
-                # if there are images, set the first one as selected
-                if self.n_total.get():
-                    self.index.set(0)
-                else:
-                    # disable zoom in button
-                    self.btn_zoom_more.config(state="disable")
-                    self.btn_zoom_less.config(state="disable")
-                    self.btn_move_feature.config(state="disable")
-                    self.btn_locate.config(state="disable")
-                    # disable run calibration button
-                    self.btn_play.config(state="disable")
-                    self.index.set(-1)
+                # disable zoom in button
+                self.btn_zoom_more.config(state="disable")
+                self.btn_zoom_less.config(state="disable")
+                self.btn_move_feature.config(state="disable")
+                self.btn_locate.config(state="disable")
+                # disable run calibration button
+                self.btn_play.config(state="disable")
+                self.index.set(-1)
             # uses self.index which is updated in updatepicture
             self.loadBarError([0, 1])
 

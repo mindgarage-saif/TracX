@@ -1,25 +1,29 @@
 import os
 import shutil
-from distutils.dir_util import copy_tree
 from typing import Optional
-import onnxruntime as ort
-import torch
-import json
+
 import cv2
+import onnxruntime as ort
 import toml
+import torch
 from easydict import EasyDict as edict
-from mocap.core.monocular_pipeline import moncular_estimation,estimation_2d,estimation_3d
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
-from mocap.rendering import StickFigureRenderer, create_opensim_vis
+from mocap.core.monocular_pipeline import estimation_2d, estimation_3d
+from mocap.rendering import StickFigureRenderer
 
-from ..constants import OPENSIM_DIR
 from .motion import MotionSequence
 from .rotation import rotate_video_monocular
 
 
 class ExperimentMonocular:
-    def __init__(self, name, create=True, base_dir=APP_PROJECTS,model_path = r"basline_model_MB.onnx") -> None:
+    def __init__(
+        self,
+        name,
+        create=True,
+        base_dir=APP_PROJECTS,
+        model_path=r"basline_model_MB.onnx",
+    ) -> None:
         self.name = name
         self.path = os.path.abspath(os.path.join(base_dir, name))
         self.videos_dir = os.path.join(self.path, "videos")
@@ -27,27 +31,39 @@ class ExperimentMonocular:
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
         self.config_file = os.path.join(self.path, "Config.toml")
         self.output_dir = os.path.join(self.path, "output")
-        self.MODEL = ort.InferenceSession(model_path,providers=['CPUExecutionProvider'])
+
+        model_path = os.path.join(APP_ASSETS, model_path)
+        self.MODEL = ort.InferenceSession(
+            model_path,
+            providers=["CPUExecutionProvider"],
+        )
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
-            self.calibration_dir, "camera_parameters.qca.txt"
+            self.calibration_dir,
+            "camera_parameters.qca.txt",
         )
         try:
-            if torch.cuda.is_available() and 'CUDAExecutionProvider' in ort.get_available_providers():
-                self.device = 'cuda'
-                self.backend = 'onnxruntime'
+            if (
+                torch.cuda.is_available()
+                and "CUDAExecutionProvider" in ort.get_available_providers()
+            ):
+                self.device = "cuda"
+                self.backend = "onnxruntime"
             else:
-                raise 
+                raise
         except:
             try:
-                if 'MPSExecutionProvider' in ort.get_available_providers() or 'CoreMLExecutionProvider' in ort.get_available_providers():
-                    self.device = 'mps'
-                    self.backend = 'onnxruntime'
+                if (
+                    "MPSExecutionProvider" in ort.get_available_providers()
+                    or "CoreMLExecutionProvider" in ort.get_available_providers()
+                ):
+                    self.device = "mps"
+                    self.backend = "onnxruntime"
                 else:
                     raise
             except:
-                self.device = 'cpu'
-                self.backend = 'openvino'
+                self.device = "cpu"
+                self.backend = "openvino"
 
         if create:
             try:
@@ -73,7 +89,7 @@ class ExperimentMonocular:
                 name
                 for name in os.listdir(APP_PROJECTS)
                 if os.path.isdir(os.path.join(APP_PROJECTS, name))
-            ]
+            ],
         )
 
     @staticmethod
@@ -83,7 +99,9 @@ class ExperimentMonocular:
     @staticmethod
     def from_path(path):
         return Experiment(
-            os.path.basename(path), create=False, base_dir=os.path.dirname(path)
+            os.path.basename(path),
+            create=False,
+            base_dir=os.path.dirname(path),
         )
 
     def _makedirs(self):
@@ -126,8 +144,8 @@ class ExperimentMonocular:
 
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
-    
-    def process_monocular(self, mode,correct_rotation,rotation):
+
+    def process_monocular(self, mode, correct_rotation, rotation):
         if correct_rotation:
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
@@ -140,18 +158,19 @@ class ExperimentMonocular:
                 os.rename(self.videos_dir, self.videos_dir + "_original")
                 os.rename(rotated_dir, self.videos_dir)
         video_list = os.listdir(self.videos_dir)
-        video_path = os.path.join(self.videos_dir,video_list[0])
+        video_path = os.path.join(self.videos_dir, video_list[0])
         print(mode)
-        res_w,res_h,fps = estimation_2d(video_path, mode, self.pose2d_dir,self.device,self.backend)
-        estimation_3d(self.pose2d_dir,self.pose3d_dir,self.MODEL,res_w,res_h)
-    
+        res_w, res_h, fps = estimation_2d(
+            video_path,
+            mode,
+            self.pose2d_dir,
+            self.device,
+            self.backend,
+        )
+        estimation_3d(self.pose2d_dir, self.pose3d_dir, self.MODEL, res_w, res_h)
 
     def get_motion_file(self) -> Optional[str]:
-        pose_3d = [
-            f
-            for f in os.listdir(self.pose3d_dir)
-            if f.endswith("data.json")
-        ]
+        pose_3d = [f for f in os.listdir(self.pose3d_dir) if f.endswith("data.json")]
         if len(pose_3d) == 0:
             return None
         return os.path.join(self.pose3d_dir, pose_3d[0])
@@ -176,8 +195,15 @@ class ExperimentMonocular:
 
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        motion_data = MotionSequence.from_monocular_json(motion_file,fps)
-        renderer = StickFigureRenderer(motion_data, animation_file,monocular=True,elev=-165,azim=155,vertical_axis="y")
+        motion_data = MotionSequence.from_monocular_json(motion_file, fps)
+        renderer = StickFigureRenderer(
+            motion_data,
+            animation_file,
+            monocular=True,
+            elev=-165,
+            azim=155,
+            vertical_axis="y",
+        )
         renderer.render()
 
         return animation_file
@@ -235,11 +261,12 @@ class ExperimentMonocular:
             mode (str): The visualization mode. Supported modes include ['naive', 'mesh', mixamo', 'opensim'].
             **kwargs: Additional keyword arguments to pass to the visualization function for the selected mode.
                       See the documentation of the corresponding visualization function for more details.
+
         """
         motion_file = self.get_motion_file()
         if motion_file is None:
             raise ValueError(
-                "Call the .process() method first before visualizing the results."
+                "Call the .process() method first before visualizing the results.",
             )
 
         # Check the visualization mode
@@ -254,7 +281,7 @@ class ExperimentMonocular:
             return self._visualize_opensim(motion_file, **kwargs)
         else:
             raise ValueError(
-                f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}"
+                f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}",
             )
 
     def __str__(self):

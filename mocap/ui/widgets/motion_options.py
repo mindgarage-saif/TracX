@@ -1,13 +1,13 @@
 from PyQt6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
+    QComboBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
     QRadioButton,
     QVBoxLayout,
     QWidget,
-    QComboBox,
 )
 
 from mocap.ui.tasks import MotionTaskConfig
@@ -16,12 +16,13 @@ from ..config.constants import PAD_X, PAD_Y
 from .buttons import EstimateMotionButton
 from .frame import Frame
 
-
 index_to_model = {
     0: "lightweight",
     1: "balanced",
     2: "performance",
 }
+
+
 class MotionOptions(Frame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -40,7 +41,7 @@ class MotionOptions(Frame):
         # Backend
         label = QLabel("Select a Model for 2D estimation", self)
         label.setToolTip(
-            "Select the model for 2D pose estimation. Lightweight is faster but less accurate. Performance is slower but more accurate."
+            "Select the model for 2D pose estimation. Lightweight is faster but less accurate. Performance is slower but more accurate.",
         )
         label.setProperty("class", "h2")
         label.setWordWrap(True)
@@ -68,7 +69,7 @@ class MotionOptions(Frame):
         self.modelH26Widget.setProperty("class", "empty")
         self.modelH26WidgetLayout = QVBoxLayout(self.modelH26Widget)
         self.modelH26WidgetLayout.setContentsMargins(0, 0, 0, 0)
-        self.skeletonWidgetLayout.addWidget(self.modelH26Widget)#
+        self.skeletonWidgetLayout.addWidget(self.modelH26Widget)
 
         self.modelH2617Widget = QWidget(self)
         self.modelH2617Widget.setProperty("class", "empty")
@@ -92,7 +93,7 @@ class MotionOptions(Frame):
         self.performanceMode = QRadioButton("Performance", self)
 
         # Modes for the Halpe26 Model initially
-        self.lightweightMode.setChecked(True) # Default
+        self.lightweightMode.setChecked(True)  # Default
         self.modelH26 = QButtonGroup(self)
         self.modelH26.addButton(self.lightweightMode)
         self.modelH26.addButton(self.balancedMode)
@@ -112,7 +113,7 @@ class MotionOptions(Frame):
         self.balancedMode17.setDisabled(True)
         # Modes for the Halpe26 + 17Spine Model initially
 
-        self.performanceMode17.setChecked(True) # Default
+        self.performanceMode17.setChecked(True)  # Default
         self.modelH26_17 = QButtonGroup(self)
         self.modelH26_17.addButton(self.lightweightMode17)
         self.modelH26_17.addButton(self.balancedMode17)
@@ -148,7 +149,7 @@ class MotionOptions(Frame):
         self.correctRotationCheckbox.stateChanged.connect(self.toggleCorrectRotation)
         self.multiPersonChecked.stateChanged.connect(self.toggleSyncVideos)
         self.markerAugmentationCheckbox.stateChanged.connect(
-            self.toggleMarkerAugmentation
+            self.toggleMarkerAugmentation,
         )
 
         self.innerLayout.addSpacing(16)
@@ -184,13 +185,12 @@ class MotionOptions(Frame):
 
     def toggleMarkerAugmentation(self):
         self.params.use_marker_augmentation, self.markerAugmentationCheckbox.isChecked()
-    
+
     def model_changed(self, index):
         # change the model
         self.params.model = index_to_model[index]
 
     def sekelton_optins_changed(self, index):
-
         if index == 0:
             self.modelH26Widget.setVisible(True)
             self.modelH2617Widget.setVisible(False)
@@ -213,7 +213,7 @@ class MotionOptions(Frame):
             self.params.mode = "performance"
         else:
             raise ValueError("Unknown model")
-    
+
     def model_changedH2617(self):
         if self.lightweightMode17.isChecked():
             self.params.mode = "lightweight"

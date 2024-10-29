@@ -1,17 +1,21 @@
+import json
+import os
+
 from PyQt6.QtWidgets import (
     QButtonGroup,
-    QRadioButton,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
     QLabel,
     QLineEdit,
+    QRadioButton,
     QVBoxLayout,
 )
-from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
+
+from mocap.constants import APP_PROJECTS
 from mocap.core import Experiment, ExperimentMonocular
-import json
-import os
+
+
 class CreateExperimentDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,7 +58,7 @@ class CreateExperimentDialog(QDialog):
         # hint about size and allowed characters unique name
         self.hint = QLabel(self)
         self.hint.setText(
-            "Experiment name must be unique and contain 3-20 characters. Only letters, numbers and hyphens are allowed."
+            "Experiment name must be unique and contain 3-20 characters. Only letters, numbers and hyphens are allowed.",
         )
         self.hint.setProperty("class", "body")
         self.hint.setWordWrap(True)
@@ -80,17 +84,16 @@ class CreateExperimentDialog(QDialog):
         )
         self.button_box.accepted.connect(self.create_experiment)
         self.button_box.rejected.connect(self.reject)
-        
 
         self.layout.addWidget(self.button_box)
 
     def create_experiment(self):
         experiment_name = self.experiment_name.text().strip()
         pose2Sim = self.pose2Sim.isChecked()
-        experiments = {'experiments':[]}
+        experiments = {"experiments": []}
         if os.path.exists(os.path.join(APP_PROJECTS, "experiments.json")):
             print("File exists", os.path.join(APP_PROJECTS, "experiments.json"))
-            with open(os.path.join(APP_PROJECTS, "experiments.json"), "r") as f:
+            with open(os.path.join(APP_PROJECTS, "experiments.json")) as f:
                 experiments = json.load(f)
         try:
             if experiment_name == "":
@@ -101,10 +104,12 @@ class CreateExperimentDialog(QDialog):
             else:
                 estim_type = "monocular"
                 ExperimentMonocular(name=experiment_name, create=True)
-            experiments['experiments'].append({'name':experiment_name,'est_type': estim_type})
+            experiments["experiments"].append(
+                {"name": experiment_name, "est_type": estim_type},
+            )
             with open(os.path.join(APP_PROJECTS, "experiments.json"), "w") as f:
                 json.dump(experiments, f, indent=4)
             self.accept()
         except Exception as e:
-            print('error')
+            print("error")
             self.error_message.setText(str(e))

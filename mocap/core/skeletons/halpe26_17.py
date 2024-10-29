@@ -93,5 +93,5 @@ class Halpe2617Skeleton(BaseSkeleton):
                 "LBigToe",
                 "LSmallToe",
                 "LHeel",
-            ]
+            ],
         )

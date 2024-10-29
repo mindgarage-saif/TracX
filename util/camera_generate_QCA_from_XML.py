@@ -2,15 +2,11 @@ import argparse
 import os
 import xml.etree.ElementTree as ET
 
-import numpy as np
-
 # Parse the XML file
 
 
 def parseXML(in_path, out_path, camera_list, path_to_project, switch):
-    """
-    Take the input XML file and exclude the cameras with the serials in the exclude list
-    """
+    """Take the input XML file and exclude the cameras with the serials in the exclude list"""
     tree = ET.parse(in_path)
 
     root = tree.getroot()
@@ -23,11 +19,12 @@ def parseXML(in_path, out_path, camera_list, path_to_project, switch):
             if camera.attrib.get("serial") not in camera_list:
                 root.find("cameras").remove(camera)
     tree.write(out_path)
-    with open(out_path, "r") as xml_file:
+    with open(out_path) as xml_file:
         xml_content = xml_file.read()
     file_name = os.path.split(out_path)[-1]
     with open(
-        os.path.join(path_to_project, file_name.replace(".xml", ".qca.txt")), "w"
+        os.path.join(path_to_project, file_name.replace(".xml", ".qca.txt")),
+        "w",
     ) as txt_file:
         txt_file.write("<?xml version='1.0' encoding='ASCII'?>\n")
         txt_file.write(xml_content)

@@ -1,8 +1,6 @@
 import argparse
-import os
 
 import cv2
-import numpy as np
 
 
 def blur(path, region, blur_size, output):
@@ -48,7 +46,10 @@ def blur(path, region, blur_size, output):
 if __name__ == "__main__":
     argsPars = argparse.ArgumentParser()
     argsPars.add_argument(
-        "--path", default=r"./video.avi", type=str, help="Path to the video file"
+        "--path",
+        default=r"./video.avi",
+        type=str,
+        help="Path to the video file",
     )
     argsPars.add_argument(
         "--region",
@@ -57,7 +58,10 @@ if __name__ == "__main__":
         help="Region to blur (top left corner to bottom right corner)",
     )
     argsPars.add_argument(
-        "--blur_size", nargs=2, type=int, help="Size of the blur filter"
+        "--blur_size",
+        nargs=2,
+        type=int,
+        help="Size of the blur filter",
     )
     argsPars.add_argument(
         "--output",

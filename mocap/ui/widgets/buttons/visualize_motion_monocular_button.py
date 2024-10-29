@@ -10,7 +10,12 @@ from .task_button import BaseTaskButton
 
 class VisualizeMonocularMotionButton(BaseTaskButton):
     def __init__(self, task_config, callback):
-        super().__init__("Preview Motion", VisualizeMotionMonocularTask, task_config, callback)
+        super().__init__(
+            "Preview Motion",
+            VisualizeMotionMonocularTask,
+            task_config,
+            callback,
+        )
 
     def on_start(self):
         super().on_start()

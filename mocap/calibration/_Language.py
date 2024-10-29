@@ -9,11 +9,15 @@ class Mixin:
     def set_language(self):
         if self.language == "en":
             el = gettext.translation(
-                "base", localedir="assets/locales", languages=["en"]
+                "base",
+                localedir="assets/locales",
+                languages=["en"],
             )
         elif self.language == "de":
             el = gettext.translation(
-                "base", localedir="assets/locales", languages=["de"]
+                "base",
+                localedir="assets/locales",
+                languages=["de"],
             )
         el.install()
         self.gt = el.gettext

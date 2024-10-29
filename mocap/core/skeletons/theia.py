@@ -58,5 +58,5 @@ class TheiaSkeleton(BaseSkeleton):
             [
                 "RFoot",
                 "LFoot",
-            ]
+            ],
         )

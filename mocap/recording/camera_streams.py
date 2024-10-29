@@ -5,8 +5,7 @@ from .camera_stream import CameraStream
 
 
 def get_recommended_fps(frame_rates):
-    """
-    Returns the maximum even number less than or equal to the smallest frame rate in the list.
+    """Returns the maximum even number less than or equal to the smallest frame rate in the list.
 
     Args:
         frame_rates (List[int]): A list of frame rates from different cameras.
@@ -16,6 +15,7 @@ def get_recommended_fps(frame_rates):
 
     Raises:
         ValueError: If the input list is empty or contains non-integer values.
+
     """
     if not frame_rates:
         raise ValueError("The frame_rates list is empty.")
@@ -44,13 +44,13 @@ class CameraStreams:
         sample_rate: Optional[float] = None,
         sync_delta: Optional[float] = None,
     ):
-        """
-        Initialize synchronized capture for multiple cameras.
+        """Initialize synchronized capture for multiple cameras.
 
         Args:
             sources (Union[int, List[int], Tuple[int]]): Camera source IDs.
             sample_rate (float): Desired sample rate in frames per second.
             sync_delta (float): Maximum allowed time difference between frames for synchronization.
+
         """
         # Normalize sources to a list
         if isinstance(sources, int):
@@ -62,7 +62,7 @@ class CameraStreams:
 
         if sample_rate is None:
             sample_rate = get_recommended_fps(
-                [CameraStream(s).frame_rate for s in sources]
+                [CameraStream(s).frame_rate for s in sources],
             )
 
         self.sources = sources
@@ -109,11 +109,11 @@ class CameraStreams:
         self._video_finished_handler = handler
 
     def on_frame(self, handler: Callable[[Dict[int, Any]], None]):
-        """
-        Handler receives a dictionary mapping camera IDs to frames.
+        """Handler receives a dictionary mapping camera IDs to frames.
 
         Args:
             handler (Callable[[Dict[int, Any]], None]): Function to handle synchronized frames.
+
         """
         self._frame_captured_handler = handler
 
@@ -128,8 +128,11 @@ class CameraStreams:
         for cam_id, cam in self.cams.items():
             cam.on_frame(
                 lambda ret, frame, timestamp, cam_id=cam_id: self._on_captured_frame(
-                    ret, frame, timestamp, cam_id
-                )
+                    ret,
+                    frame,
+                    timestamp,
+                    cam_id,
+                ),
             )
 
         # Call the video started handler
@@ -163,9 +166,7 @@ class CameraStreams:
                 self._check_sync()
 
     def _check_sync(self):
-        """
-        Attempt to synchronize frames from all cameras.
-        """
+        """Attempt to synchronize frames from all cameras."""
         while self.capture_frames and all(
             len(buffer) > 0 for buffer in self.buffers.values()
         ):
@@ -205,18 +206,14 @@ class CameraStreams:
             self.sync_condition.notify_all()
 
     def start(self):
-        """
-        Start the synchronized capture in a separate thread.
-        """
+        """Start the synchronized capture in a separate thread."""
         if not self.running:
             self.running = True
             self.worker_thread = threading.Thread(target=self._worker, daemon=True)
             self.worker_thread.start()
 
     def _worker(self):
-        """
-        Worker thread to manage the capture process.
-        """
+        """Worker thread to manage the capture process."""
         self.start_capture()
         with self.sync_condition:
             while self.capture_frames:
@@ -224,8 +221,6 @@ class CameraStreams:
         self.stop_capture()
 
     def release(self):
-        """
-        Release all resources.
-        """
+        """Release all resources."""
         for cam in self.cams.values():
             cam.release()

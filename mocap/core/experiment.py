@@ -1,22 +1,23 @@
+import json
 import os
 import shutil
 from distutils.dir_util import copy_tree
 from typing import Optional
-import json
+
 import cv2
 import toml
 from easydict import EasyDict as edict
 from Pose2Sim import Pose2Sim
 from Pose2Sim.Utilities import bodykin_from_mot_osim
-from mocap.core.pipeline_est2dCustom import estimation_2d_custom
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
+from mocap.core.pipeline_est2dCustom import estimation_2d_custom
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from ..constants import OPENSIM_DIR
 from .motion import MotionSequence
 from .rotation import rotate_videos, unrotate_pose2d
-import toml
+
 
 class Experiment:
     def __init__(self, name, create=True, base_dir=APP_PROJECTS) -> None:
@@ -29,7 +30,8 @@ class Experiment:
         self.output_dir = os.path.join(self.path, "output")
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
-            self.calibration_dir, "camera_parameters.qca.txt"
+            self.calibration_dir,
+            "camera_parameters.qca.txt",
         )
         self.config_file = os.path.join(self.path, "Config.toml")
 
@@ -53,16 +55,16 @@ class Experiment:
     @staticmethod
     def list():
         if os.path.exists(os.path.join(APP_PROJECTS, "experiments.json")):
-            with open(os.path.join(APP_PROJECTS, "experiments.json"), "r") as f:
+            with open(os.path.join(APP_PROJECTS, "experiments.json")) as f:
                 data = json.load(f)
-            return sorted(data["experiments"],key = lambda x: x['name'])
+            return sorted(data["experiments"], key=lambda x: x["name"])
         return []
         return sorted(
             [
                 name
                 for name in os.listdir(APP_PROJECTS)
                 if os.path.isdir(os.path.join(APP_PROJECTS, name))
-            ]
+            ],
         )
 
     @staticmethod
@@ -72,7 +74,9 @@ class Experiment:
     @staticmethod
     def from_path(path):
         return Experiment(
-            os.path.basename(path), create=False, base_dir=os.path.dirname(path)
+            os.path.basename(path),
+            create=False,
+            base_dir=os.path.dirname(path),
         )
 
     def _makedirs(self):
@@ -117,14 +121,14 @@ class Experiment:
     def set_camera_parameters(self, params_file):
         if params_file.split(".")[-1].lower() != "xml":
             raise ValueError(
-                "Invalid calibration file format. We except a Qualisys calibration file in XML format."
+                "Invalid calibration file format. We except a Qualisys calibration file in XML format.",
             )
 
         shutil.copy(params_file, self.calibration_file)
 
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
-    
+
     # def process_mocular(self, mode,correct_rotation):
     #     if correct_rotation:
     #         rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
@@ -144,7 +148,7 @@ class Experiment:
         self,
         correct_rotation=True,
         use_marker_augmentation=False,
-        custom_model = False,
+        custom_model=False,
     ):
         # Change the working directory to the project directory.
         cwd = os.getcwd()
@@ -168,7 +172,11 @@ class Experiment:
         # Execute the 2D pose estimation
         print("Executing 2D pose estimatioan...")
         if custom_model:
-            estimation_2d_custom(self.videos_dir, pose_model_path=r"C:\Users\Jeremias\Downloads\td-cc_rtmpose-l_coco41-384x288_float32.onnx",json_output_dir=self.pose2d_dir)
+            estimation_2d_custom(
+                self.videos_dir,
+                pose_model_path="td-cc_rtmpose-l_coco41-384x288_float32.onnx",
+                json_output_dir=self.pose2d_dir,
+            )
         else:
             Pose2Sim.poseEstimation()
 
@@ -211,9 +219,10 @@ class Experiment:
     @property
     def log_file(self):
         return os.path.join(self.path, "logs.log")
+
     def read_skeleton(self):
         file = toml.load(self.config_file)
-        return file["pose"]['pose_model']
+        return file["pose"]["pose_model"]
 
     def _visualize_naive(self, motion_file):
         # Create a side-by-side visualization using OpenCV
@@ -231,7 +240,7 @@ class Experiment:
         skeleton = self.read_skeleton()
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        motion_data = MotionSequence.from_pose2sim_trc(motion_file,skeleton)
+        motion_data = MotionSequence.from_pose2sim_trc(motion_file, skeleton)
         renderer = StickFigureRenderer(motion_data, animation_file)
         renderer.render()
 
@@ -294,7 +303,9 @@ class Experiment:
 
         if with_blender:
             bodykin_from_mot_osim.bodykin_from_mot_osim_func(
-                mot, scaled_model, os.path.join(output, "bodykin.csv")
+                mot,
+                scaled_model,
+                os.path.join(output, "bodykin.csv"),
             )
 
         return output, mot, scaled_model
@@ -306,11 +317,12 @@ class Experiment:
             mode (str): The visualization mode. Supported modes include ['naive', 'mesh', mixamo', 'opensim'].
             **kwargs: Additional keyword arguments to pass to the visualization function for the selected mode.
                       See the documentation of the corresponding visualization function for more details.
+
         """
         motion_file = self.get_motion_file()
         if motion_file is None:
             raise ValueError(
-                "Call the .process() method first before visualizing the results."
+                "Call the .process() method first before visualizing the results.",
             )
 
         # Check the visualization mode
@@ -325,7 +337,7 @@ class Experiment:
             return self._visualize_opensim(motion_file, **kwargs)
         else:
             raise ValueError(
-                f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}"
+                f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}",
             )
 
     def __str__(self):

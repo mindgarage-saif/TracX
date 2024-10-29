@@ -43,14 +43,16 @@ class ProcessingPage(BasePage):
         # Create the project details layout for Monocular
         self.experimentMonocularUI = QWidget(self)
         self.experimentMonocularUI.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
         )
         self.innerLayout.addWidget(self.experimentMonocularUI)
         self.createExperimentMonocularUI()
         # Create the project details layout
         self.experimentUI = QWidget(self)
         self.experimentUI.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
         )
         self.innerLayout.addWidget(self.experimentUI)
         self.createExperimentUI()
@@ -65,7 +67,7 @@ class ProcessingPage(BasePage):
         self.sidebar.onExperimentSelected = self.showExperiment
 
     def createExperimentMonocularUI(self):
-                # Create a layout for the processing page
+        # Create a layout for the processing page
         self.experimentMonocularUILayout = QVBoxLayout(self.experimentMonocularUI)
         self.experimentMonocularUILayout.setContentsMargins(0, 0, 0, 0)
         self.experimentMonocularUILayout.setSpacing(0)
@@ -101,7 +103,8 @@ class ProcessingPage(BasePage):
 
         self.logs_viewMonocular = LogsWidget(self)
         self.logs_viewMonocular.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
         )
 
         # Add columns to the horizontal layout with equal stretch factors
@@ -111,7 +114,9 @@ class ProcessingPage(BasePage):
 
         # Add motion estimation settings in column 1
         self.motionOptionsMonocular = MotionOptionsMonocular(self)
-        self.motionOptionsMonocular.downloadButton.clicked.connect(self.downloadMotionData)
+        self.motionOptionsMonocular.downloadButton.clicked.connect(
+            self.downloadMotionData,
+        )
         column1Layout.addWidget(self.motionOptionsMonocular)
 
         # Add visualizer settings in column 2
@@ -121,7 +126,9 @@ class ProcessingPage(BasePage):
         # Connect the update event
         self.motionOptionsMonocular.setEnabled(False)
         self.visualizationOptionsMonocular.setEnabled(False)
-        self.experimentDataViewMonocular.onUpdate = self.onExperimentMonocularDataUploaded
+        self.experimentDataViewMonocular.onUpdate = (
+            self.onExperimentMonocularDataUploaded
+        )
         self.motionOptionsMonocular.onUpdate = self.onMotionMoncularEstimated
 
     def createExperimentUI(self):
@@ -161,7 +168,8 @@ class ProcessingPage(BasePage):
 
         self.logs_view = LogsWidget(self)
         self.logs_view.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
         )
 
         # Add columns to the horizontal layout with equal stretch factors
@@ -228,7 +236,7 @@ class ProcessingPage(BasePage):
                 self.experiment = Experiment(name, create=False)
                 self.experimentDataView.setExperiment(self.experiment)
                 self.experimentDataView.videoUploader.previewSelected(
-                    self.experiment.videos
+                    self.experiment.videos,
                 )
                 hasMotionData = self.experiment.get_motion_file() is not None
                 self.motionOptions.estimateButton.setEnabled(not hasMotionData)
@@ -236,8 +244,12 @@ class ProcessingPage(BasePage):
                 self.visualizationOptions.setEnabled(hasMotionData)
 
                 self.motionOptions.estimateButton.log_file = self.experiment.log_file
-                self.visualizationOptions.createButton.log_file = self.experiment.log_file
-                self.visualizationOptions.downloadButton.log_file = self.experiment.log_file
+                self.visualizationOptions.createButton.log_file = (
+                    self.experiment.log_file
+                )
+                self.visualizationOptions.downloadButton.log_file = (
+                    self.experiment.log_file
+                )
                 self.logs_view.start_log_streaming(self.experiment.log_file)
             else:
                 self.motionOptionsMonocular.params.experiment_name = name
@@ -245,15 +257,21 @@ class ProcessingPage(BasePage):
                 self.experiment = ExperimentMonocular(name, create=False)
                 self.experimentDataViewMonocular.setExperiment(self.experiment)
                 self.experimentDataViewMonocular.videoUploader.previewSelected(
-                    self.experiment.videos
+                    self.experiment.videos,
                 )
                 hasMotionData = self.experiment.get_motion_file() is not None
-                self.motionOptionsMonocular.estimateMoncularButton.setEnabled(not hasMotionData)
+                self.motionOptionsMonocular.estimateMoncularButton.setEnabled(
+                    not hasMotionData,
+                )
                 self.motionOptionsMonocular.downloadButton.setEnabled(hasMotionData)
                 self.visualizationOptionsMonocular.setEnabled(hasMotionData)
 
-                self.motionOptionsMonocular.estimateMoncularButton.log_file = self.experiment.log_file
-                self.visualizationOptionsMonocular.createButton.log_file = self.experiment.log_file
+                self.motionOptionsMonocular.estimateMoncularButton.log_file = (
+                    self.experiment.log_file
+                )
+                self.visualizationOptionsMonocular.createButton.log_file = (
+                    self.experiment.log_file
+                )
                 self.logs_viewMonocular.start_log_streaming(self.experiment.log_file)
             self.log(f"Loaded experiment: {self.experiment}")
 
@@ -264,7 +282,7 @@ class ProcessingPage(BasePage):
             else:
                 self.experimentUI.hide()
                 self.experimentMonocularUI.show()
-            #self.experimentUI.show()
+            # self.experimentUI.show()
 
         except Exception as e:
             print(e)

@@ -11,6 +11,6 @@ from .recording_layout import RecordingLayout
 from .sidebar import Sidebar
 from .simulation_options import SimulationOptions
 from .SimulationOptionsMonocular import SimulationOptionsMonocular
-from .upload_layout import ExperimentDataWidget,ExperimentMonocularDataWidget
+from .upload_layout import ExperimentDataWidget, ExperimentMonocularDataWidget
 from .video_list import VideoList
 from .video_preview import VideoPreview

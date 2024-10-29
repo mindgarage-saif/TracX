@@ -5,8 +5,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 
 class TaskRunner(QObject):
-    """
-    TaskRunner class runs a provided task in a separate thread, optionally logging the output.
+    """TaskRunner class runs a provided task in a separate thread, optionally logging the output.
     Emits a signal upon task completion indicating success or failure, along with the result or error.
     """
 
@@ -14,14 +13,14 @@ class TaskRunner(QObject):
     finished = pyqtSignal(bool, object)
 
     def __init__(self, task_instance, log_file_path=None, *task_args, **task_kwargs):
-        """
-        Initializes the TaskRunner with a task instance to execute, optional logging, and task arguments.
+        """Initializes the TaskRunner with a task instance to execute, optional logging, and task arguments.
 
         Args:
             task_instance: Instance of a class that inherits from BaseTask.
             log_file_path: Optional file path to log the output (stdout and stderr).
             task_args: Positional arguments to pass to the task's execute function.
             task_kwargs: Keyword arguments to pass to the task's execute function.
+
         """
         super().__init__()
         self.task_instance = task_instance
@@ -30,8 +29,7 @@ class TaskRunner(QObject):
         self.task_kwargs = task_kwargs
 
     def run(self):
-        """
-        Runs the provided task with the specified arguments, optionally logs output,
+        """Runs the provided task with the specified arguments, optionally logs output,
         and emits a signal when the task finishes.
         """
         original_stdout = sys.stdout

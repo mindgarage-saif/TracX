@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ...recording.utils import find_cameras
-from ..config.constants import PAD_X, PAD_Y
+from ..config.constants import PAD_Y
 
 
 class CameraItemWidget(QWidget):
@@ -61,12 +61,13 @@ class CameraSelector(QWidget):
 
         # Add instructions
         instructions = QLabel(
-            "Select one or more cameras to record from. If multiple cameras are selected, they will be synchronized."
+            "Select one or more cameras to record from. If multiple cameras are selected, they will be synchronized.",
         )
         instructions.setProperty("class", "body")
         instructions.setWordWrap(True)
         instructions.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Minimum,
         )
         self.innerLayout.addWidget(instructions)
         self.innerLayout.addSpacing(PAD_Y)
@@ -74,7 +75,8 @@ class CameraSelector(QWidget):
         # Show all cameras in a list with checkboxes, allowing multiple selection
         self.camera_list = QListWidget()
         self.camera_list.setSizePolicy(
-            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.MinimumExpanding,
+            QSizePolicy.Policy.Expanding,
         )
         self.camera_items = []
         self.innerLayout.addWidget(self.camera_list)
@@ -82,12 +84,13 @@ class CameraSelector(QWidget):
 
         # Add refresh instructions
         refresh_instructions = QLabel(
-            "Don't see your camera? Unplug and replug it, then click the refresh button to search again."
+            "Don't see your camera? Unplug and replug it, then click the refresh button to search again.",
         )
         refresh_instructions.setProperty("class", "body")
         refresh_instructions.setWordWrap(True)
         refresh_instructions.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Minimum,
         )
         self.innerLayout.addWidget(refresh_instructions)
         self.innerLayout.addSpacing(16)

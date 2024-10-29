@@ -8,7 +8,7 @@ import pandas as pd
 
 def theia_to_pose2sim(theia_file, seq_name, f_range):
     # Load Theia JSON file
-    with open(theia_file, "r") as file:
+    with open(theia_file) as file:
         data = json.load(file)
 
     # Read motion data
@@ -65,7 +65,7 @@ def theia_to_pose2sim(theia_file, seq_name, f_range):
                     f_range[0],
                     f_range[1],
                 ],
-            )
+            ),
         ),
         "Frame#\tTime\t" + "\t\t\t".join(keypoints_names) + "\t\t",
         "\t\t"

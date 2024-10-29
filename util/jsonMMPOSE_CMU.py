@@ -25,7 +25,7 @@ def mmpose_cmu(directory, camera_xml, output_path):
         # Check if the file is a JSON file
         if filename.endswith(".json"):
             filepath = os.path.join(directory, filename)
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 data = json.load(f)
 
             for frame in data:
@@ -38,12 +38,12 @@ def mmpose_cmu(directory, camera_xml, output_path):
                     if rotation_angle == "270":
                         y2 = np.array(points[:, 0])
                         x2 = width - np.array(
-                            points[:, 1]
+                            points[:, 1],
                         )  # static 1920 for width of image
                     elif rotation_angle == "90":
                         x2 = np.array(points[:, 1])
                         y2 = height - np.array(
-                            points[:, 0]
+                            points[:, 0],
                         )  # static 1088 for height of image
                     elif rotation_angle == "180":
                         x2 = width + np.array(points[:, 0]) * -1

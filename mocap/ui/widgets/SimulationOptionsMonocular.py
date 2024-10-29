@@ -10,12 +10,15 @@ from PyQt6.QtWidgets import (
 from mocap.ui.tasks import VisualizeTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
-from .buttons import  VisualizeMonocularMotionButton
+from .buttons import VisualizeMonocularMotionButton
 from .frame import Frame
 
 
 class SimulationOptionsMonocular(Frame):
-    def __init__(self, parent,):
+    def __init__(
+        self,
+        parent,
+    ):
         super().__init__(parent)
         self.params = VisualizeTaskConfig()
 
@@ -30,7 +33,6 @@ class SimulationOptionsMonocular(Frame):
         self.innerLayout.addWidget(heading)
         self.innerLayout.addSpacing(16)
 
-
         row = QWidget(self)
         row.setProperty("class", "empty")
         rowLayout = QVBoxLayout(row)
@@ -41,7 +43,6 @@ class SimulationOptionsMonocular(Frame):
         self.stick.setChecked(True)
         rowLayout.addWidget(self.stick)
         rowLayout.addSpacing(PAD_Y)
-
 
         rowLayout.addStretch()
 
@@ -63,10 +64,10 @@ class SimulationOptionsMonocular(Frame):
 
         # Create Button
         self.createButton = VisualizeMonocularMotionButton(
-            self.params, self.onVisualizationsCreated
+            self.params,
+            self.onVisualizationsCreated,
         )
         buttonBarLayout.addWidget(self.createButton)
-
 
         self.innerLayout.addWidget(buttonBar)
 

@@ -6,8 +6,7 @@ from PyQt6.QtWidgets import QFileDialog, QPushButton, QTextEdit, QVBoxLayout, QW
 
 
 class LogStreamer(QThread):
-    """
-    A QThread that continuously streams log file updates.
+    """A QThread that continuously streams log file updates.
 
     Signals:
         new_log_signal (str): Emitted when new log data is read.
@@ -33,7 +32,7 @@ class LogStreamer(QThread):
         if not os.path.exists(self.log_file_path):
             return
 
-        with open(self.log_file_path, "r") as log_file:
+        with open(self.log_file_path) as log_file:
             # Move to the end of the file to only read new changes
             log_file.seek(0, os.SEEK_END)
             while self._is_running:
@@ -48,8 +47,7 @@ class LogStreamer(QThread):
 
 
 class LogsWidget(QWidget):
-    """
-    A widget for displaying and downloading log files.
+    """A widget for displaying and downloading log files.
 
     Attributes:
         log_file_path (str): The path to the log file.
@@ -58,6 +56,7 @@ class LogsWidget(QWidget):
         download_button (QPushButton): The button to download the log file.
         log_thread (LogStreamer): The thread for streaming logs.
         file_watcher (QFileSystemWatcher): Watches the log file for changes.
+
     """
 
     def __init__(self, parent):
@@ -95,7 +94,7 @@ class LogsWidget(QWidget):
         # Start the log streaming thread
         self.log_thread = LogStreamer(self.log_file_path, wait_for_file=True)
         self.log_thread.new_log_signal.connect(
-            self.update_log_display
+            self.update_log_display,
         )  # Connect the signal
         self.log_thread.start()
 
@@ -111,7 +110,7 @@ class LogsWidget(QWidget):
 
         self.log_display.setText(text)
         self.log_display.verticalScrollBar().setValue(
-            self.log_display.verticalScrollBar().maximum()
+            self.log_display.verticalScrollBar().maximum(),
         )
 
     def download_log(self):
@@ -120,16 +119,18 @@ class LogsWidget(QWidget):
 
         # Open a file dialog to save the log file
         save_path, _ = QFileDialog.getSaveFileName(
-            self, "Save Log File", os.path.basename(self.log_file_path)
+            self,
+            "Save Log File",
+            os.path.basename(self.log_file_path),
         )
         if save_path:
-            with open(self.log_file_path, "r") as log_file:
+            with open(self.log_file_path) as log_file:
                 with open(save_path, "w") as save_file:
                     save_file.write(log_file.read())
 
     def on_log_file_changed(self):
         # Triggered when the file watcher detects changes to the log file
-        with open(self.log_file_path, "r") as log_file:
+        with open(self.log_file_path) as log_file:
             self.log_display.clear()
             self.log_display.setText(log_file.read())
 

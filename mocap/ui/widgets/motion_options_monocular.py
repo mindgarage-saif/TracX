@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QButtonGroup,
-    QComboBox,
     QCheckBox,
+    QComboBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -9,8 +9,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from PyQt6.QtCore import Qt
 
 from mocap.ui.tasks import MonocularMotionTaskConfig
 
@@ -38,7 +36,7 @@ class MotionOptionsMonocular(Frame):
         # Backend
         label = QLabel("2D Estimation Model", self)
         label.setToolTip(
-            "Select the model for 2D pose estimation. Lightweight is faster but less accurate. Performance is slower but more accurate."
+            "Select the model for 2D pose estimation. Lightweight is faster but less accurate. Performance is slower but more accurate.",
         )
         label.setProperty("class", "h2")
         label.setWordWrap(True)
@@ -70,12 +68,11 @@ class MotionOptionsMonocular(Frame):
         self.innerLayout.addSpacing(16)
         label = QLabel("Video Options", self)
         label.setToolTip(
-            "Select the options that fit the uploaded video. Correct Rotation will correct the rotation of the video. Sync Videos will sync the videos."
+            "Select the options that fit the uploaded video. Correct Rotation will correct the rotation of the video. Sync Videos will sync the videos.",
         )
         label.setProperty("class", "h2")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)
-
 
         self.isRotatedCheckbox = QCheckBox("Is Rotated", self)
         self.isRotatedCheckbox.setProperty("class", "body")
@@ -87,7 +84,9 @@ class MotionOptionsMonocular(Frame):
 
         # Rotation Drop down Menu
         self.rotationOptions = QComboBox(self)
-        self.rotationOptions.addItems(["90° Clockwise", "180°", "90° Counter Clockwise"])
+        self.rotationOptions.addItems(
+            ["90° Clockwise", "180°", "90° Counter Clockwise"],
+        )
         self.rotationOptions.setVisible(False)  # Initially hidden
         self.innerLayout.addWidget(self.rotationOptions)
 
@@ -118,7 +117,6 @@ class MotionOptionsMonocular(Frame):
         self.model3DWidgetLayout.addWidget(self.BaseLineModel)
         self.model3DWidgetLayout.addWidget(self.MotionBert)
 
-
         self.innerLayout.addSpacing(16)
         self.innerLayout.addStretch()
 
@@ -129,7 +127,10 @@ class MotionOptionsMonocular(Frame):
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 
         # Create Button
-        self.estimateMoncularButton = EstimateMonocularMotionButton(self.params, self.onMotionMonocularEstimated)
+        self.estimateMoncularButton = EstimateMonocularMotionButton(
+            self.params,
+            self.onMotionMonocularEstimated,
+        )
         buttonBarLayout.addWidget(self.estimateMoncularButton)
 
         self.downloadButton = QPushButton("Download Motion", self)
@@ -144,7 +145,6 @@ class MotionOptionsMonocular(Frame):
         self.onUpdate(status, result)
         self.downloadButton.setEnabled(status)
 
-
     @property
     def data(self):
         return dict(
@@ -153,7 +153,7 @@ class MotionOptionsMonocular(Frame):
             # kpt_thr=self.threshold.value() / 100.0,
             draw_bbox=self.draw_bbox.isChecked(),
         )
-    
+
     def toggle_rotation_options(self):
         self.params.correct_rotation = self.isRotatedCheckbox.isChecked()
         if self.isRotatedCheckbox.isChecked():
@@ -164,12 +164,8 @@ class MotionOptionsMonocular(Frame):
             self.rotationOptions.setVisible(False)
 
     def index_to_rotation_option(self, index):
-        return {
-            0: 90,
-            1: 180,
-            2: -90
-        }[index]
-    
+        return {0: 90, 1: 180, 2: -90}[index]
+
     def rotation_option_changed(self, index):
         self.params.rotation = self.index_to_rotation_option(index)
 

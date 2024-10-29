@@ -11,6 +11,7 @@ class MotionRenderer:
 
     Attributes:
         motion_data (BaseSkeleton): The skeleton to render.
+
     """
 
     def __init__(self, motion_data: MotionSequence):
@@ -19,7 +20,7 @@ class MotionRenderer:
         self.ylimits = self.motion_data.get_ylimits()
         self.zlimits = self.motion_data.get_zlimits()
 
-    def get_difference(self,minimum,maximum):
+    def get_difference(self, minimum, maximum):
         # minimum can be negative and maximum can also be negative
         # if minimum is negative and maximum is positive, then the difference is maximum
 
@@ -35,19 +36,19 @@ class MotionRenderer:
 
         Args:
             ax: The axes to set the limits for.
+
         """
         x_min, x_max = self.xlimits
         y_min, y_max = self.ylimits
         z_min, z_max = self.zlimits
 
-        x_diff = self.get_difference(x_min,x_max)
-        y_diff = self.get_difference(y_min,y_max)
-        z_diff = self.get_difference(z_min,z_max)
+        x_diff = self.get_difference(x_min, x_max)
+        y_diff = self.get_difference(y_min, y_max)
+        z_diff = self.get_difference(z_min, z_max)
         if "monocular" in kwargs:
-            max_diff = max(x_diff, y_diff,z_diff) * 0.75
+            max_diff = max(x_diff, y_diff, z_diff) * 0.75
         else:
             max_diff = max(x_diff, y_diff) * 0.75
-        
 
         x_center = (x_min + x_max) / 2
         y_center = (y_min + y_max) / 2
@@ -64,13 +65,21 @@ class MotionRenderer:
             z_min = 0
             z_max = max_diff
 
+        # Halve the range to center the plot
+        x_min /= 2
+        x_max /= 2
+        y_min /= 2
+        y_max /= 2
+        z_min /= 2
+        z_max /= 2
+
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.set_zlim(z_min, z_max)
         elev = kwargs.get("elev", 15)
         azim = kwargs.get("azim", 75)
         vertical_axis = kwargs.get("vertical_axis", "z")
-        ax.view_init(elev=elev, azim=azim,vertical_axis=vertical_axis)
+        ax.view_init(elev=elev, azim=azim, vertical_axis=vertical_axis)
 
     def render_frame(
         self,
@@ -84,6 +93,7 @@ class MotionRenderer:
             frame_idx (int): Index of the frame to render.
             skeleton (BaseSkeleton): The skeleton to render with the frame's pose.
             metadata (Dict): Additional metadata for the frame.
+
         """
         print("Rendering frame2")
         raise NotImplementedError

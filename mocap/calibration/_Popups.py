@@ -18,31 +18,50 @@ class Mixin:
 
         self.popup.wm_title(self._("Settings calibration"))
         tk.Label(self.popup, text=self._("Use intrinsics guess")).grid(
-            row=0, column=0, sticky=tk.W
+            row=0,
+            column=0,
+            sticky=tk.W,
         )
         tk.Checkbutton(self.popup, variable=self.p_intrinsics_guess).grid(
-            row=0, column=1, sticky=tk.E + tk.W + tk.N
+            row=0,
+            column=1,
+            sticky=tk.E + tk.W + tk.N,
         )
         tk.Label(self.popup, text=self._("Fix principal point")).grid(
-            row=1, column=0, sticky=tk.W
+            row=1,
+            column=0,
+            sticky=tk.W,
         )
         tk.Checkbutton(self.popup, variable=self.p_fix_point).grid(
-            row=1, column=1, sticky=tk.E + tk.W + tk.N
+            row=1,
+            column=1,
+            sticky=tk.E + tk.W + tk.N,
         )
         tk.Label(self.popup, text=self._("Fix aspect ratio")).grid(
-            row=2, column=0, sticky=tk.W
+            row=2,
+            column=0,
+            sticky=tk.W,
         )
         tk.Checkbutton(self.popup, variable=self.p_fix_ratio).grid(
-            row=2, column=1, sticky=tk.E + tk.W + tk.N
+            row=2,
+            column=1,
+            sticky=tk.E + tk.W + tk.N,
         )
         tk.Label(self.popup, text=self._("Set zero tangent distance")).grid(
-            row=3, column=0, sticky=tk.W
+            row=3,
+            column=0,
+            sticky=tk.W,
         )
         tk.Checkbutton(self.popup, variable=self.p_zero_tangent_distance).grid(
-            row=3, column=1, sticky=tk.E + tk.W + tk.N
+            row=3,
+            column=1,
+            sticky=tk.E + tk.W + tk.N,
         )
         tk.Button(self.popup, text=self._("Exit"), command=self.popup.destroy).grid(
-            row=4, column=0, columnspan=2, sticky=tk.E + tk.W + tk.N
+            row=4,
+            column=0,
+            columnspan=2,
+            sticky=tk.E + tk.W + tk.N,
         )
         self.center()
 
@@ -83,14 +102,14 @@ class Mixin:
                 self.p_width = self.pattern_width.get()
                 if self.p_width < 2:
                     self.label_msg[0].configure(
-                        text=self._("width parameter must be greater than one")
+                        text=self._("width parameter must be greater than one"),
                     )
                     b_continue = False
                 else:
                     self.label_msg[0].configure(text="")
             except (ValueError, tk.TclError):
                 self.label_msg[0].configure(
-                    text=self._("width parameter can not be empty")
+                    text=self._("width parameter can not be empty"),
                 )
                 b_continue = False
             # check range of pattern height, update the continue flag and show
@@ -99,14 +118,14 @@ class Mixin:
                 self.p_height = self.pattern_height.get()
                 if self.p_height < 2:
                     self.label_msg[1].configure(
-                        text=self._("height parameter must be greater than one")
+                        text=self._("height parameter must be greater than one"),
                     )
                     b_continue = False
                 else:
                     self.label_msg[1].configure(text="")
             except (ValueError, tk.TclError):
                 self.label_msg[1].configure(
-                    text=self._("height parameter can not be empty")
+                    text=self._("height parameter can not be empty"),
                 )
                 b_continue = False
             # check range of pattern length and show error if applies
@@ -114,13 +133,13 @@ class Mixin:
                 self.f_distance = self.feature_distance.get()
                 if self.f_distance == 0:
                     self.label_msg[2].configure(
-                        text=self._("length parameter must be greater than zero")
+                        text=self._("length parameter must be greater than zero"),
                     )
                 else:
                     self.label_msg[2].configure(text="")
             except (ValueError, tk.TclError):
                 self.label_msg[2].configure(
-                    text=self._("length parameter can not be empty")
+                    text=self._("length parameter can not be empty"),
                 )
 
             if b_continue:
@@ -169,32 +188,34 @@ class Mixin:
             try:
                 if self.image_width.get() == 0:
                     self.label_msg[3].configure(
-                        text=self._("width parameter must be greater than zero")
+                        text=self._("width parameter must be greater than zero"),
                     )
                 else:
                     self.label_msg[3].configure(text="")
             except ValueError:
                 self.label_msg[3].configure(
-                    text=self._("width parameter can not be empty")
+                    text=self._("width parameter can not be empty"),
                 )
             # check range of pattern height, update the continue flag and show
             # error if applies
             try:
                 if self.image_height.get() == 0:
                     self.label_msg[4].configure(
-                        text=self._("height parameter must be greater than zero")
+                        text=self._("height parameter must be greater than zero"),
                     )
                 else:
                     self.label_msg[4].configure(text="")
             except ValueError:
                 self.label_msg[4].configure(
-                    text=self._("height parameter can not be empty")
+                    text=self._("height parameter can not be empty"),
                 )
 
             # load 3D points to object_pattern
             if self.load_files[0]:
                 set_3D_points = np.fromfile(
-                    self.load_files[0][0], dtype=np.float32, sep=","
+                    self.load_files[0][0],
+                    dtype=np.float32,
+                    sep=",",
                 )
                 n_points = int(len(set_3D_points) / 3)
                 self.object_pattern = set_3D_points.reshape((n_points, 1, 3))
@@ -257,7 +278,9 @@ class Mixin:
         )
 
         tk.Label(self.m_frm[0], text=self._("Select file type to load")).grid(
-            row=0, column=0, sticky=tk.W + tk.E
+            row=0,
+            column=0,
+            sticky=tk.W + tk.E,
         )
         tk.OptionMenu(
             self.m_frm[0],
@@ -273,10 +296,13 @@ class Mixin:
         self.l_error = tk.Label(self.m_frm[3], compound=tk.LEFT)
         self.l_error.grid(row=1, column=0, columnspan=2)
         tk.Button(self.m_frm[3], text=self._("Start"), command=self.add_session).grid(
-            row=2, column=0
+            row=2,
+            column=0,
         )
         tk.Button(
-            self.m_frm[3], text=self._("Cancel"), command=self.popup.destroy
+            self.m_frm[3],
+            text=self._("Cancel"),
+            command=self.popup.destroy,
         ).grid(row=2, column=1)
 
         # struct Frame add session images (m_frm[1]) #
@@ -305,7 +331,9 @@ class Mixin:
         # -------------------------------------------------------------
 
         tk.Label(self.m_frm[1], text=self._("Pattern type ")).grid(
-            row=0, column=0, sticky=tk.W
+            row=0,
+            column=0,
+            sticky=tk.W,
         )
         tk.OptionMenu(
             self.m_frm[1],
@@ -315,7 +343,9 @@ class Mixin:
             self._("Symmetric Grid"),
         ).grid(row=1, column=0, sticky=tk.W + tk.E)
         self.labelP = tk.Label(self.m_frm[1], text=self._("Pattern width ")).grid(
-            row=2, column=0, sticky=tk.W
+            row=2,
+            column=0,
+            sticky=tk.W,
         )
         tk.Entry(
             self.m_frm[1],
@@ -328,7 +358,9 @@ class Mixin:
         self.label_msg[0].grid(row=4, column=0, sticky=tk.W)
 
         tk.Label(self.m_frm[1], text=self._("Pattern height ")).grid(
-            row=5, column=0, sticky=tk.W
+            row=5,
+            column=0,
+            sticky=tk.W,
         )
         tk.Entry(
             self.m_frm[1],
@@ -341,7 +373,9 @@ class Mixin:
         self.label_msg[1].grid(row=7, column=0, sticky=tk.W)
 
         tk.Label(self.m_frm[1], text=self._("Feature distance (mm) ")).grid(
-            row=8, column=0, sticky=tk.W
+            row=8,
+            column=0,
+            sticky=tk.W,
         )
         tk.Entry(
             self.m_frm[1],
@@ -379,7 +413,9 @@ class Mixin:
         # self.c_pattern.bind('<Configure>', self.check_errors_and_plot)
 
         tk.Label(self.m_frm[2], text=self._("Image width ")).grid(
-            row=0, column=0, sticky=tk.W
+            row=0,
+            column=0,
+            sticky=tk.W,
         )
         tk.Entry(
             self.m_frm[2],
@@ -391,7 +427,9 @@ class Mixin:
         self.label_msg[3].grid(row=2, column=0, sticky=tk.W)
 
         tk.Label(self.m_frm[2], text=self._("Image height ")).grid(
-            row=3, column=0, sticky=tk.W
+            row=3,
+            column=0,
+            sticky=tk.W,
         )
         tk.Entry(
             self.m_frm[2],
@@ -412,37 +450,41 @@ class Mixin:
 
         self.m_frm[0].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "The toolbox is capable of chessboard, "
                 "asymetric and symmetric circle targets "
                 "(choose images). If the \nused target is "
                 "none of them, please input txt-files with "
-                "the given features (see documentation)."
+                "the given features (see documentation).",
             ): self.entry_mouse_enter(event, message),
         )
         self.m_frm[1].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "The parameters of the target must be "
                 "entered: The number of features in the "
                 "width and height, as well \nas their real "
                 "world distance. Examples for the "
                 "parameterization are given in the "
-                "documentation."
+                "documentation.",
             ): self.entry_mouse_enter(event, message),
         )
         self.m_frm[2].bind(
             "<Enter>",
-            lambda event, message=self._(
-                "The width and height of the " "images must be entered."
+            lambda event,
+            message=self._(
+                "The width and height of the " "images must be entered.",
             ): self.entry_mouse_enter(event, message),
         )
         self.m_frm[3].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "Setting whether stereo mode "
                 "should be used. Starting a new "
-                "session."
+                "session.",
             ): self.entry_mouse_enter(event, message),
         )
         self.m_frm[0].bind("<Leave>", self.entry_mouse_leave)
@@ -507,7 +549,8 @@ class Mixin:
             self.progbar["value"] = 0
             self.lb_time.config(text="")
             self.style_pg.configure(
-                "text.Horizontal.TProgressbar", text="{:g} %".format(0)
+                "text.Horizontal.TProgressbar",
+                text=f"{0:g} %",
             )
             # set GUI for clustering
             self.m_frm[1].grid(row=3, column=0, sticky=tk.N + tk.S)
@@ -577,7 +620,9 @@ class Mixin:
         self.f_frm.grid(row=0, column=0)
 
         tk.Label(self.f_frm, text=self._("How to get camera parameters?")).grid(
-            row=0, column=0, sticky=tk.E + tk.W + tk.N
+            row=0,
+            column=0,
+            sticky=tk.E + tk.W + tk.N,
         )
         tk.OptionMenu(
             self.f_frm,
@@ -714,17 +759,23 @@ class Mixin:
         # ------------------------------------
 
         tk.Label(self.m_frm[1], text=self._("Number of images (n) ")).grid(
-            row=1, column=0, sticky=tk.W
+            row=1,
+            column=0,
+            sticky=tk.W,
         )
         tk.Label(self.m_frm[1], text=str(self.n_total.get())).grid(
-            row=2, column=0, sticky=tk.E + tk.W
+            row=2,
+            column=0,
+            sticky=tk.E + tk.W,
         )
 
         self.c_r.set(self.n_total.get())
         self.c_k.set(1)
 
         tk.Label(self.m_frm[1], text=self._("Number of groups (k) ")).grid(
-            row=3, column=0, sticky=tk.W
+            row=3,
+            column=0,
+            sticky=tk.W,
         )
         tk.Entry(
             self.m_frm[1],
@@ -736,7 +787,9 @@ class Mixin:
         self.label_msg[0].grid(row=5, column=0, sticky=tk.W)
 
         tk.Label(self.m_frm[1], text=self._("Number of elements per group (r) ")).grid(
-            row=6, column=0, sticky=tk.W
+            row=6,
+            column=0,
+            sticky=tk.W,
         )
         tk.Entry(
             self.m_frm[1],
@@ -750,7 +803,8 @@ class Mixin:
         # set initial text progressbar
         self.style_pg.configure("text.Horizontal.TProgressbar", text="0 %")
         self.progbar = ttk.Progressbar(
-            self.m_frm[1], style="text.Horizontal.TProgressbar"
+            self.m_frm[1],
+            style="text.Horizontal.TProgressbar",
         )
         self.progbar.config(maximum=10, mode="determinate")
         self.progbar.grid(row=9, column=0, sticky=tk.E + tk.W)
@@ -797,26 +851,31 @@ class Mixin:
         calib_button.config(command=lambda: self.play(calib_button))
         calib_button.grid(row=0, column=0, sticky=tk.E + tk.W + tk.N)
         tk.Button(self.m_frm[2], text=self._("Exit"), command=self.popup.destroy).grid(
-            row=0, column=1, sticky=tk.E + tk.W + tk.N
+            row=0,
+            column=1,
+            sticky=tk.E + tk.W + tk.N,
         )
 
         self.f_frm.bind(
             "<Enter>",
             lambda event, message=self._("Choose between ."): self.entry_mouse_enter(
-                event, message
+                event,
+                message,
             ),
         )
         self.m_frm[0].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "The textfiles with the saved "
                 "intrinsic parameters are to be "
-                "loaded."
+                "loaded.",
             ): self.entry_mouse_enter(event, message),
         )
         self.m_frm[1].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "The parameters for the number of "
                 "calibrations and the number of "
                 "images per calibration must be "
@@ -826,14 +885,16 @@ class Mixin:
                 "(presettings). For a good "
                 "calibration, at \nleast r = 10 "
                 "images should be selected "
-                "usually."
+                "usually.",
             ): self.entry_mouse_enter(event, message),
         )
         self.m_frm[2].bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Start of the calibration."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Start of the calibration."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.f_frm.bind("<Leave>", self.entry_mouse_leave)
         self.m_frm[0].bind("<Leave>", self.entry_mouse_leave)
@@ -850,11 +911,16 @@ class Mixin:
 
         self.popup.wm_title(self._("Importing error"))
         l_error = tk.Label(
-            self.popup, compound=tk.LEFT, image="::tk::icons::error", text=message
+            self.popup,
+            compound=tk.LEFT,
+            image="::tk::icons::error",
+            text=message,
         )
         l_error.grid(row=0, column=0, sticky=tk.W + tk.E)
         tk.Button(self.popup, text=self._("Okay"), command=self.popup.destroy).grid(
-            row=1, column=0, sticky=tk.W + tk.E
+            row=1,
+            column=0,
+            sticky=tk.W + tk.E,
         )
         self.center()
 
@@ -865,13 +931,18 @@ class Mixin:
 
         self.popup.wm_title(self._("Delete session"))
         tk.Label(
-            self.popup, text=self._("\nAre you sure you want to delete the session?\n")
+            self.popup,
+            text=self._("\nAre you sure you want to delete the session?\n"),
         ).grid(row=0, column=0, columnspan=2, sticky=tk.W + tk.E)
         tk.Button(self.popup, text=self._("Yes"), command=self.del_all).grid(
-            row=1, column=0, sticky=tk.W + tk.E
+            row=1,
+            column=0,
+            sticky=tk.W + tk.E,
         )
         tk.Button(self.popup, text=self._("Cancel"), command=self.popup.destroy).grid(
-            row=1, column=1, sticky=tk.W + tk.E
+            row=1,
+            column=1,
+            sticky=tk.W + tk.E,
         )
 
         self.center()
@@ -888,9 +959,13 @@ class Mixin:
             compound=tk.LEFT,
         ).grid(row=0, column=0, columnspan=2, sticky=tk.W + tk.E)
         tk.Button(
-            self.popup, text=self._("Yes"), command=self.change_position_feature
+            self.popup,
+            text=self._("Yes"),
+            command=self.change_position_feature,
         ).grid(row=1, column=0, sticky=tk.W + tk.E)
         tk.Button(self.popup, text=self._("No"), command=self.popup.destroy).grid(
-            row=1, column=1, sticky=tk.W + tk.E
+            row=1,
+            column=1,
+            sticky=tk.W + tk.E,
         )
         self.center()

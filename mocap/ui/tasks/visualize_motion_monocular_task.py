@@ -4,9 +4,7 @@ from .base_task import BaseTask, TaskConfig
 
 
 class VisualizeMonocularTaskConfig(TaskConfig):
-    """
-    Configuration class for motion estimation tasks.
-    """
+    """Configuration class for motion estimation tasks."""
 
     def __init__(self):
         super().__init__(
@@ -21,9 +19,7 @@ class VisualizeMonocularTaskConfig(TaskConfig):
 
 
 class VisualizeMotionMonocularTask(BaseTask):
-    """
-    Task for visualizing estimated motion.
-    """
+    """Task for visualizing estimated motion."""
 
     def __init__(self, config: VisualizeMonocularTaskConfig):
         super().__init__(config)

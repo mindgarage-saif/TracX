@@ -8,9 +8,7 @@ from mocap.constants import OPENSIM_DIR
 
 
 def parse_osim_file(file_path):
-    """
-    Parse the osim file to extract marker names and locations.
-    """
+    """Parse the osim file to extract marker names and locations."""
     tree = ET.parse(file_path)
     root = tree.getroot()
 

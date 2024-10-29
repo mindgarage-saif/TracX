@@ -58,7 +58,8 @@ class CameraController:
             )
 
             videos_dir = os.path.join(
-                APP_RECORDINGS, f"VID_{strftime('%Y%m%d_%H%M%S')}"
+                APP_RECORDINGS,
+                f"VID_{strftime('%Y%m%d_%H%M%S')}",
             )
             os.makedirs(videos_dir, exist_ok=True)
 
@@ -72,7 +73,7 @@ class CameraController:
                         cv2.VideoWriter_fourcc(*"mp4v"),
                         self._camera.sample_rate,
                         self._camera.resolution(cam_id),
-                    )
+                    ),
                 )
 
             self._camera.on_frame(self.process_multi)
@@ -91,17 +92,16 @@ class CameraController:
         self.writers.clear()
 
     def process_multi(self, frames):
-        """
-        Processes multiple video frames by resizing them to the same resolution,
+        """Processes multiple video frames by resizing them to the same resolution,
         applying center cropping if their aspect ratios differ, and concatenating them side by side.
 
         Args:
             frames (Tuple[numpy.ndarray]): The video frames.
+
         """
 
         def center_crop(frame, target_aspect_ratio):
-            """
-            Crops the input frame to the target aspect ratio centered.
+            """Crops the input frame to the target aspect ratio centered.
 
             Args:
                 frame (numpy.ndarray): The input image frame.
@@ -109,6 +109,7 @@ class CameraController:
 
             Returns:
                 numpy.ndarray: The center-cropped frame.
+
             """
             height, width = frame.shape[:2]
             current_aspect_ratio = width / height

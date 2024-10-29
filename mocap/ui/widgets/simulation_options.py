@@ -75,7 +75,8 @@ class SimulationOptions(Frame):
 
         # Create Button
         self.createButton = VisualizeMotionButton(
-            self.params, self.onVisualizationsCreated
+            self.params,
+            self.onVisualizationsCreated,
         )
         buttonBarLayout.addWidget(self.createButton)
 
@@ -85,7 +86,8 @@ class SimulationOptions(Frame):
             with_blender=False,
         )
         self.downloadButton = OpenSimButton(
-            self.opensim_config, self.saveVisualizations
+            self.opensim_config,
+            self.saveVisualizations,
         )
         buttonBarLayout.addWidget(self.downloadButton)
 

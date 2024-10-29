@@ -207,7 +207,7 @@ class Mixin:
                         (
                             "Horizontal.Progressbar.pbar",
                             {"side": "left", "sticky": "ns"},
-                        )
+                        ),
                     ],
                     "sticky": "nswe",
                 },
@@ -217,8 +217,7 @@ class Mixin:
         self.style_pg.layout("text.Horizontal.TProgressbar", layout)
 
     def add_session(self):
-        """
-        Function to add session after the given parameters are correct.
+        """Function to add session after the given parameters are correct.
 
         Creates object_pattern according to the selected pattern type
         Enables and disables the corresponding buttons
@@ -243,7 +242,8 @@ class Mixin:
             # creates object from Chessboard pattern
             if self._("Chessboard") in self.pattern_type.get():
                 self.object_pattern = np.zeros(
-                    (self.p_width * self.p_height, 3), np.float32
+                    (self.p_width * self.p_height, 3),
+                    np.float32,
                 )
                 grid = (
                     np.mgrid[0 : self.p_height, 0 : self.p_width].T.reshape(-1, 2)
@@ -256,7 +256,7 @@ class Mixin:
                 pattern_size = (self.p_height, self.p_width)
                 self.object_pattern = np.zeros((np.prod(pattern_size), 3), np.float32)
                 self.object_pattern[:, :2] = np.fliplr(
-                    np.indices(pattern_size).T.reshape(-1, 2)
+                    np.indices(pattern_size).T.reshape(-1, 2),
                 )
                 for i in range(np.prod(pattern_size)):
                     if self.object_pattern[i, 0] % 2 == 0:
@@ -277,7 +277,8 @@ class Mixin:
             # returns for led pattern (not yet implemented)
             elif self._("Symmetric Grid") in self.pattern_type.get():
                 self.object_pattern = np.zeros(
-                    (self.p_width * self.p_height, 3), np.float32
+                    (self.p_width * self.p_height, 3),
+                    np.float32,
                 )
                 grid = (
                     np.mgrid[0 : self.p_height, 0 : self.p_width].T.reshape(-1, 2)
@@ -305,7 +306,8 @@ class Mixin:
         self.popup.destroy()
 
         self.btn_start.config(
-            state="disable", relief="raised"
+            state="disable",
+            relief="raised",
         )  # disable add session button
         self.btn_add_folder.config(state="normal")  # enable adding images per folder
         self.btn_zoom_more.config(state="disable")  # disable zoom in button
@@ -353,19 +355,24 @@ class Mixin:
         # link changes in width and height to plotting function
         self.pattern_type.trace_id = self.pattern_type.trace("w", self.pattern_default)
         self.image_width.trace_id = self.image_width.trace(
-            "w", self.check_errors_and_plot
+            "w",
+            self.check_errors_and_plot,
         )
         self.image_height.trace_id = self.image_height.trace(
-            "w", self.check_errors_and_plot
+            "w",
+            self.check_errors_and_plot,
         )
         self.pattern_width.trace_id = self.pattern_width.trace(
-            "w", self.check_errors_and_plot
+            "w",
+            self.check_errors_and_plot,
         )
         self.pattern_height.trace_id = self.pattern_height.trace(
-            "w", self.check_errors_and_plot
+            "w",
+            self.check_errors_and_plot,
         )
         self.feature_distance.trace_id = self.feature_distance.trace(
-            "w", self.check_errors_and_plot
+            "w",
+            self.check_errors_and_plot,
         )
         # link changes in selected pose to update GUI
         self.index.trace("w", self.update_index_corner)
@@ -394,35 +401,40 @@ class Mixin:
         self.frm[2].grid(row=1, column=1, sticky=tk.N + tk.S)
         # set frame width 28% of screen width
         self.frm[2].configure(
-            width=self.screen_width * 0.28 * 0.9, height=(self.screen_height - 25) / 2
+            width=self.screen_width * 0.28 * 0.9,
+            height=(self.screen_height - 25) / 2,
         )
 
         # frame for intrinsics first camera
         self.frm[3].grid(row=1, column=2, sticky=tk.N + tk.S)
         # set frame width 15% of screen width
         self.frm[3].configure(
-            width=self.screen_width * 0.15 * 0.9, height=(self.screen_height - 25) / 2
+            width=self.screen_width * 0.15 * 0.9,
+            height=(self.screen_height - 25) / 2,
         )
 
         # frame for extrinsics
         self.frm[4].grid(row=1, column=3, sticky=tk.N + tk.S)
         # set frame width 14% of screen width
         self.frm[4].configure(
-            width=self.screen_width * 0.14 * 0.9, height=(self.screen_height - 25) / 2
+            width=self.screen_width * 0.14 * 0.9,
+            height=(self.screen_height - 25) / 2,
         )
 
         # frame for intrinsics second camera
         self.frm[5].grid(row=1, column=4, sticky=tk.N + tk.S)
         # set frame width 15% of screen width
         self.frm[5].configure(
-            width=self.screen_width * 0.15 * 0.9, height=(self.screen_height - 25) / 2
+            width=self.screen_width * 0.15 * 0.9,
+            height=(self.screen_height - 25) / 2,
         )
 
         # frame for pictures second camera
         self.frm[6].grid(row=1, column=5, sticky=tk.N + tk.S)
         # set frame width 28% of screen width
         self.frm[6].configure(
-            width=self.screen_width * 0.28 * 0.9, height=(self.screen_height - 25) / 2
+            width=self.screen_width * 0.28 * 0.9,
+            height=(self.screen_height - 25) / 2,
         )
 
         sub_frame_g = tk.Frame(self.master)
@@ -444,72 +456,80 @@ class Mixin:
 
         self.frm[1].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "The data browser shows all images "
                 "used for calibration. To see an "
                 "image on the right, click on its "
-                "name in the list."
+                "name in the list.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[3].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "Mean results and the standard "
                 "deviation of the first cameras "
-                "intrinsics."
+                "intrinsics.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[4].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "Mean results and the standard "
                 "deviation of the stereo "
-                "extrinsics."
+                "extrinsics.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[5].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "Mean results and the standard "
                 "deviation of the second cameras "
-                "intrinsics."
+                "intrinsics.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[7].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "RMS Diagramm over all images of the "
                 "first camera. To view an image, "
-                "select its error block."
+                "select its error block.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[8].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "RMS Diagramm over all images of the "
                 "second camera. To view an image, "
-                "select its error block."
+                "select its error block.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[9].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "Pixel distance error of the above "
                 "selected image over all of its "
                 "features. By selecting an error "
                 "block, the feature is higlighted in "
-                "the intrinsic and extrinsic tab."
+                "the intrinsic and extrinsic tab.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[10].bind(
             "<Enter>",
-            lambda event, message=self._(
+            lambda event,
+            message=self._(
                 "Pixel distance error of the above "
                 "selected image over all of its "
                 "features. By selecting an error "
                 "block, the feature is higlighted "
                 "in the intrinsic and extrinsic "
-                "tab."
+                "tab.",
             ): self.entry_mouse_enter(event, message),
         )
         self.frm[1].bind("<Leave>", self.entry_mouse_leave)
@@ -552,7 +572,9 @@ class Mixin:
         # toolbar configuration #
         # icons assignment and trace of functions to the buttons
         self.btn_start = tk.Button(
-            self.frm[0], image=self.icono_plus, command=self.add_session_popup
+            self.frm[0],
+            image=self.icono_plus,
+            command=self.add_session_popup,
         )
         self.btn_add_file = tk.Button(
             self.frm[0],
@@ -567,20 +589,26 @@ class Mixin:
             command=lambda: self.add_file("f"),
         )
         self.btn_zoom_more = tk.Button(
-            self.frm[0], state=tk.DISABLED, image=self.icono_zoommore
+            self.frm[0],
+            state=tk.DISABLED,
+            image=self.icono_zoommore,
         )
         self.btn_zoom_less = tk.Button(
-            self.frm[0], state=tk.DISABLED, image=self.icono_zoomless
+            self.frm[0],
+            state=tk.DISABLED,
+            image=self.icono_zoomless,
         )
         self.btn_zoom_more.config(
             command=lambda: self.toggle_zoom_buttons(
-                self.btn_zoom_more, self.btn_zoom_less
-            )
+                self.btn_zoom_more,
+                self.btn_zoom_less,
+            ),
         )
         self.btn_zoom_less.config(
             command=lambda: self.toggle_zoom_buttons(
-                self.btn_zoom_less, self.btn_zoom_more
-            )
+                self.btn_zoom_less,
+                self.btn_zoom_more,
+            ),
         )
         self.btn_move_feature = tk.Button(
             self.frm[0],
@@ -596,7 +624,9 @@ class Mixin:
             width=3,
         )
         self.btn_change_feature = tk.Button(
-            self.frm[0], text="Change", command=self.popupmsg_changes
+            self.frm[0],
+            text="Change",
+            command=self.popupmsg_changes,
         )
         self.btn_locate = tk.Button(
             self.frm[0],
@@ -638,68 +668,87 @@ class Mixin:
         # Binding the hint boxes to the buttons
         self.btn_start.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Start a new session."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Start a new session."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_add_file.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Adding single image files."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Adding single image files."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_add_folder.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Adding image files of a folder."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Adding image files of a folder."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_zoom_more.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Activate zoom-in function for " "images."
+            lambda event,
+            message=self._(
+                "Activate zoom-in function for " "images.",
             ): self.entry_mouse_enter(event, message),
         )
         self.btn_zoom_less.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Activate zoom-out function for " "images."
+            lambda event,
+            message=self._(
+                "Activate zoom-out function for " "images.",
             ): self.entry_mouse_enter(event, message),
         )
         self.btn_locate.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Activate locating image by click"
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Activate locating image by click"): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_play.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Start a calibration run."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Start a calibration run."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_delete.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Delete the active session."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Delete the active session."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_settings.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Set different calibration flags."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Set different calibration flags."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_export.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Export the mean parameters."
-            ): self.entry_mouse_enter(event, message),
+            lambda event,
+            message=self._("Export the mean parameters."): self.entry_mouse_enter(
+                event,
+                message,
+            ),
         )
         self.btn_export2.bind(
             "<Enter>",
-            lambda event, message=self._(
-                "Export the parameters of every " "subsample."
+            lambda event,
+            message=self._(
+                "Export the parameters of every " "subsample.",
             ): self.entry_mouse_enter(event, message),
         )
 
@@ -773,86 +822,107 @@ class Mixin:
                         if q == 0:
                             self.c_labels[j].append(tk.Label(sub_frame, font=("", 8)))
                             self.c_labels[j][-1].grid(
-                                row=p, column=1, columnspan=3, sticky=tk.N + tk.S
+                                row=p,
+                                column=1,
+                                columnspan=3,
+                                sticky=tk.N + tk.S,
                             )
                     elif p == 14:
                         if q == 0:
                             self.c_labels[j].append(tk.Label(sub_frame, font=("", 8)))
                             self.c_labels[j][-1].grid(
-                                row=p, column=1 + q, sticky=tk.N + tk.S
+                                row=p,
+                                column=1 + q,
+                                sticky=tk.N + tk.S,
                             )
                         elif q == 1:
                             self.c_labels[j].append(tk.Label(sub_frame, font=("", 8)))
                             self.c_labels[j][-1].grid(
-                                row=p, column=1 + q, columnspan=3, sticky=tk.N + tk.S
+                                row=p,
+                                column=1 + q,
+                                columnspan=3,
+                                sticky=tk.N + tk.S,
                             )
                     else:
                         self.c_labels[j].append(tk.Label(sub_frame, font=("", 8)))
                         self.c_labels[j][-1].grid(
-                            row=p + 0, column=1 + q, sticky=tk.N + tk.S
+                            row=p + 0,
+                            column=1 + q,
+                            sticky=tk.N + tk.S,
                         )
             # positioning of images in panels and trace of click event for zoom
             for i in range(5):
                 tab = ttk.Frame(self.tabControl[j])
                 self.tabControl[j].add(tab, text=tab_names[i])
                 self.list_panel[j].append(
-                    tk.Canvas(tab, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT)
+                    tk.Canvas(tab, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT),
                 )
                 self.list_panel[j][i].grid(row=0, column=0, sticky=tk.E + tk.W + tk.N)
                 self.list_panel[j][i].bind(
-                    "<Button-1>", lambda e, a=j: self.click_to_zoom(e, a)
+                    "<Button-1>",
+                    lambda e, a=j: self.click_to_zoom(e, a),
                 )
                 self.list_panel[j][i].bind(
-                    "<Button-4>", lambda e: self.scroll_to_zoom("m", e)
+                    "<Button-4>",
+                    lambda e: self.scroll_to_zoom("m", e),
                 )
                 self.list_panel[j][i].bind(
-                    "<Button-5>", lambda e: self.scroll_to_zoom("l", e)
+                    "<Button-5>",
+                    lambda e: self.scroll_to_zoom("l", e),
                 )
                 self.list_image_on_panel[j].append(
                     self.list_panel[j][i].create_image(
-                        0, 0, anchor=tk.N + tk.W, image=None
-                    )
+                        0,
+                        0,
+                        anchor=tk.N + tk.W,
+                        image=None,
+                    ),
                 )
             self.tabControl[j].grid(row=0, column=0, rowspan=13, sticky=tk.N + tk.S)
 
             self.list_panel[j][0].bind(
                 "<Enter>",
-                lambda event, message=self._(
-                    "The original image is shown here."
+                lambda event,
+                message=self._(
+                    "The original image is shown here.",
                 ): self.entry_mouse_enter(event, message),
             )
             self.list_panel[j][1].bind(
                 "<Enter>",
-                lambda event, message=self._(
-                    "The detected calibration target is " "shown here."
+                lambda event,
+                message=self._(
+                    "The detected calibration target is " "shown here.",
                 ): self.entry_mouse_enter(event, message),
             )
             self.list_panel[j][2].bind(
                 "<Enter>",
-                lambda event, message=self._(
+                lambda event,
+                message=self._(
                     "The distribution of the features over "
                     "all images are shown here. Dark blue "
                     "areas mean that the target was never "
-                    "in this image region."
+                    "in this image region.",
                 ): self.entry_mouse_enter(event, message),
             )
             self.list_panel[j][3].bind(
                 "<Enter>",
-                lambda event, message=self._(
+                lambda event,
+                message=self._(
                     "The detected calibration target is "
                     "shown here. After the calibration, the "
                     "target reprojection is drawn in "
-                    "additionally."
+                    "additionally.",
                 ): self.entry_mouse_enter(event, message),
             )
             self.list_panel[j][4].bind(
                 "<Enter>",
-                lambda event, message=self._(
+                lambda event,
+                message=self._(
                     "The detected calibration target is "
                     "shown here. After the calibration, the "
                     "target reprojection from the view of "
                     "the other camera is drawn in "
-                    "additionally."
+                    "additionally.",
                 ): self.entry_mouse_enter(event, message),
             )
             self.list_panel[j][0].bind("<Leave>", self.entry_mouse_leave)
@@ -916,7 +986,10 @@ class Mixin:
         for m in range(3):
             self.c_labels[2].append(tk.Label(sub_frame, font=("", 8)))
             self.c_labels[2][-1].grid(
-                row=m + 12, column=1, columnspan=3, sticky=tk.N + tk.S
+                row=m + 12,
+                column=1,
+                columnspan=3,
+                sticky=tk.N + tk.S,
             )
         self.c_labels[2].append(tk.Label(sub_frame, font=("", 8)))
         self.c_labels[2][-1].grid(row=15, column=1, columnspan=3, sticky=tk.N + tk.S)
@@ -952,7 +1025,7 @@ class Mixin:
                             * 0.25,
                         ),
                         dpi=int(self.master.winfo_fpixels("1i")),
-                    )
+                    ),
                 )
                 self.ax[i].append(self.f[i][-1].add_subplot(111))
                 # bar chart initialization and definition #
@@ -962,15 +1035,18 @@ class Mixin:
                 # defining object to handle plot
                 # (necessary for connecting the event)
                 self.bar[i].append(
-                    FigureCanvasTkAgg(self.f[i][-1], master=self.frm[7 + j + 2 * i])
+                    FigureCanvasTkAgg(self.f[i][-1], master=self.frm[7 + j + 2 * i]),
                 )
                 self.bar[i][-1].draw()
                 self.bar[i][-1].get_tk_widget().grid(
-                    row=0, column=0, sticky=tk.W + tk.E
+                    row=0,
+                    column=0,
+                    sticky=tk.W + tk.E,
                 )
                 # creating click event over the figures
                 self.f[i][-1].canvas.mpl_connect(
-                    "button_press_event", lambda e, a=i, b=j: self.on_press(e, a, b)
+                    "button_press_event",
+                    lambda e, a=i, b=j: self.on_press(e, a, b),
                 )
 
                 # clear plot for first loop
@@ -991,7 +1067,8 @@ class Mixin:
         self.master.bind("<Alt-F4>", self.master.quit)
         self.master.bind("<F5>", lambda event: self.btn_play.invoke())
         self.master.bind(
-            "<Control-f>", lambda e: self.export_features()
+            "<Control-f>",
+            lambda e: self.export_features(),
         )  # functionality not in toolbar
 
     def entry_mouse_enter(self, event, message="I got no message!"):
