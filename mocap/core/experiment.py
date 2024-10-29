@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from distutils.dir_util import copy_tree
@@ -10,6 +11,7 @@ from Pose2Sim import Pose2Sim
 from Pose2Sim.Utilities import bodykin_from_mot_osim
 
 from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
+from mocap.core.pipeline_est2dCustom import estimation_2d_custom
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from ..constants import OPENSIM_DIR
@@ -21,13 +23,15 @@ class Experiment:
     def __init__(self, name, create=True, base_dir=APP_PROJECTS) -> None:
         self.name = name
         self.path = os.path.abspath(os.path.join(base_dir, name))
+        self.config_file = os.path.join(self.path, "Config.toml")
         self.videos_dir = os.path.join(self.path, "videos")
         self.pose2d_dir = os.path.join(self.path, "pose")
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
         self.output_dir = os.path.join(self.path, "output")
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
-            self.calibration_dir, "camera_parameters.qca.txt"
+            self.calibration_dir,
+            "camera_parameters.qca.txt",
         )
         self.config_file = os.path.join(self.path, "Config.toml")
 
@@ -50,12 +54,17 @@ class Experiment:
 
     @staticmethod
     def list():
+        if os.path.exists(os.path.join(APP_PROJECTS, "experiments.json")):
+            with open(os.path.join(APP_PROJECTS, "experiments.json")) as f:
+                data = json.load(f)
+            return sorted(data["experiments"], key=lambda x: x["name"])
+        return []
         return sorted(
             [
                 name
                 for name in os.listdir(APP_PROJECTS)
                 if os.path.isdir(os.path.join(APP_PROJECTS, name))
-            ]
+            ],
         )
 
     @staticmethod
@@ -65,7 +74,9 @@ class Experiment:
     @staticmethod
     def from_path(path):
         return Experiment(
-            os.path.basename(path), create=False, base_dir=os.path.dirname(path)
+            os.path.basename(path),
+            create=False,
+            base_dir=os.path.dirname(path),
         )
 
     def _makedirs(self):
@@ -110,7 +121,7 @@ class Experiment:
     def set_camera_parameters(self, params_file):
         if params_file.split(".")[-1].lower() != "xml":
             raise ValueError(
-                "Invalid calibration file format. We except a Qualisys calibration file in XML format."
+                "Invalid calibration file format. We except a Qualisys calibration file in XML format.",
             )
 
         shutil.copy(params_file, self.calibration_file)
@@ -118,10 +129,26 @@ class Experiment:
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
 
+    # def process_mocular(self, mode,correct_rotation):
+    #     if correct_rotation:
+    #         rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
+    #         if not os.path.exists(rotated_dir):
+    #             rotate_videos(self.videos, rotated_dir, self.calibration_file)
+    #         else:
+    #             print("Rotated videos already exist. Skipping rotation...")
+
+    #         # Rename the videos directories to use the rotated videos
+    #         if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
+    #             os.rename(self.videos_dir, self.videos_dir + "_original")
+    #             os.rename(rotated_dir, self.videos_dir)
+    #     video_list = os.listdir(self.videos_dir)
+    #     video_path = os.path.join(self.videos_dir,video_list[0])
+    #     moncular_estimation(video_path, mode, self.pose2d_dir,self.pose3d_dir)
     def process(
         self,
         correct_rotation=True,
         use_marker_augmentation=False,
+        custom_model=False,
     ):
         # Change the working directory to the project directory.
         cwd = os.getcwd()
@@ -144,7 +171,14 @@ class Experiment:
 
         # Execute the 2D pose estimation
         print("Executing 2D pose estimatioan...")
-        Pose2Sim.poseEstimation()
+        if custom_model:
+            estimation_2d_custom(
+                self.videos_dir,
+                pose_model_path="td-cc_rtmpose-l_coco41-384x288_float32.onnx",
+                json_output_dir=self.pose2d_dir,
+            )
+        else:
+            Pose2Sim.poseEstimation()
 
         # Unrotate the 2D poses
         if correct_rotation:
@@ -158,7 +192,12 @@ class Experiment:
         # Triangulate the 2D poses to 3D
         print("Triangulating 2D poses to 3D...")
         Pose2Sim.calibration()
-        Pose2Sim.personAssociation()
+        try:
+            # Pose2Sim.synchronization()
+            Pose2Sim.personAssociation()
+        except Exception as e:
+            print(e)
+            raise e
         Pose2Sim.triangulation()
         Pose2Sim.filtering()
         if use_marker_augmentation:
@@ -181,9 +220,14 @@ class Experiment:
     def log_file(self):
         return os.path.join(self.path, "logs.log")
 
+    def read_skeleton(self):
+        file = toml.load(self.config_file)
+        return file["pose"]["pose_model"]
+
     def _visualize_naive(self, motion_file):
         # Create a side-by-side visualization using OpenCV
         # path = os.path.join(self.output_dir, "animation.mp4")
+        print(self.output_dir)
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         if os.path.exists(animation_file):
             return animation_file
@@ -193,10 +237,10 @@ class Experiment:
         video = cv2.VideoCapture(video_file)
         fps = video.get(cv2.CAP_PROP_FPS)
         video.release()
-
+        skeleton = self.read_skeleton()
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        motion_data = MotionSequence.from_pose2sim_trc(motion_file)
+        motion_data = MotionSequence.from_pose2sim_trc(motion_file, skeleton)
         renderer = StickFigureRenderer(motion_data, animation_file)
         renderer.render()
 
@@ -259,7 +303,9 @@ class Experiment:
 
         if with_blender:
             bodykin_from_mot_osim.bodykin_from_mot_osim_func(
-                mot, scaled_model, os.path.join(output, "bodykin.csv")
+                mot,
+                scaled_model,
+                os.path.join(output, "bodykin.csv"),
             )
 
         return output, mot, scaled_model
@@ -271,27 +317,27 @@ class Experiment:
             mode (str): The visualization mode. Supported modes include ['naive', 'mesh', mixamo', 'opensim'].
             **kwargs: Additional keyword arguments to pass to the visualization function for the selected mode.
                       See the documentation of the corresponding visualization function for more details.
+
         """
         motion_file = self.get_motion_file()
         if motion_file is None:
             raise ValueError(
-                "Call the .process() method first before visualizing the results."
+                "Call the .process() method first before visualizing the results.",
             )
 
         # Check the visualization mode
         supported_modes = ["naive", "mesh", "mixamo", "opensim"]
         if mode == "naive":
             return self._visualize_naive(motion_file, **kwargs)
-        elif mode == "mesh":
+        if mode == "mesh":
             return self._visualize_mesh(motion_file, **kwargs)
-        elif mode == "mixamo":
+        if mode == "mixamo":
             return self._visualize_mixamo(motion_file, **kwargs)
-        elif mode == "opensim":
+        if mode == "opensim":
             return self._visualize_opensim(motion_file, **kwargs)
-        else:
-            raise ValueError(
-                f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}"
-            )
+        raise ValueError(
+            f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}",
+        )
 
     def __str__(self):
         return f"Experiment(name={self.name}, path={self.path})"

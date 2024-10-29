@@ -11,7 +11,10 @@ from .task_button import BaseTaskButton
 class OpenSimButton(BaseTaskButton):
     def __init__(self, task_config, callback):
         super().__init__(
-            "Get OpenSim Files", VisualizeMotionTask, task_config, callback
+            "Get OpenSim Files",
+            VisualizeMotionTask,
+            task_config,
+            callback,
         )
 
     def on_start(self):
@@ -30,7 +33,8 @@ class OpenSimButton(BaseTaskButton):
         output_dir = os.path.abspath(output_dir)
         parent_dir = os.path.dirname(output_dir)
         output_zip = os.path.join(
-            parent_dir, f"{self.task.config.experiment_name}-opensim"
+            parent_dir,
+            f"{self.task.config.experiment_name}-opensim",
         )
         shutil.make_archive(output_zip, "zip", output_dir)
 

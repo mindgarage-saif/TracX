@@ -17,7 +17,6 @@ logging.basicConfig(level=logging.ERROR)
 
 class Mixin:
     def play(self, calib_button):
-
         calib_button.config(state="disabled")
         self.btn_play.config(relief="sunken")
         self.btn_play.config(state="active")
@@ -64,12 +63,12 @@ class Mixin:
                 c_r = self.c_r.get()
                 if c_r < 3:
                     self.label_msg[1].configure(
-                        text=self._("R parameter must be greater than two")
+                        text=self._("R parameter must be greater than two"),
                     )
                     b_continue = False
                 elif c_r > self.n_total.get():
                     self.label_msg[1].configure(
-                        text=self._("R parameter must be smaller or equal than n")
+                        text=self._("R parameter must be smaller or equal than n"),
                     )
                     b_continue = False
                 else:
@@ -81,7 +80,7 @@ class Mixin:
                 c_k = self.c_k.get()
                 if c_k < 1:
                     self.label_msg[0].configure(
-                        text=self._("K parameter must be greater than zero")
+                        text=self._("K parameter must be greater than zero"),
                     )
                     b_continue = False
                 else:
@@ -105,7 +104,7 @@ class Mixin:
                     text=(
                         self._("Number of groups changed from ")
                         + self._("%d to %d (maximum possible)") % (c_k, k)
-                    )
+                    ),
                 )
                 self.popup.update()  # for updating while running other process
 
@@ -148,11 +147,11 @@ class Mixin:
                     s = self.samples[counter]
 
                 # select the object points of the sample
-                op = list(self.objpoints[i] for i in s)
+                op = [self.objpoints[i] for i in s]
                 ip, c, d = [], [], []
                 for j in range(self.n_cameras):
                     # select the object points of the sample for each camera
-                    ip.append(list(self.imgpoints[j][i] for i in s))
+                    ip.append([self.imgpoints[j][i] for i in s])
                     c.append(np.eye(3, dtype=np.float32))
                     d.append(np.zeros((5, 1), dtype=np.float32))
 
@@ -198,7 +197,12 @@ class Mixin:
                     width = self.size[0][1]
                     height = self.size[0][0]
                     rms, c[0], d[0], _, _ = cv2.calibrateCamera(
-                        op, ip[0], (width, height), c[0], d[0], flags=flags_parameters
+                        op,
+                        ip[0],
+                        (width, height),
+                        c[0],
+                        d[0],
+                        flags=flags_parameters,
                     )
 
                 logging.info(self._("this is stereo rms error: %s"), rms)
@@ -219,22 +223,23 @@ class Mixin:
                     self.progbar["value"] = c_percent * 10.0
                 elapsed_time_1 = time_play.gettime()
                 t_left_minutes, t_left_seconds = divmod(
-                    elapsed_time_1 * (1 / c_percent - 1), 60
+                    elapsed_time_1 * (1 / c_percent - 1),
+                    60,
                 )
                 if t_left_minutes != 0:
                     self.lb_time.config(
                         text=self._("Estimated time left: %d minutes and %d seconds")
-                        % (max(t_left_minutes, 0), max(t_left_seconds, 0))
+                        % (max(t_left_minutes, 0), max(t_left_seconds, 0)),
                     )
                 else:
                     self.lb_time.config(
                         text=self._("Estimated time left: %d seconds")
-                        % (max(t_left_seconds, 0))
+                        % (max(t_left_seconds, 0)),
                     )
                 # update label
                 self.style_pg.configure(
                     "text.Horizontal.TProgressbar",
-                    text="{:g} %".format(int(c_percent * 100)),
+                    text=f"{int(c_percent * 100):g} %",
                 )
                 # checks if desired number of calibrations is reached
                 if counter >= k:
@@ -284,8 +289,8 @@ class Mixin:
                     if self.size[0] != self.size[1]:
                         logging.debug(
                             self._("Correcting cx an cy for camera {0}").format(
-                                index_min + 1
-                            )
+                                index_min + 1,
+                            ),
                         )
                         self.camera_matrix[index_min][0][2] -= h_adj
                         self.camera_matrix[index_min][1][2] -= w_adj
@@ -295,7 +300,7 @@ class Mixin:
             elapsed_time_2 = time_play.gettime()
             self.label_status[2][1].config(text="\u2714")
             self.label_status[2][2].config(
-                text="%0.5f" % (elapsed_time_2 - elapsed_time_1)
+                text="%0.5f" % (elapsed_time_2 - elapsed_time_1),
             )
 
             if np.any(self.camera_matrix[:, 0, 0] == 1):
@@ -308,7 +313,7 @@ class Mixin:
                 elapsed_time_3 = time_play.gettime()
                 self.label_status[3][1].config(text="\u2714")
                 self.label_status[3][2].config(
-                    text="%0.5f" % (elapsed_time_3 - elapsed_time_2)
+                    text="%0.5f" % (elapsed_time_3 - elapsed_time_2),
                 )
                 # Calculate RMS error
                 self.calculate_error()
@@ -316,7 +321,7 @@ class Mixin:
                 elapsed_time_4 = time_play.gettime()
                 self.label_status[4][1].config(text="\u2714")
                 self.label_status[4][2].config(
-                    text="%0.5f" % (elapsed_time_4 - elapsed_time_3)
+                    text="%0.5f" % (elapsed_time_4 - elapsed_time_3),
                 )
                 self.label_status[5][2].config(text="%0.5f" % elapsed_time_4)
                 # enable export parameters buttons
@@ -341,7 +346,8 @@ class Mixin:
                 if ".txt" not in self.l_load_files[j].cget("text"):
                     if j == 2:
                         self.l_load_files[j].config(
-                            text=self._("Missing Extrinsics"), fg="green"
+                            text=self._("Missing Extrinsics"),
+                            fg="green",
                         )
                         self.label_status_l[3][1].config(text="\u2718")
                         if b_continue:
@@ -373,7 +379,7 @@ class Mixin:
                                 self.R_stereo = R
                                 self.T_stereo = T
                                 self.label_status_l[3][0].config(
-                                    text=self._("3. Calculating Extrinsics")
+                                    text=self._("3. Calculating Extrinsics"),
                                 )
                                 self.label_status_l[3][1].config(text="\u2714")
                             else:
@@ -383,7 +389,8 @@ class Mixin:
                                 self.label_status_l[4][1].config(text="\u2718")
                     else:
                         self.l_load_files[j].config(
-                            text=self._("File missing, please add"), fg="red"
+                            text=self._("File missing, please add"),
+                            fg="red",
                         )
                         b_continue = False
                         self.label_status_l[j + 1][1].config(text="\u2718")
@@ -417,8 +424,7 @@ class Mixin:
                         self.btn_export.config(state="disable")
                         self.btn_export2.config(state="disable")
                         break
-                    else:
-                        self.label_status_l[4][1].config(text="\u2714")
+                    self.label_status_l[4][1].config(text="\u2714")
 
         self.update = True  # Update bool activated
 
@@ -457,14 +463,19 @@ class Mixin:
                     if j == 1:
                         r2 = np.dot(np.linalg.inv(self.R_stereo), r1)
                         t2 = np.dot(np.linalg.inv(self.R_stereo), t1) - np.dot(
-                            np.linalg.inv(self.R_stereo), self.T_stereo
+                            np.linalg.inv(self.R_stereo),
+                            self.T_stereo,
                         )
                     else:
                         r2 = np.dot(self.R_stereo, r1)
                         t2 = np.dot(self.R_stereo, t1) + self.T_stereo
 
                     imgpoints2, _ = cv2.projectPoints(
-                        op[i], r2, t2, c[(j + 1) % 2], d[(j + 1) % 2]
+                        op[i],
+                        r2,
+                        t2,
+                        c[(j + 1) % 2],
+                        d[(j + 1) % 2],
                     )
                     self.projected_stereo[(j + 1) % 2].append(imgpoints2)
 
@@ -480,8 +491,8 @@ class Mixin:
                     imgpoints2 = self.projected[j][i]
                 self.r_error[j].append(
                     np.sqrt(
-                        (np.power(np.linalg.norm(ip[i] - imgpoints2, axis=2), 2).mean())
-                    )
+                        np.power(np.linalg.norm(ip[i] - imgpoints2, axis=2), 2).mean(),
+                    ),
                 )
                 self.r_error_p[j].append(np.linalg.norm(ip[i] - imgpoints2, axis=2))
                 # Calculated value to update progressbar
@@ -491,17 +502,17 @@ class Mixin:
                 # update label
                 self.style_pg.configure(
                     "text.Horizontal.TProgressbar",
-                    text="{:g} %".format(int(c_percent * 100)),
+                    text=f"{int(c_percent * 100):g} %",
                 )
                 self.popup.update()  # for updating while running other process
                 # update rms when the error for all the images is calculated
                 if len(self.r_error[j]) == len(ip):
                     logging.info(self._("Updating RMS for camera %d"), j + 1)
                     self.rms[j] = np.sqrt(
-                        np.sum(np.square(self.r_error[j])) / len(self.r_error[j])
+                        np.sum(np.square(self.r_error[j])) / len(self.r_error[j]),
                     )
                     if j == 1:
                         self.rms[2] = np.sqrt(
                             np.sum(np.square(self.r_error[0] + self.r_error[1]))
-                            / len(self.r_error[0] + self.r_error[1])
+                            / len(self.r_error[0] + self.r_error[1]),
                         )

@@ -1,8 +1,10 @@
 easydict
-matplotlib~=3.1.1
+matplotlib
 numpy
 opencv-python-headless~=4.10.0.84
 Pillow~=10.4.0
+pre-commit
 PyQt6
 PyQt6-3D
 qt-material==2.14
+ruff

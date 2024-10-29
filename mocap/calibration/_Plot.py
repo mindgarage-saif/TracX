@@ -176,7 +176,7 @@ class Mixin:
                     and self.btn_move_feature.config("relief")[-1] == "sunken"
                 ):
                     images[j].append(
-                        Image.fromarray(self.show_moving_features(j, selection))
+                        Image.fromarray(self.show_moving_features(j, selection)),
                     )
                 else:
                     images[j].append(Image.fromarray(self.image_features(j, selection)))
@@ -185,14 +185,18 @@ class Mixin:
                 # get projection image with intrinsic parameters of the
                 # selected image
                 images[j].append(
-                    Image.fromarray(self.project_detected_features(j, selection))
+                    Image.fromarray(self.project_detected_features(j, selection)),
                 )
                 # get projection image with the intrinsics of the other camera
                 # and extrinsics between the cameras of the selected image
                 images[j].append(
                     Image.fromarray(
-                        self.project_detected_features(j, selection, forExtrinsics=True)
-                    )
+                        self.project_detected_features(
+                            j,
+                            selection,
+                            forExtrinsics=True,
+                        ),
+                    ),
                 )
             # scale image if zoom applies and update panel of tabs
             if self.zoomhandler != 0:
@@ -201,13 +205,18 @@ class Mixin:
                 for j in range(self.n_cameras):
                     for i in range(len(self.list_panel[j])):
                         self.list_panel[j][i].scale(
-                            "all", self.x, self.y, self.scale, self.scale
+                            "all",
+                            self.x,
+                            self.y,
+                            self.scale,
+                            self.scale,
                         )
                         self.img[j][i] = ImageTk.PhotoImage(
-                            images[j][i].resize(new_size)
+                            images[j][i].resize(new_size),
                         )
                         self.list_panel[j][i].itemconfig(
-                            self.list_image_on_panel[j][i], image=self.img[j][i]
+                            self.list_image_on_panel[j][i],
+                            image=self.img[j][i],
                         )
             # Update panel of tabs
             else:
@@ -218,13 +227,16 @@ class Mixin:
                     for i in range(len(self.list_panel[j])):
                         self.list_panel[j][i].scale("all", 0, 0, 1, 1)
                         self.list_panel[j][i].coords(
-                            self.list_image_on_panel[j][i], 0, 0
+                            self.list_image_on_panel[j][i],
+                            0,
+                            0,
                         )
                         self.img[j][i] = ImageTk.PhotoImage(
-                            images[j][i].resize(new_size)
+                            images[j][i].resize(new_size),
                         )
                         self.list_panel[j][i].itemconfig(
-                            self.list_image_on_panel[j][i], image=self.img[j][i]
+                            self.list_image_on_panel[j][i],
+                            image=self.img[j][i],
                         )
             self.scale = 1
 
@@ -234,7 +246,10 @@ class Mixin:
                 for i in range(len(self.list_panel[j])):
                     self.list_panel[j][i].delete("all")
                     self.list_image_on_panel[j][i] = self.list_panel[j][i].create_image(
-                        0, 0, anchor=tk.N + tk.W, image=None
+                        0,
+                        0,
+                        anchor=tk.N + tk.W,
+                        image=None,
                     )
 
     # self.panel1.itemconfig(self.image_on_panel1, image = None)
@@ -252,7 +267,10 @@ class Mixin:
             im2[:, :, 2] = im
             # draw markers over the image representing the features
             cv2.drawChessboardCorners(
-                im2, (self.p_height, self.p_width), features, True
+                im2,
+                (self.p_height, self.p_width),
+                features,
+                True,
             )
         else:
             im2 = im
@@ -346,7 +364,8 @@ class Mixin:
 
                 # TODO: Show errors
                 grid[x_min:x_max, y_min:y_max] += grid_circle[
-                    x_min_g:x_max_g, y_min_g:y_max_g
+                    x_min_g:x_max_g,
+                    y_min_g:y_max_g,
                 ]
 
         # normalized the picture
@@ -359,8 +378,7 @@ class Mixin:
         # create heatmap of the normalized picture. Check:
         # https://stackoverflow.com/questions/10965417/how-to-convert-numpy-
         # array-to-pil-image-applying-matplotlib-colormap
-        im = np.uint8(cm.jet(grid) * 255)
-        return im
+        return np.uint8(cm.jet(grid) * 255)
 
     def show_moving_features(self, camera, index):
         """Function to represent new desired feature position after click."""
@@ -399,19 +417,17 @@ class Mixin:
         im3[:, :, 0] = im
         im3[:, :, 1] = im
         im3[:, :, 2] = im
+
         # check if the projection is from intrinsics or from intrinsics and
         # extrinsics (from the other camera)
-        if forExtrinsics:
-            projections = self.projected_stereo
-        else:
-            projections = self.projected
+        projections = self.projected_stereo if forExtrinsics else self.projected
 
         # plot projection mesh of features using  red lines
         if projections[camera]:
             for i in range(self.p_height):
                 for j in range(self.p_width):
                     a = projections[camera][index][j * self.p_height + i].astype(
-                        np.uint8
+                        np.uint8,
                     )
                     if j * self.p_height + i == self.index_corner.get():
                         cv2.circle(im3, (a[0][0], a[0][1]), 5, (154, 12, 70))
@@ -420,21 +436,27 @@ class Mixin:
                             j * self.p_height + i + 1
                         ].astype(np.uint8)
                         cv2.line(
-                            im3, (a[0][0], a[0][1]), (b[0][0], b[0][1]), (154, 12, 70)
+                            im3,
+                            (a[0][0], a[0][1]),
+                            (b[0][0], b[0][1]),
+                            (154, 12, 70),
                         )
                     if j < self.p_width - 1:
                         c = projections[camera][index][
                             (j + 1) * self.p_height + i
                         ].astype(np.uint8)
                         cv2.line(
-                            im3, (a[0][0], a[0][1]), (c[0][0], c[0][1]), (154, 12, 70)
+                            im3,
+                            (a[0][0], a[0][1]),
+                            (c[0][0], c[0][1]),
+                            (154, 12, 70),
                         )
 
         # plot original mesh of features using green lines
         for i in range(self.p_height):
             for j in range(self.p_width):
                 a = self.detected_features[camera][index][j * self.p_height + i].astype(
-                    np.uint8
+                    np.uint8,
                 )
                 if j * self.p_height + i == self.index_corner.get():
                     cv2.circle(im3, (a[0][0], a[0][1]), 5, (80, 149, 200))
@@ -443,7 +465,10 @@ class Mixin:
                         j * self.p_height + i + 1
                     ].astype(np.uint8)
                     cv2.line(
-                        im3, (a[0][0], a[0][1]), (b[0][0], b[0][1]), (80, 149, 200)
+                        im3,
+                        (a[0][0], a[0][1]),
+                        (b[0][0], b[0][1]),
+                        (80, 149, 200),
                     )
                 if j < self.p_width - 1:
                     c = self.detected_features[camera][index][
@@ -451,7 +476,10 @@ class Mixin:
                     ].astype(np.uint8)
 
                     cv2.line(
-                        im3, (a[0][0], a[0][1]), (c[0][0], c[0][1]), (80, 149, 200)
+                        im3,
+                        (a[0][0], a[0][1]),
+                        (c[0][0], c[0][1]),
+                        (80, 149, 200),
                     )
 
         return im3
@@ -461,10 +489,7 @@ class Mixin:
 
         The selected bar is red, the others are blue.
         """
-        if k == 0:
-            index = self.index.get()
-        else:
-            index = self.index_corner.get()
+        index = self.index.get() if k == 0 else self.index_corner.get()
         for j in range(self.n_cameras):
             # TODO maybe save old index?
             if self.r_error[j]:
@@ -494,11 +519,10 @@ class Mixin:
                         data = self.r_error[j]
                         m_error = np.mean(data)
                         index = self.index.get()
-                else:
-                    if self.r_error_p[j]:
-                        # converted to size-1 arrays
-                        data = self.r_error_p[j][self.index.get()].T[0]
-                        index = self.index_corner.get()
+                elif self.r_error_p[j]:
+                    # converted to size-1 arrays
+                    data = self.r_error_p[j][self.index.get()].T[0]
+                    index = self.index_corner.get()
 
                 if data is not None:
                     # defining bars of the chart #
@@ -534,7 +558,10 @@ class Mixin:
                     # create dashed line for RMS reprojection mean
                     if k == 0:
                         self.ax[k][j].axhline(
-                            y=m_error, color="k", linestyle="--", label="z"
+                            y=m_error,
+                            color="k",
+                            linestyle="--",
+                            label="z",
                         )
                         handles, _ = self.ax[k][j].get_legend_handles_labels()
                         self.ax[k][j].legend(

@@ -94,7 +94,8 @@ class StudioWindow(QMainWindow):
         self.sidebar = Sidebar(self.studioFrame)
         self.sidebar.setFixedWidth(int(sidebarWidth))
         self.sidebar.setSizePolicy(
-            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
         )
         self.studioFrame.layout.addWidget(self.sidebar)
 
@@ -146,7 +147,7 @@ class StudioWindow(QMainWindow):
         return self.pageFrame.height() - PAD_Y * 2
 
     def confirmExit(self):
-        if (
+        return (
             QMessageBox.question(
                 self,
                 APP_NAME,
@@ -155,10 +156,7 @@ class StudioWindow(QMainWindow):
                 QMessageBox.StandardButton.No,
             )
             == QMessageBox.StandardButton.Yes
-        ):
-            return True
-        else:
-            return False
+        )
 
     def closeEvent(self, event):
         if self.confirmExit():

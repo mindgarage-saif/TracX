@@ -1,16 +1,7 @@
 import logging
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
-    QFrame,
-    QGridLayout,
-    QLabel,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QFrame, QGridLayout, QSizePolicy, QVBoxLayout, QWidget
 
-from ...recording import CameraController
 from ...recording.controller_widget import ControllerWidget
 from .camera_view import CameraView
 from .control_panel import ControlPanel
@@ -49,7 +40,8 @@ class RecordingLayout(QFrame):
             size=512,
         )
         self.noCamerasLabel.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
         )
         self.innerLayout.addWidget(self.noCamerasLabel)
 

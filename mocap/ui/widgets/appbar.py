@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
 
 from mocap.constants import APP_NAME, APP_VERSION
 
-from ..config.constants import PAD_X, PAD_Y
+from ..config.constants import PAD_X
 
 
 class AppBar(QWidget):

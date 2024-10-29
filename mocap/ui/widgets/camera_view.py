@@ -34,7 +34,6 @@ def resize_with_padding(image: np.ndarray, target_size: Tuple[int, int]) -> np.n
 
 
 class CameraView(QLabel):
-
     mousePressed = pyqtSignal(int, int, bool)
 
     def __init__(self, size, flip=True):
@@ -59,7 +58,11 @@ class CameraView(QLabel):
             h, w, ch = frame.shape
             bytes_per_line = ch * w
             convert_to_Qt_format = QImage(
-                frame.data, w, h, bytes_per_line, QImage.Format.Format_RGB888
+                frame.data,
+                w,
+                h,
+                bytes_per_line,
+                QImage.Format.Format_RGB888,
             )
             pixmap = QPixmap(convert_to_Qt_format)
             self.setPixmap(pixmap)

@@ -78,6 +78,64 @@ def rotate_videos(video_list, output_dir, camera_parameters):
         cap.release()
 
 
+def rotate_video_monocular(video_list, output_dir, rotation):
+    for video in video_list:
+        video_name = os.path.basename(video)
+        rot = rotation
+        cap = cv2.VideoCapture(video)
+        ret, frame = cap.read()
+        if not ret:
+            continue
+        # frame = Image.fromarray(frame)
+        # frame = frame.rotate(rot, expand=True)
+        # frame = np.array(frame)
+        if rot == 180:
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
+        elif rot == 90:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        elif rot == -90:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        else:
+            print(f"Rotation angle {rot} not supported")
+            continue
+        frame_width = frame.shape[1]
+        frame_height = frame.shape[0]
+        # Get original video's width, height, and fps
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        # Create a VideoWriter object
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        # Define VideoWriter object for MP4 file
+        out = cv2.VideoWriter(
+            os.path.join(output_dir, video_name.split(".")[0] + "_rot.mp4"),
+            cv2.VideoWriter_fourcc(*"mp4v"),
+            fps,
+            (frame_width, frame_height),
+        )
+
+        # out = cv2.VideoWriter(os.path.join(output_dir, videoName +"_rot.avi"), cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
+        out.write(frame)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            # frame = Image.fromarray(frame)
+            # frame = frame.rotate(rot, expand=True)
+            # frame = np.array(frame)
+            if rot == 180:
+                frame = cv2.rotate(frame, cv2.ROTATE_180)
+            elif rot == 90:
+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            elif rot == -90:
+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            # Write the rotated frame to the new video file
+            out.write(frame)
+
+        # Release the VideoCapture and VideoWriter objects
+        cap.release()
+
+
 def unrotate_pose2d(pose_dir, camera_parameters):
     # Rename the original directory and create a new directory
     rotated_dir = pose_dir + "_rotated"
@@ -110,7 +168,7 @@ def unrotate_pose2d(pose_dir, camera_parameters):
 
         rotation_angle = get_rotation(name, rotation_dict)
         for file in pose_files:
-            with open(os.path.join(rotated, file), "r") as f:
+            with open(os.path.join(rotated, file)) as f:
                 data = json.load(f)
                 for i in range(len(data["people"])):
                     # Extract the 'pose_keypoints_2d' data for the first person
@@ -137,27 +195,11 @@ def unrotate_pose2d(pose_dir, camera_parameters):
 
                     # Unrotate the points
                     points = np.array(list(zip(x2, y2)))
-                    if rotation_angle == 90:
-                        rotated_keypoints = [
-                            coord
-                            for i in range(len(points))
-                            for coord in [
-                                points[i][0],
-                                points[i][1],
-                                c[i],
-                            ]
-                        ]
-                    elif rotation_angle == 180:
-                        rotated_keypoints = [
-                            coord
-                            for i in range(len(points))
-                            for coord in [
-                                points[i][0],
-                                points[i][1],
-                                c[i],
-                            ]
-                        ]
-                    elif rotation_angle == 270:
+                    if (
+                        rotation_angle == 90
+                        or rotation_angle == 180
+                        or rotation_angle == 270
+                    ):
                         rotated_keypoints = [
                             coord
                             for i in range(len(points))

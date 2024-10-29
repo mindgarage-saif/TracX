@@ -1,9 +1,16 @@
+import json
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 
-from .skeletons import BaseSkeleton, Halpe26Skeleton, TheiaSkeleton
+from .skeletons import (
+    BaseSkeleton,
+    Halpe26Skeleton,
+    Halpe2617Skeleton,
+    MonocularSkeleton,
+    TheiaSkeleton,
+)
 
 
 def get_range(vals):
@@ -11,6 +18,7 @@ def get_range(vals):
 
     Returns:
         tuple(float, float): Minimum and maximum values.
+
     """
     # Calculate the IQR to filter out outliers
     q1 = np.percentile(vals, 25)
@@ -25,17 +33,19 @@ def get_range(vals):
     # Return the minimum and maximum of the filtered X coordinates
     if bounded_vals:
         return min(bounded_vals), max(bounded_vals)
-    else:
-        # In case all points are filtered out, return the min and max of the original data
-        return min(vals), max(vals)
+    # In case all points are filtered out, return the min and max of the original data
+    return min(vals), max(vals)
 
 
 def df_from_trc(trc_path):
-    """
-    Retrieve header and data from TRC file path.
-    """
+    """Retrieve header and data from TRC file path."""
     df_header = pd.read_csv(
-        trc_path, sep="\t", skiprows=1, header=None, nrows=2, encoding="ISO-8859-1"
+        trc_path,
+        sep="\t",
+        skiprows=1,
+        header=None,
+        nrows=2,
+        encoding="ISO-8859-1",
     )
     header = dict(zip(df_header.iloc[0].tolist(), df_header.iloc[1].tolist()))
 
@@ -45,14 +55,39 @@ def df_from_trc(trc_path):
         [
             [labels[i] + "_X", labels[i] + "_Y", labels[i] + "_Z"]
             for i in range(len(labels))
-        ]
+        ],
     ).flatten()
     labels_FTXYZ = np.concatenate((["Frame#", "Time"], labels_XYZ))
 
     data = pd.read_csv(
-        trc_path, sep="\t", skiprows=5, index_col=False, header=None, names=labels_FTXYZ
+        trc_path,
+        sep="\t",
+        skiprows=5,
+        index_col=False,
+        header=None,
+        names=labels_FTXYZ,
     )
     return header, data
+
+
+index_to_bodypart_for_monocular = {
+    0: "Hip",
+    1: "RHip",
+    2: "RKnee",
+    3: "RAnkle",
+    4: "LHip",
+    5: "LKnee",
+    6: "LAnkle",
+    7: "Neck",
+    8: "Nose",
+    9: "Head",
+    10: "LShoulder",
+    11: "LElbow",
+    12: "LWrist",
+    13: "RShoulder",
+    14: "RElbow",
+    15: "RWrist",
+}
 
 
 class MotionSequence:
@@ -120,7 +155,7 @@ class MotionSequence:
         import json
 
         # Load the JSON file
-        with open(path, "r") as file:
+        with open(path) as file:
             data = json.load(file)
         frames = data["frames"]
 
@@ -143,10 +178,9 @@ class MotionSequence:
         return motion
 
     @staticmethod
-    def from_pose2sim_trc(path: str):
+    def from_pose2sim_trc(path: str, skeleton_name="HALPE_26"):
         if not path.endswith(".trc"):
             raise ValueError("Input file must be a .trc file.")
-
         header, data = df_from_trc(path)
         bodyparts = np.array([d[:-2] for d in data.columns[2::3]])
 
@@ -154,6 +188,7 @@ class MotionSequence:
 
         # Aggregate data for each frame
         for bp in bodyparts:
+            print(bp)
             bp_X = bp + "_X"
             bp_Y = bp + "_Y"
             bp_Z = bp + "_Z"
@@ -167,7 +202,10 @@ class MotionSequence:
                 zs = np.concatenate((zs, np.array(data[bp_Z]).reshape(-1, 1)), axis=1)
 
         # Initialize the motion object
-        skeleton = Halpe26Skeleton()
+        if skeleton_name == "HALPE_26":
+            skeleton = Halpe26Skeleton()
+        elif skeleton_name == "CUSTOM":
+            skeleton = Halpe2617Skeleton()
         fps = int(header["DataRate"])
         motion = MotionSequence(skeleton, fps)
 
@@ -179,4 +217,24 @@ class MotionSequence:
 
             motion.set_frame(frame_idx, pose)
 
+        return motion
+
+    @staticmethod
+    def from_monocular_json(path: str, fps):
+        # Load the JSON file
+        with open(path) as file:
+            data = json.load(file)
+
+        skeleton = MonocularSkeleton()
+        motion = MotionSequence(skeleton, fps)
+        for frame_idx in range(len(data.keys())):
+            pose = {}
+            for i in range(len(data[str(frame_idx)])):
+                j_name = index_to_bodypart_for_monocular[i]
+                pose[j_name] = (
+                    data[str(frame_idx)][i][0],
+                    data[str(frame_idx)][i][1],
+                    data[str(frame_idx)][i][2],
+                )
+            motion.set_frame(frame_idx, pose)
         return motion

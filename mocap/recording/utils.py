@@ -7,7 +7,7 @@ import cv2
 def get_camera_hardware(cam_id):
     # Prepare the external command to extract serial number.
     p = subprocess.Popen(
-        'udevadm info --query=all /dev/video{} | grep "ID_"'.format(cam_id),
+        f'udevadm info --query=all /dev/video{cam_id} | grep "ID_"',
         stdout=subprocess.PIPE,
         shell=True,
     )
@@ -31,9 +31,9 @@ def get_camera_hardware(cam_id):
             value = line.split("=")[1]
             info[key] = value
     return {
-        "manufacturer": info["ID_VENDOR"].replace("_", " "),
-        "model": info["ID_MODEL"].replace("_", " ") + f" {info['ID_MODEL_ID']}",
-        "serial": info["ID_SERIAL"].replace("_", " "),
+        # "manufacturer": info["ID_VENDOR"].replace("_", " "),
+        # "model": info["ID_MODEL"].replace("_", " ") + f" {info['ID_MODEL_ID']}",
+        # "serial": info["ID_SERIAL"].replace("_", " "),
     }
 
 
@@ -61,6 +61,7 @@ def find_cameras(max_cameras=5) -> List[Dict]:
 
     Args:
         max_cameras (int): Maximum number of cameras to search for.
+
     """
     info = []
     for i in range(max_cameras):

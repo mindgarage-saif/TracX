@@ -19,9 +19,7 @@ class BasePage(QWidget):
         self.innerLayout.setSpacing(PAD_X)
 
     def log(self, message: str) -> None:
-        """
-        Logs a message to the console.
-        """
+        """Logs a message to the console."""
         logger.info(message)
         self.statusBar.showMessage(message)
 

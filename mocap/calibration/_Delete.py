@@ -57,11 +57,10 @@ class Mixin:
                 del self.detected_features[j][index[0]]
                 if self.projected[j]:  # check if projection data exists
                     del self.projected[j][index[0]]
-                if j == 1:
-                    # check if stereo projection data exists
-                    if self.projected_stereo[0]:
-                        del self.projected_stereo[0][index[0]]
-                        del self.projected_stereo[1][index[0]]
+                # check if stereo projection data exists
+                if j == 1 and self.projected_stereo[0]:
+                    del self.projected_stereo[0][index[0]]
+                    del self.projected_stereo[1][index[0]]
                 # barchar
                 if self.r_error[j]:  # check if reprojection error data exists
                     del self.r_error[j][index[0]]
@@ -79,19 +78,18 @@ class Mixin:
                 else:
                     self.index.set(index[0])
                     self.listbox.yview(index[0])
+            # if there are images, set the first one as selected
+            elif self.n_total.get():
+                self.index.set(0)
             else:
-                # if there are images, set the first one as selected
-                if self.n_total.get():
-                    self.index.set(0)
-                else:
-                    # disable zoom in button
-                    self.btn_zoom_more.config(state="disable")
-                    self.btn_zoom_less.config(state="disable")
-                    self.btn_move_feature.config(state="disable")
-                    self.btn_locate.config(state="disable")
-                    # disable run calibration button
-                    self.btn_play.config(state="disable")
-                    self.index.set(-1)
+                # disable zoom in button
+                self.btn_zoom_more.config(state="disable")
+                self.btn_zoom_less.config(state="disable")
+                self.btn_move_feature.config(state="disable")
+                self.btn_locate.config(state="disable")
+                # disable run calibration button
+                self.btn_play.config(state="disable")
+                self.index.set(-1)
             # uses self.index which is updated in updatepicture
             self.loadBarError([0, 1])
 

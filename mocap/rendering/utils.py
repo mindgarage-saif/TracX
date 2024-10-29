@@ -4,9 +4,7 @@ import cv2
 
 
 def export_video(image_dir, video_output_path, fps=30):
-    """
-    Create a video from images in the image directory and save it as MP4.
-    """
+    """Create a video from images in the image directory and save it as MP4."""
     img_array = []
     image_files = sorted(
         [f for f in os.listdir(image_dir) if f.endswith(".png")],

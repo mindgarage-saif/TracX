@@ -65,7 +65,11 @@ class Calibration:
 
         # Calibrate the camera
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
-            objpoints, imgpoints, (width, height), None, None
+            objpoints,
+            imgpoints,
+            (width, height),
+            None,
+            None,
         )
 
         # Print calibration results
@@ -90,7 +94,14 @@ class Calibration:
         ret, mtx1, dist1, mtx2, dist2, R, T, E, F = stereo_calibration
         rectify_scale = 1  # 0 for crop, 1 for full image
         R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
-            mtx1, dist1, mtx2, dist2, shape, R, T, alpha=rectify_scale
+            mtx1,
+            dist1,
+            mtx2,
+            dist2,
+            shape,
+            R,
+            T,
+            alpha=rectify_scale,
         )
         return R1, R2, P1, P2, Q, roi1, roi2
 
@@ -162,6 +173,4 @@ class Calibration:
 
         # Convert points from homogeneous to Euclidean coordinates
         points3D = points4D_hom[:3] / points4D_hom[3]
-        points3D = points3D.T  # (N, 3) array of 3D points
-
-        return points3D
+        return points3D.T  # (N, 3) array of 3D points

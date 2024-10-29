@@ -1,13 +1,19 @@
+import json
+import os
+
 from PyQt6.QtWidgets import (
+    QButtonGroup,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
     QLabel,
     QLineEdit,
+    QRadioButton,
     QVBoxLayout,
 )
 
-from mocap.core import Experiment
+from mocap.constants import APP_PROJECTS
+from mocap.core import Experiment, ExperimentMonocular
 
 
 class CreateExperimentDialog(QDialog):
@@ -52,7 +58,7 @@ class CreateExperimentDialog(QDialog):
         # hint about size and allowed characters unique name
         self.hint = QLabel(self)
         self.hint.setText(
-            "Experiment name must be unique and contain 3-20 characters. Only letters, numbers and hyphens are allowed."
+            "Experiment name must be unique and contain 3-20 characters. Only letters, numbers and hyphens are allowed.",
         )
         self.hint.setProperty("class", "body")
         self.hint.setWordWrap(True)
@@ -64,7 +70,14 @@ class CreateExperimentDialog(QDialog):
         self.error_message.setStyleSheet("color: red;")
         self.layout.addWidget(self.error_message)
         self.layout.addSpacing(8)
-
+        self.monocular = QRadioButton("Monocular", self)
+        self.pose2Sim = QRadioButton("Pose2Sim", self)
+        self.pose2Sim.setChecked(True)
+        self.estimation_type = QButtonGroup(self)
+        self.estimation_type.addButton(self.monocular)
+        self.estimation_type.addButton(self.pose2Sim)
+        self.layout.addWidget(self.monocular)
+        self.layout.addWidget(self.pose2Sim)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             self,
@@ -76,11 +89,27 @@ class CreateExperimentDialog(QDialog):
 
     def create_experiment(self):
         experiment_name = self.experiment_name.text().strip()
+        pose2Sim = self.pose2Sim.isChecked()
+        experiments = {"experiments": []}
+        if os.path.exists(os.path.join(APP_PROJECTS, "experiments.json")):
+            print("File exists", os.path.join(APP_PROJECTS, "experiments.json"))
+            with open(os.path.join(APP_PROJECTS, "experiments.json")) as f:
+                experiments = json.load(f)
         try:
             if experiment_name == "":
                 raise Exception("Experiment name cannot be empty.")
-
-            Experiment(name=experiment_name, create=True)
+            if pose2Sim:
+                estim_type = "pose2sim"
+                Experiment(name=experiment_name, create=True)
+            else:
+                estim_type = "monocular"
+                ExperimentMonocular(name=experiment_name, create=True)
+            experiments["experiments"].append(
+                {"name": experiment_name, "est_type": estim_type},
+            )
+            with open(os.path.join(APP_PROJECTS, "experiments.json"), "w") as f:
+                json.dump(experiments, f, indent=4)
             self.accept()
         except Exception as e:
+            print("error")
             self.error_message.setText(str(e))

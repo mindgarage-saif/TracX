@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import QSizePolicy, QWidget
 
-from ..config.constants import PAD_X
 from ..widgets import RecordingLayout
 from .base import BasePage
 
@@ -15,7 +14,8 @@ class RecordPage(BasePage):
             on_frame_fn=self.process,
         )
         self.recordingLayout.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
         )
         self.innerLayout.addWidget(self.recordingLayout)
 
@@ -30,6 +30,7 @@ class RecordPage(BasePage):
 
         Args:
             frames (List[ndarray]): A list of synchronized frames from the camera system.
+
         """
         return frames
 

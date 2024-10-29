@@ -187,5 +187,7 @@ def plot_custom(c_pattern, all_points, w, h):
     ]
     for p in points:
         c_pattern.create_oval(
-            [(p[0] - 2, p[1] - 2), (p[0] + 2, p[1] + 2)], tag="grid_line", fill="red"
+            [(p[0] - 2, p[1] - 2), (p[0] + 2, p[1] + 2)],
+            tag="grid_line",
+            fill="red",
         )

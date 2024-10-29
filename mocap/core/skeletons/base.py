@@ -8,6 +8,7 @@ def get_range(vals, iqr_factor=2.5):
 
     Returns:
         tuple(float, float): Minimum and maximum values.
+
     """
     # Calculate the IQR to filter out outliers
     q1 = np.percentile(vals, 30)
@@ -22,9 +23,8 @@ def get_range(vals, iqr_factor=2.5):
     # Return the minimum and maximum of the filtered X coordinates
     if bounded_vals:
         return min(bounded_vals), max(bounded_vals)
-    else:
-        # In case all points are filtered out, return the min and max of the original data
-        return min(vals), max(vals)
+    # In case all points are filtered out, return the min and max of the original data
+    return min(vals), max(vals)
 
 
 class Joint:
@@ -34,6 +34,7 @@ class Joint:
         name (str): Name of the joint.
         position (Tuple[float, float, float]): Position of the joint in 3D space.
         rotation (Tuple[float, float, float]): Rotation of the joint in 3D space.
+
     """
 
     def __init__(self, name):
@@ -56,6 +57,7 @@ class Joint:
             x (float): X coordinate.
             y (float): Y coordinate.
             z (float): Z coordinate.
+
         """
         self._position = (x, y, z)
 
@@ -66,6 +68,7 @@ class Joint:
             pitch (float): Pitch angle.
             yaw (float): Yaw angle.
             roll (float): Roll angle.
+
         """
         self._rotation = (pitch, yaw, roll)
 
@@ -81,18 +84,18 @@ class BaseSkeleton:
         joints (List[Joint]): List of joints in the skeleton.
         feet_joints (List[str]): List of joints that represent feet (used for rendering).
         connections (List[Tuple[int, int]]): List of connections between joints.
+
     """
 
     def __init__(self, joint_names: Set[str], connections: List[Tuple[str, str]]):
         self.joints = [Joint(name) for name in joint_names]
         self.feet_joints = []
         self.connections = []
-        for connection in connections:
+        for i, connection in enumerate(connections):
             joint1 = self.get_joint(connection[0])
             joint2 = self.get_joint(connection[1])
             if not joint1 or not joint2:
                 raise ValueError(f"Invalid connection: {connection}")
-
             self.connections.append((joint1, joint2))
 
     def set_feet_joints(self, feet_joints: List[str]):
@@ -100,6 +103,7 @@ class BaseSkeleton:
 
         Args:
             feet_joints (List[str]): List of joint names.
+
         """
         for joint_name in set(feet_joints):
             if not self.get_joint(joint_name):
@@ -115,11 +119,11 @@ class BaseSkeleton:
 
         Returns:
             Joint: The joint with the given name.
+
         """
         for joint in self.joints:
             if joint.name == name:
                 return joint
-
         return None
 
     def get_joint_names(self):
@@ -127,6 +131,7 @@ class BaseSkeleton:
 
         Returns:
             Set[str]: Set of joint names.
+
         """
         return {joint.name for joint in self.joints}
 
@@ -138,6 +143,7 @@ class BaseSkeleton:
             x (float): X coordinate.
             y (float): Y coordinate.
             z (float): Z coordinate.
+
         """
         joint = self.get_joint(name)
         if not self.get_joint(name):
@@ -153,6 +159,7 @@ class BaseSkeleton:
             pitch (float): Pitch angle.
             yaw (float): Yaw angle.
             roll (float): Roll angle.
+
         """
         joint = self.get_joint(name)
         if not self.get_joint(name):
@@ -165,6 +172,7 @@ class BaseSkeleton:
 
         Args:
             pose (Dict[str, Tuple[float, float, float]]): Dictionary of joint names to positions.
+
         """
         for name, (x, y, z) in pose.items():
             self.set_joint_position(name, x, y, z)
@@ -174,6 +182,7 @@ class BaseSkeleton:
 
         Args:
             rotations (Dict[str, Tuple[float, float, float]]): Dictionary of joint names to rotations.
+
         """
         for name, (pitch, yaw, roll) in rotations.items():
             self.set_joint_rotation(name, pitch, yaw, roll)
@@ -183,6 +192,7 @@ class BaseSkeleton:
 
         Returns:
             Dict[str, Tuple[float, float, float]]: Dictionary of joint names to positions.
+
         """
         return {joint.name: joint._position for joint in self.joints}
 
@@ -191,6 +201,7 @@ class BaseSkeleton:
 
         Returns:
             Dict[str, Tuple[float, float, float]]: Dictionary of joint names to rotations.
+
         """
         return {joint.name: joint._rotation for joint in self.joints}
 
@@ -200,6 +211,7 @@ class BaseSkeleton:
 
         Returns:
             tuple(float, float): Minimum and maximum X coordinates.
+
         """
         return get_range([joint.position[0] for joint in self.joints])
 
@@ -209,6 +221,7 @@ class BaseSkeleton:
 
         Returns:
             tuple(float, float): Minimum and maximum Y coordinates.
+
         """
         return get_range([joint.position[1] for joint in self.joints])
 
@@ -218,5 +231,6 @@ class BaseSkeleton:
 
         Returns:
             tuple(float, float): Minimum and maximum Z coordinates.
+
         """
         return get_range([joint.position[2] for joint in self.joints])

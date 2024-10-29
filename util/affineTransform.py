@@ -3,7 +3,7 @@ import numpy as np
 
 # Open the video file
 cap = cv.VideoCapture(
-    r"E:\Uni\Data\LIHS\LIHS\ROM_1_videos_rot\Generic Markerless 1_Miqus_1_23087_rot.avi"
+    r"E:\Uni\Data\LIHS\LIHS\ROM_1_videos_rot\Generic Markerless 1_Miqus_1_23087_rot.avi",
 )
 
 # Define the codec and create a VideoWriter object

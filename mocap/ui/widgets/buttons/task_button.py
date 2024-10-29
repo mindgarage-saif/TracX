@@ -5,19 +5,18 @@ from mocap.ui.tasks import TaskRunner
 
 
 class BaseTaskButton(QPushButton):
-    """
-    Base class for buttons associated with tasks.
+    """Base class for buttons associated with tasks.
     Clicking the button will trigger the associated task.
     """
 
     def __init__(self, label, task_class, task_config, callback):
-        """
-        Initializes the button with a label and task to be executed on click.
+        """Initializes the button with a label and task to be executed on click.
 
         Args:
             label: The label to display on the button.
             task_class: The class of the task to be executed (must inherit from BaseTask).
             task_config: The configuration for the task.
+
         """
         super().__init__(label)
         self.task = task_class(task_config)
@@ -45,9 +44,7 @@ class BaseTaskButton(QPushButton):
             self.task_thread.start()
 
     def finalize_thread(self, success, result):
-        """
-        Ensures the worker thread is properly stopped and cleaned up.
-        """
+        """Ensures the worker thread is properly stopped and cleaned up."""
         if self.task_thread:
             self.task_thread.quit()  # Request thread to exit gracefully
             self.task_thread.wait()  # Wait until the thread is fully stopped
@@ -60,12 +57,12 @@ class BaseTaskButton(QPushButton):
         self.setEnabled(False)
 
     def on_finish(self, success, result):
-        """
-        Callback function to handle the task result.
+        """Callback function to handle the task result.
 
         Args:
             success: A boolean indicating if the task was successful.
             result: The result of the task execution.
+
         """
         self.setEnabled(True)
         self.callback(success, result)

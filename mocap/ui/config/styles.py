@@ -19,7 +19,7 @@ startButtonStyle = f"""
         background-color: {colorPrimary};
         color: {colorOnPrimary};
     }}
-                                
+
     QPushButton:hover {{
         background-color: {colorPrimaryDark};
         color: {colorOnPrimary};
@@ -36,7 +36,7 @@ pauseButtonStyle = f"""
         background-color: {colorSecondary};
         color: {colorOnSecondary};
     }}
-                                
+
     QPushButton:hover {{
         background-color: {colorSecondaryDark};
         color: {colorOnSecondary};
@@ -53,7 +53,7 @@ stopButtonStyle = f"""
         background-color: {colorError};
         color: {colorOnError};
     }}
-                                
+
     QPushButton:hover {{
         background-color: {colorErrorDark};
         color: {colorOnError};

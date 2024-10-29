@@ -4,7 +4,7 @@
 
 The MRT Camera Calibration Toolbox is an application, developed in Python using OpenCV and tkinter, which determines the parameters of a camera's perspective projection by performing an intrinsic and extrinsic geometric calibration.
 
-The application provides intrinsics, extrinsics and lens distortion parameters for each camera (two for stereo mode). For the stereo mode, the transformations between the individual camera coordinate systems are given as well. The information for each camera pose can be loaded using images or text files with the 2D points of the pattern. The calibration can be also made by using random subgroups from the total set of images. The computed parameters are the averaged over all iterations, and both the final results and the results per calibration can be exported to text files. 
+The application provides intrinsics, extrinsics and lens distortion parameters for each camera (two for stereo mode). For the stereo mode, the transformations between the individual camera coordinate systems are given as well. The information for each camera pose can be loaded using images or text files with the 2D points of the pattern. The calibration can be also made by using random subgroups from the total set of images. The computed parameters are the averaged over all iterations, and both the final results and the results per calibration can be exported to text files.
 
 ## Reasons for using this Toolbox
 
@@ -18,7 +18,7 @@ The application provides intrinsics, extrinsics and lens distortion parameters f
 
 ## Requirements
 
-To use the toolbox, the modules listed below have to be installed on your computer. 
+To use the toolbox, the modules listed below have to be installed on your computer.
 
 -   Python3 (Tested for Python 3.4, Python 3.6 and Python 3.7)
 -   OpenCV 4.2.0
@@ -38,7 +38,7 @@ python3 main.py
 
 ## Getting Started
 
-Check this animation of a running example of the MRT Camera Calibration Toolbox. 
+Check this animation of a running example of the MRT Camera Calibration Toolbox.
 
 ![example](./calibration-example.gif)
 

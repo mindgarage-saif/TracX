@@ -16,23 +16,28 @@ class Mixin:
     def load_3D_points(self):
         """Function to load 3D points from text."""
         self.load_files[0] = filedialog.askopenfilenames(
-            parent=self.popup, filetypes=[(self._("Text files"), "*.txt")]
+            parent=self.popup,
+            filetypes=[(self._("Text files"), "*.txt")],
         )
         if len(self.load_files[0]) == 0:
             self.object_pattern = None
             self.l_load_files[0].config(
-                text=self._("File missing, please add"), fg="red"
+                text=self._("File missing, please add"),
+                fg="red",
             )
         else:
             set_3D_points = np.fromfile(
-                self.load_files[0][0], dtype=np.float32, sep=","
+                self.load_files[0][0],
+                dtype=np.float32,
+                sep=",",
             )
             if len(set_3D_points) % 3 != 0:
                 self.l_load_files[0].config(text=self._("No 3D points"), fg="red")
                 self.object_pattern = None
             else:
                 self.l_load_files[0].config(
-                    text=self.load_files[0][0].rsplit("/", 1)[1], fg="black"
+                    text=self.load_files[0][0].rsplit("/", 1)[1],
+                    fg="black",
                 )
                 self.check_errors_and_plot(None)
 
@@ -43,7 +48,9 @@ class Mixin:
         if typeof == "p":
             t_choose = self._("Please select a file for ") + title_dialog
             filenames = filedialog.askopenfilenames(
-                parent=self.master, title=t_choose, filetypes=self.ftypes
+                parent=self.master,
+                title=t_choose,
+                filetypes=self.ftypes,
             )
         # this is adding per folder
         else:
@@ -57,7 +64,8 @@ class Mixin:
                     + t_options[len(list_path)]
                 )
                 path_folder = filedialog.askdirectory(
-                    parent=self.master, title=t_choose
+                    parent=self.master,
+                    title=t_choose,
                 )
                 # checks that the selected folder exists
                 if path_folder:
@@ -76,7 +84,7 @@ class Mixin:
                     # https://stackoverflow.com/questions/33159106/
                     # sort-filenames-in-directory-in-ascending-order
                     file_no_path.sort(
-                        key=lambda f: int("".join(filter(str.isdigit, f)))
+                        key=lambda f: int("".join(filter(str.isdigit, f))),
                     )
                 except ValueError:
                     logging.warning(self._("non-indexable filenames"))
@@ -86,33 +94,34 @@ class Mixin:
 
     def assign_filename(self, j):
         self.load_files[j] = filedialog.askopenfilenames(
-            parent=self.popup, filetypes=[(self._("Text files"), "*.txt")]
+            parent=self.popup,
+            filetypes=[(self._("Text files"), "*.txt")],
         )
         if len(self.load_files[j]) == 0:
             self.l_load_files[j].config(text="", fg="black")
             # clear status check
             self.label_status_l[j + 1][1].config(text="")
             return
-        else:
-            self.l_load_files[j].config(
-                text=self.load_files[j][0].rsplit("/", 1)[1], fg="black"
-            )
-            f = open(self.load_files[j][0], "r")
+        self.l_load_files[j].config(
+            text=self.load_files[j][0].rsplit("/", 1)[1],
+            fg="black",
+        )
+        with open(self.load_files[j][0]) as f:
             a = f.read()
-            if j <= 1:
-                self.camera_matrix[j], self.dist_coefs[j] = datastring.string2intrinsic(
-                    a
-                )
-            else:
-                self.R_stereo, self.T_stereo = datastring.string2extrinsic(a)
-            # update status check
-            self.label_status_l[j + 1][1].config(text="\u2714")
-            if j == 2:
-                self.label_status_l[3][0].config(text=self._("3. Loading Extrinsics"))
-            self.rms = [0, 0, 0]
-            self.reset_error()
-            self.updateCameraParametersGUI()
-            self.loadBarError([0, 1])
+        if j <= 1:
+            self.camera_matrix[j], self.dist_coefs[j] = datastring.string2intrinsic(
+                a,
+            )
+        else:
+            self.R_stereo, self.T_stereo = datastring.string2extrinsic(a)
+        # update status check
+        self.label_status_l[j + 1][1].config(text="\u2714")
+        if j == 2:
+            self.label_status_l[3][0].config(text=self._("3. Loading Extrinsics"))
+        self.rms = [0, 0, 0]
+        self.reset_error()
+        self.updateCameraParametersGUI()
+        self.loadBarError([0, 1])
 
     def add_file(self, typeof):
         """Function to add files to the session."""
@@ -121,15 +130,15 @@ class Mixin:
         if len(file_names_2D_points) == 0:
             if self.m_stereo:
                 self.popup_importing_fails(
-                    self._("\nThe folder has no valid files to import.\n")
+                    self._("\nThe folder has no valid files to import.\n"),
                 )
             return
         # for stereo mode, checks if the folders have the same number of valid files
-        elif self.m_stereo and len(file_names_2D_points) % 2 != 0:
+        if self.m_stereo and len(file_names_2D_points) % 2 != 0:
             self.popup_importing_fails(
                 self._(
-                    "\nThe number of files per folder has to be the same for each camera.\n"
-                )
+                    "\nThe number of files per folder has to be the same for each camera.\n",
+                ),
             )
             return
 
@@ -143,15 +152,15 @@ class Mixin:
         for i, _ in enumerate(file_names_2D_points):
             if self.continue_importing:
                 message = self._("Processing {0} of {1} images\n").format(
-                    i + 1, len(file_names_2D_points)
+                    i + 1,
+                    len(file_names_2D_points),
                 )
                 l_msg.configure(text=message)
                 file_name_2D_points = file_names_2D_points[i]
                 j = 0
-                if self.m_stereo:
-                    # this corresponds to the right camera
-                    if i >= len(file_names_2D_points) / 2:
-                        j = 1
+                # this corresponds to the right camera
+                if self.m_stereo and i >= len(file_names_2D_points) / 2:
+                    j = 1
                 # checks if images isn't repeated
                 if file_name_2D_points not in self.paths[j]:
                     if ".txt" not in self.valid_files:
@@ -161,7 +170,8 @@ class Mixin:
                         if self.size[j] is None or len(self.paths[j]) == 0:
                             self.size[j] = im.shape
                             logging.debug(
-                                "Initialized image size for camera %d...", j + 1
+                                "Initialized image size for camera %d...",
+                                j + 1,
                             )
                         # check if image size is valid
                         if im.shape == self.size[j]:
@@ -179,29 +189,33 @@ class Mixin:
                                     im2 = im * 1
                                 elif process == 1:
                                     logging.debug(
-                                        self._("Original image + Inverting image")
+                                        self._("Original image + Inverting image"),
                                     )
                                     im2 = 255 - im2
                                 elif process == 2:
                                     logging.debug(self._("Normalized image (only)"))
                                     im2 = cv2.normalize(
-                                        im, None, 0, 255, cv2.NORM_MINMAX
+                                        im,
+                                        None,
+                                        0,
+                                        255,
+                                        cv2.NORM_MINMAX,
                                     )
                                 elif process == 3:
                                     logging.debug(
-                                        self._("Normalized image + Inverting image")
+                                        self._("Normalized image + Inverting image"),
                                     )
                                     im2 = 255 - im2
                                 elif process == 4:
                                     logging.debug(
-                                        self._("Normalized image + Gaussian Blur")
+                                        self._("Normalized image + Gaussian Blur"),
                                     )
                                     im2 = cv2.GaussianBlur(im * 1, (11, 11), 0)
                                 elif process == 5:
                                     logging.debug(
                                         self._(
-                                            "Normalized image + Gaussian Blur + Inverting image"
-                                        )
+                                            "Normalized image + Gaussian Blur + Inverting image",
+                                        ),
                                     )
                                     im2 = 255 - im2
                                 elif process == 6:
@@ -224,15 +238,16 @@ class Mixin:
                                 elif process == 7:
                                     logging.debug(
                                         self._(
-                                            "Normalized image + Dilate + Inverting image"
-                                        )
+                                            "Normalized image + Dilate + Inverting image",
+                                        ),
                                     )
                                     im2 = 255 - im2
 
                                 # find features for chessboard pattern type
                                 if self._("Chessboard") in self.pattern_type.get():
                                     ret, features = cv2.findChessboardCorners(
-                                        im2, (self.p_height, self.p_width)
+                                        im2,
+                                        (self.p_height, self.p_width),
                                     )
                                     if ret:
                                         # EPS realistisch einstellen je nach
@@ -245,7 +260,11 @@ class Mixin:
                                             0.25,
                                         )
                                         cv2.cornerSubPix(
-                                            im2, features, (3, 3), (-1, -1), criteria
+                                            im2,
+                                            features,
+                                            (3, 3),
+                                            (-1, -1),
+                                            criteria,
                                         )
                                         break
                                 # find features for asymmetric grid pattern type
@@ -294,13 +313,19 @@ class Mixin:
                                                 # configuration to match the original
                                                 # (height, width)
                                                 features = features.reshape(
-                                                    self.p_height, self.p_width, 1, 2
+                                                    self.p_height,
+                                                    self.p_width,
+                                                    1,
+                                                    2,
                                                 )
                                                 features = np.transpose(
-                                                    features, (1, 0, 2, 3)
+                                                    features,
+                                                    (1, 0, 2, 3),
                                                 )
                                                 features = features.reshape(
-                                                    self.p_width * self.p_height, 1, 2
+                                                    self.p_width * self.p_height,
+                                                    1,
+                                                    2,
                                                 )
                                                 break
                                     if ret:
@@ -339,7 +364,8 @@ class Mixin:
                                 self.image_width.get(),
                             )
                             logging.debug(
-                                "Initialized image size for camera %d...", j + 1
+                                "Initialized image size for camera %d...",
+                                j + 1,
                             )
                         a = np.fromfile(file_name_2D_points, dtype=np.float32, sep=",")
                         a = a.reshape((int(len(a) / 2), 1, 2))
@@ -361,7 +387,7 @@ class Mixin:
                 # update label
                 self.style_pg.configure(
                     "text.Horizontal.TProgressbar",
-                    text="{:g} %".format(int(c_percent * 100)),
+                    text=f"{int(c_percent * 100):g} %",
                 )
                 # if one or more images failed the importing, add info
                 message += self._("Imported: {0}\n").format(
@@ -369,26 +395,26 @@ class Mixin:
                     + 1
                     - len(rejected_images)
                     - len(repeated_images)
-                    - len(no_valid_sized_images)
+                    - len(no_valid_sized_images),
                 )
                 message += self._("Rejected: {0}\n").format(len(rejected_images))
                 message += self._("Repeated: {0}\n").format(len(repeated_images))
                 message += self._("Invalid sized: {0}\n").format(
-                    len(no_valid_sized_images)
+                    len(no_valid_sized_images),
                 )
                 l_msg.configure(text=message)
                 message = ""
                 if rejected_images:
                     message += self._("Rejected: \n{0}\n").format(
-                        "\n".join(rejected_images)
+                        "\n".join(rejected_images),
                     )
                 if repeated_images:
                     message += self._("Repeated: \n{0}\n").format(
-                        "\n".join(repeated_images)
+                        "\n".join(repeated_images),
                     )
                 if no_valid_sized_images:
                     message += self._("Invalid sized images: \n{0}\n").format(
-                        "\n".join(no_valid_sized_images)
+                        "\n".join(no_valid_sized_images),
                     )
                 text_detail.config(state="normal")
                 text_detail.delete(1.0, "end")
@@ -398,19 +424,20 @@ class Mixin:
                 self.popup.update()
             else:
                 message = self._("Processed {0} of {1} images\n").format(
-                    i + 1, len(file_names_2D_points)
+                    i + 1,
+                    len(file_names_2D_points),
                 )
                 message += self._("Imported: {0}\n").format(
                     i
                     + 1
                     - len(rejected_images)
                     - len(repeated_images)
-                    - len(no_valid_sized_images)
+                    - len(no_valid_sized_images),
                 )
                 message += self._("Rejected: {0}\n").format(len(rejected_images))
                 message += self._("Repeated: {0}\n").format(len(repeated_images))
                 message += self._("Invalid sized: {0}\n").format(
-                    len(no_valid_sized_images)
+                    len(no_valid_sized_images),
                 )
                 l_msg.configure(text=message)
                 l_msg.configure(text=message)

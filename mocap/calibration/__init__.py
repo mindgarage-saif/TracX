@@ -22,7 +22,6 @@ class MRTCalibrationToolbox(
     _Delete.Mixin,
     _Language.Mixin,
 ):
-
     def __init__(self, master, *args, **kwargs):
         self.master = master
         if args and args[0] in ("en", "de"):

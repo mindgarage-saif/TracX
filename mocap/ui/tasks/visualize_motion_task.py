@@ -4,15 +4,14 @@ from .base_task import BaseTask, TaskConfig
 
 
 class VisualizeTaskConfig(TaskConfig):
-    """
-    Configuration class for motion estimation tasks.
-    """
+    """Configuration class for motion estimation tasks."""
 
     def __init__(self):
         super().__init__(
             experiment_name=None,
             visualization_mode="naive",
             visualization_args=dict(),
+            # skeleton=motion_config.skeleton if motion_config is not None else None,
             # visualization_mode = "opensim",
             # visualization_args = dict(
             #     with_blender=False,
@@ -21,9 +20,7 @@ class VisualizeTaskConfig(TaskConfig):
 
 
 class VisualizeMotionTask(BaseTask):
-    """
-    Task for visualizing estimated motion.
-    """
+    """Task for visualizing estimated motion."""
 
     def __init__(self, config: VisualizeTaskConfig):
         super().__init__(config)
@@ -35,7 +32,7 @@ class VisualizeMotionTask(BaseTask):
         visualization_args = self.config.visualization_args
 
         if experiment_name is None:
-            return
+            return None
 
         print("Visualizing 3D motion...")
         experiment = Experiment(experiment_name, create=False)

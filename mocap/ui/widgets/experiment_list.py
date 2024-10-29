@@ -21,7 +21,7 @@ class ExperimentList(QListWidget):
 
     def onSelectionChanged(self, current, previous):
         if current and self.onItemSelected is not None:
-            self.onItemSelected(current.text())
+            self.onItemSelected(current.text(), current.data(0x0100))
 
     def getSelection(self) -> Optional[str]:
         currentItem = self._list_widget.currentItem()
@@ -29,7 +29,9 @@ class ExperimentList(QListWidget):
 
     def refresh(self):
         self.clear()
-        for name in self.experiments:
+        for exp in self.experiments:
             item = QListWidgetItem(self)
-            item.setText(name)
+            print(exp)
+            item.setData(0x0100, exp["est_type"])
+            item.setText(exp["name"])
             self.addItem(item)

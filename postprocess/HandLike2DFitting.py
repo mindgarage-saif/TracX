@@ -1,30 +1,39 @@
-"""
-July 2023: This code is written by Jameel Malik. Some conversion functions are adopted from https://github.com/otaheri/MANO
-This code implements 2D hand pose fitting using a PyTorch based Forward kinematics hand skeleton layer (axis angles representation is used).   
-Create virtual env e.g., using conda, install PyTorch, and other dependencies using pip install..   
-Note: initial 3D reference pose of hand is provided to the layer as input, see 'HandSkeletonLayer' function. 
+"""July 2023: This code is written by Jameel Malik. Some conversion functions are adopted from https://github.com/otaheri/MANO
+This code implements 2D hand pose fitting using a PyTorch based Forward kinematics hand skeleton layer (axis angles representation is used).
+Create virtual env e.g., using conda, install PyTorch, and other dependencies using pip install..
+Note: initial 3D reference pose of hand is provided to the layer as input, see 'HandSkeletonLayer' function.
 """
 
 import json
 import os
 import time
 
-import chumpy as xp
 import cv2
-import matplotlib.pyplot
 import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d
 import numpy as np
 import toml
 import torch
 import torch.nn.functional as F
-from mpl_toolkits.mplot3d import Axes3D
-from utils import Struct, to_np, to_tensor
+
+
+def to_tensor(array, dtype=torch.float32):
+    """Converts a numpy array to a PyTorch tensor.
+
+    Parameters
+    ----------
+    - array: numpy array to be converted
+    - dtype: desired data type of the tensor (default: torch.float32)
+
+    Returns
+    -------
+    - tensor: PyTorch tensor
+
+    """
+    return torch.tensor(array, dtype=dtype)
 
 
 def computeP(calib_file, undistort=False):
-    """
-    Compute projection matrices from toml calibration file.
+    """Compute projection matrices from toml calibration file.
 
     INPUT:
     - calib_file: calibration .toml file.
@@ -33,7 +42,6 @@ def computeP(calib_file, undistort=False):
     OUTPUT:
     - P: projection matrix as list of arrays
     """
-
     calib = toml.load(calib_file)
 
     P = []
@@ -45,7 +53,11 @@ def computeP(calib_file, undistort=False):
                 S = np.array(calib[cam]["size"])
                 dist = np.array(calib[cam]["distortions"])
                 optim_K = cv2.getOptimalNewCameraMatrix(
-                    K, dist, [int(s) for s in S], 1, [int(s) for s in S]
+                    K,
+                    dist,
+                    [int(s) for s in S],
+                    1,
+                    [int(s) for s in S],
                 )[0]
                 Kh = np.block([optim_K, np.zeros(3).reshape(3, 1)])
             else:
@@ -68,7 +80,7 @@ def createDic(list):
 
 def readTrc(path_to_3d_joints):
     # path_to_3d_joints = os.path.expanduser('~/miniconda3/envs/Pose2Sim/lib/python3.8/site-packages/Pose2Sim/ROM2_RTMPose/3c/28983_29913_23138/pose-3d/ROM2_RTMPose_0-3038_filt_butterworth.trc')
-    with open(path_to_3d_joints, "r") as trc_file:
+    with open(path_to_3d_joints) as trc_file:
         lines = trc_file.readlines()
         joints = []
         joint_names = lines[3].split("\t")[2:]  # remove empty string
@@ -88,8 +100,7 @@ def readTrc(path_to_3d_joints):
 
 
 def BodySkeletionLayer(pose, transl, Projection_mat, img_size, J, j_to_idx):
-    """
-    Implements the PyTorch based forward kinematics function of hand skeleton that allows automatic gradient computation.
+    """Implements the PyTorch based forward kinematics function of hand skeleton that allows automatic gradient computation.
     The joint order is from https://github.com/otaheri/MANO/blob/master/mano/joints_info.py
     Update this reference pose for a particular user (bonelengths will be automatically calculated from this pose).
     This 3D pose is provided in camera coordinates and in meters.
@@ -120,7 +131,7 @@ def BodySkeletionLayer(pose, transl, Projection_mat, img_size, J, j_to_idx):
     ]
     J = J[order]
     parents = np.array(
-        [-1, 0, 1, 2, 3, 3, 3, 0, 7, 8, 9, 9, 9, 0, 13, 14, 13, 16, 17, 13, 19, 20]
+        [-1, 0, 1, 2, 3, 3, 3, 0, 7, 8, 9, 9, 9, 0, 13, 14, 13, 16, 17, 13, 19, 20],
     )
     J = torch.from_numpy(J)
     joints = torch.ones(1, J.size(0), J.size(1))
@@ -134,7 +145,8 @@ def BodySkeletionLayer(pose, transl, Projection_mat, img_size, J, j_to_idx):
     # print(rel_joints)
     rot_mats = batch_rodrigues(pose.view(-1, 3)).view([1, -1, 3, 3])
     transforms_mat = transform_mat(
-        rot_mats.reshape(-1, 3, 3), rel_joints.reshape(-1, 3, 1)
+        rot_mats.reshape(-1, 3, 3),
+        rel_joints.reshape(-1, 3, 1),
     ).reshape(-1, joints.shape[1], 4, 4)
     # print(transforms_mat)
     transform_chain = [transforms_mat[:, 0]]
@@ -160,7 +172,8 @@ def get_2D_joints(path_to_2d_joints, which_person=0):
     joints_2d = []
     confidences = []
     for file in sorted(
-        os.listdir(path_to_2d_joints), key=lambda x: int(x.split("_")[1])
+        os.listdir(path_to_2d_joints),
+        key=lambda x: int(x.split("_")[1]),
     ):
         if file.endswith(".json"):
             with open(os.path.join(path_to_2d_joints, file)) as f:
@@ -171,12 +184,16 @@ def get_2D_joints(path_to_2d_joints, which_person=0):
                 confidences.append(confidence)
                 joints_2d.append([[x, y] for x, y in zip(xs, ys)])
     return np.array(joints_2d, dtype=np.float64), np.array(
-        confidences, dtype=np.float64
+        confidences,
+        dtype=np.float64,
     )
 
 
 def main_HPE(
-    path_to_2d_joints1, path_to_2d_joints2, path_to_2d_joints3, path_to_3d_joints
+    path_to_2d_joints1,
+    path_to_2d_joints2,
+    path_to_2d_joints3,
+    path_to_3d_joints,
 ):
     joint_name_to_idx = {
         "Nose": 0,
@@ -211,7 +228,7 @@ def main_HPE(
     joints_gt_2D_all_view2, confidences_all_view2 = get_2D_joints(path_to_2d_joints2, 0)
     joints_gt_2D_all_view3, confidences_all_view3 = get_2D_joints(path_to_2d_joints3, 0)
     joint_gt_2d_views = np.array(
-        [joints_gt_2D_all_view1, joints_gt_2D_all_view2, joints_gt_2D_all_view3]
+        [joints_gt_2D_all_view1, joints_gt_2D_all_view2, joints_gt_2D_all_view3],
     )
     joints_3d, joint_names_to_idx = readTrc(path_to_3d_joints)
     ordering = [
@@ -261,24 +278,27 @@ def main_HPE(
                 [P_new[0][0], P_new[0][1], P_new[0][2]],
                 [P_new[1][0], P_new[1][1], P_new[1][2]],
                 [P_new[2][0], P_new[2][1], P_new[2][2]],
-            ]
+            ],
         )
         # P = np.array([[P_new[2][0],P_new[2][1],P_new[2][2]]])
         Ps_batch = torch.ones(1, 3, 3, 4)
         Ps_batch[:, :] = torch.tensor(P)
         joint_num = len(joint_gt_2D_view3)
         joint_gt = torch.from_numpy(
-            np.array([joint_gt_2D_view1, joint_gt_2D_view2, joint_gt_2D_view3])
+            np.array([joint_gt_2D_view1, joint_gt_2D_view2, joint_gt_2D_view3]),
         )
         # joint_gt = torch.from_numpy(np.array([joint_gt_2D_view3]))
         joint_gt = torch.unsqueeze(joint_gt, dim=0).view(1, 3, joint_num, 2)
         # print(P)
         confidences_tensor = torch.from_numpy(
-            np.array([confidences_view1, confidences_view2, confidences_view3])
+            np.array([confidences_view1, confidences_view2, confidences_view3]),
         )
         # confidences_tensor = torch.from_numpy(np.array([confidences_view3]))
         confidences_tensor = torch.unsqueeze(confidences_tensor, dim=0).view(
-            1, 3, joint_num, 1
+            1,
+            3,
+            joint_num,
+            1,
         )
         torch_identity = torch.eye(3)
         # print(confidences_tensor)
@@ -286,7 +306,9 @@ def main_HPE(
         # h_keys_proj_gt = multiview_projection_batch(Ps_batch.detach(), joint_gt.float())
         # print(img_size[1],img_size[0])
         h_keys_proj_gt = normalize_keys_batch(
-            joint_gt.float(), img_size[1], img_size[0]
+            joint_gt.float(),
+            img_size[1],
+            img_size[0],
         )
         # h_keys_proj_gt = multiview_projection_batch(Ps_batch.detach(), joint_gt.float())
         # h_keys_proj_gt = normalize_keys_batch(h_keys_proj_gt, img_size[1], img_size[0])
@@ -305,7 +327,9 @@ def main_HPE(
         ]
         optimizer = torch.optim.Adam(params=params)
         lr_scheduler = torch.optim.lr_scheduler.StepLR(
-            optimizer, step_size=50, gamma=0.1
+            optimizer,
+            step_size=50,
+            gamma=0.1,
         )
         itr = 250
         indices = [4, 5, 10, 11, 1, 2, 7, 8]
@@ -374,7 +398,7 @@ def main_HPE(
             e[i] = reprojection_error[0, 0, k][i, 0]
             f[i] = reprojection_error[0, 0, k][i, 1]
             joint_gt = torch.from_numpy(
-                np.array([joint_gt_2d_views[k, 2460][ordering]])
+                np.array([joint_gt_2d_views[k, 2460][ordering]]),
             )
             joint_gt = torch.unsqueeze(joint_gt, dim=0).view(1, 1, joint_num, 2)
             joint_gt = normalize_keys_batch(joint_gt.float(), img_size[1], img_size[0])
@@ -383,17 +407,19 @@ def main_HPE(
             a[i] = joint_gt[0, 0, i, 0]
             b[i] = joint_gt[0, 0, i, 1]
             joint_gt2 = torch.from_numpy(
-                np.array([joint_gt_2d_views[k, 2620][ordering]])
+                np.array([joint_gt_2d_views[k, 2620][ordering]]),
             )
             joint_gt2 = torch.unsqueeze(joint_gt2, dim=0).view(1, 1, joint_num, 2)
             joint_gt2 = normalize_keys_batch(
-                joint_gt2.float(), img_size[1], img_size[0]
+                joint_gt2.float(),
+                img_size[1],
+                img_size[0],
             )
             joint_gt2 = joint_gt2.detach().numpy()
             x[i] = joint_gt2[0, 0, i, 0]
             y[i] = joint_gt2[0, 0, i, 1]
         fig = plt.figure()
-        ax = fig.add_subplot((111))
+        ax = fig.add_subplot(111)
         for o in range(joint_num):
             ax.scatter(e[o], f[o], color="r")
             ax.scatter(a[o], b[o], color="b")
@@ -456,7 +482,7 @@ def main_HPE(
         #'''
         # For axes equal
         max_range = np.array(
-            [x.max() - x.min(), y.max() - y.min(), z.max() - z.min()]
+            [x.max() - x.min(), y.max() - y.min(), z.max() - z.min()],
         ).max()
         Xb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].flatten() + 0.5 * (
             x.max() + x.min()
@@ -476,8 +502,7 @@ def main_HPE(
 
 ##############################################################################################
 def multiview_projection_batch(Ps, points):
-    """
-    Ps (projection matrices for each view):B x n_view x 3 x 4
+    """Ps (projection matrices for each view):B x n_view x 3 x 4
     points: B x n_points x 3
     returns: B x n_view x n_points x 2
     """
@@ -485,7 +510,10 @@ def multiview_projection_batch(Ps, points):
     B, n_view, dim1, dim2 = Ps.shape
     _, n_p, d = points.shape
     points = points.view(B, 1, n_p, d).expand(
-        -1, n_view, -1, -1
+        -1,
+        n_view,
+        -1,
+        -1,
     )  # B x n_views x n_points x 3
     points_homo = torch.cat((points, torch.ones(B, n_view, n_p, 1)), 3)
     proj_homo = torch.transpose(
@@ -502,9 +530,7 @@ def multiview_projection_batch(Ps, points):
 
 
 def normalize_keys_batch(keys, h, w):
-    """
-    keys:Bxn_viewsxNx2
-    """
+    """keys:Bxn_viewsxNx2"""
     keys[:, :, :, 0] /= w
     keys[:, :, :, 1] /= h
     return keys
@@ -524,16 +550,18 @@ def transform_mat(R, t):
 
 def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
     """Calculates the rotation matrices for a batch of rotation vectors
+
     Parameters
     ----------
     rot_vecs: torch.tensor Nx3
         array of N axis-angle vectors
+
     Returns
     -------
     R: torch.tensor Nx3x3
         The rotation matrices for the given axis-angle parameters
-    """
 
+    """
     batch_size = rot_vecs.shape[0]
     device, dtype = rot_vecs.device, rot_vecs.dtype
 
@@ -549,28 +577,30 @@ def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
 
     zeros = torch.zeros((batch_size, 1), dtype=dtype, device=device)
     K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1).view(
-        (batch_size, 3, 3)
+        (batch_size, 3, 3),
     )
 
     ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
-    rot_mat = ident + sin * K + (1 - cos) * torch.bmm(K, K)
-    return rot_mat
+    return ident + sin * K + (1 - cos) * torch.bmm(K, K)
 
 
 if __name__ == "__main__":
     path_to_2d_joints1 = os.path.expanduser(
-        r"E:\Uni\Data\LIHS\2dFitting\RTMPOSE_L\ROM2\23087_json"
+        r"E:\Uni\Data\LIHS\2dFitting\RTMPOSE_L\ROM2\23087_json",
     )
     path_to_2d_joints2 = os.path.expanduser(
-        r"E:\Uni\Data\LIHS\2dFitting\RTMPOSE_L\ROM2\29092_json"
+        r"E:\Uni\Data\LIHS\2dFitting\RTMPOSE_L\ROM2\29092_json",
     )
     path_to_2d_joints3 = os.path.expanduser(
-        r"E:\Uni\Data\LIHS\2dFitting\RTMPOSE_L\ROM2\29913_json"
+        r"E:\Uni\Data\LIHS\2dFitting\RTMPOSE_L\ROM2\29913_json",
     )
     path_to_3d_joints = os.path.expanduser(
-        r"C:\Users\Jeremias\anaconda3\envs\Pose2Sim\Lib\site-packages\Pose2Sim\RMTPoseL\RMTPoseL\ROM2\3c\23087_29092_29913\ROM2_RTMPose_0-3038_filt_butterworth.trc"
+        r"C:\Users\Jeremias\anaconda3\envs\Pose2Sim\Lib\site-packages\Pose2Sim\RMTPoseL\RMTPoseL\ROM2\3c\23087_29092_29913\ROM2_RTMPose_0-3038_filt_butterworth.trc",
     )
     # joints_3d, joint_names_to_idx = readTrc()
     main_HPE(
-        path_to_2d_joints1, path_to_2d_joints2, path_to_2d_joints3, path_to_3d_joints
+        path_to_2d_joints1,
+        path_to_2d_joints2,
+        path_to_2d_joints3,
+        path_to_3d_joints,
     )

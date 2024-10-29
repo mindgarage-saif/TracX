@@ -12,11 +12,20 @@ from .utils import export_video
 class StickFigureRenderer(MotionRenderer):
     """Class for rendering a stick figure skeleton."""
 
-    def __init__(self, motion_data, output_path):
+    def __init__(
+        self,
+        motion_data,
+        output_path,
+        monocular=False,
+        elev=15,
+        azim=75,
+        vertical_axis="z",
+    ):
         """Initialize the stick figure renderer.
 
         Args:
             motion_data (MotionSequence): The motion sequence to render.
+
         """
         super().__init__(motion_data)
 
@@ -29,10 +38,13 @@ class StickFigureRenderer(MotionRenderer):
 
         self.output_path = output_path
         self.output_dir = output_dir
-
+        self.monocular = monocular
+        self.elev = elev
+        self.azim = azim
+        self.vertical_axis = vertical_axis
         # Footstep rendering
         self.footsteps = None
-        self.show_footsteps = True
+        self.show_footsteps = False
         self.footstep_cfg = {
             "color": "lightgreen",
             "marker": "x",
@@ -53,7 +65,7 @@ class StickFigureRenderer(MotionRenderer):
             "color": "red",
             "marker": "o",
             "alpha": 1.0,
-            "s": 25,
+            "s": 5,
             "zorder": 1,
         }
 
@@ -63,10 +75,8 @@ class StickFigureRenderer(MotionRenderer):
         skeleton,
         metadata=None,
     ):
-        """
-        Plot and save the 3D skeleton for the given frame.
-        """
-        fig = plt.figure(figsize=(10, 10), facecolor="lightgray")
+        """Plot and save the 3D skeleton for the given frame."""
+        fig = plt.figure(facecolor="lightgray", figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
 
         # Plot footsteps
@@ -89,7 +99,7 @@ class StickFigureRenderer(MotionRenderer):
             )
 
         # Draw joints.
-        joints = np.array([pos for pos in skeleton.get_pose().values()])
+        joints = np.array(list(skeleton.get_pose().values()))
         ax.scatter(
             joints[:, 0],
             joints[:, 1],
@@ -103,7 +113,13 @@ class StickFigureRenderer(MotionRenderer):
         ax.set_zlabel("Z")
 
         # Initialize the view
-        self.init_view(ax)
+        self.init_view(
+            ax,
+            monocular=self.monocular,
+            elev=self.elev,
+            azim=self.azim,
+            vertical_axis=self.vertical_axis,
+        )
 
         # Minimize whitespace
         plt.tight_layout()

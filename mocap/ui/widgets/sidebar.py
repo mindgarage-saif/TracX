@@ -55,8 +55,8 @@ class Sidebar(QFrame):
         if self.onTabSelected:
             self.onTabSelected(index)
 
-    def handleExperimentSelected(self, experiment):
-        self.onExperimentSelected(experiment)
+    def handleExperimentSelected(self, experiment, est_type):
+        self.onExperimentSelected(experiment, est_type)
 
     def recordTabUI(self):
         layout = QVBoxLayout()
@@ -66,7 +66,8 @@ class Sidebar(QFrame):
         cameras = CameraSelector(self)
         cameras.setCameraSelectedCallback(self.handleCamerasSelected)
         cameras.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
         )
         layout.addWidget(cameras)
         self.recordTab.setLayout(layout)
@@ -83,19 +84,21 @@ class Sidebar(QFrame):
 
         # Add instructions
         instructions = QLabel(
-            "Select an experiment to start motion estimation or create a new one."
+            "Select an experiment to start motion estimation or create a new one.",
         )
         instructions.setProperty("class", "body")
         instructions.setWordWrap(True)
         instructions.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Minimum,
         )
         layout.addWidget(instructions)
         layout.addSpacing(PAD_Y)
 
         self.experimentList = ExperimentList(self)
         self.experimentList.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
         )
         self.experimentList.onItemSelected = self.handleExperimentSelected
         layout.addWidget(self.experimentList)
@@ -103,7 +106,8 @@ class Sidebar(QFrame):
 
         createButton = QPushButton("New Experiment")
         createButton.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed,
         )
         createButton.clicked.connect(self.createExperiment)
         layout.addWidget(createButton)

@@ -18,7 +18,6 @@ class SimulationOptions(Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.params = VisualizeTaskConfig()
-
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
         self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
@@ -76,7 +75,8 @@ class SimulationOptions(Frame):
 
         # Create Button
         self.createButton = VisualizeMotionButton(
-            self.params, self.onVisualizationsCreated
+            self.params,
+            self.onVisualizationsCreated,
         )
         buttonBarLayout.addWidget(self.createButton)
 
@@ -86,7 +86,8 @@ class SimulationOptions(Frame):
             with_blender=False,
         )
         self.downloadButton = OpenSimButton(
-            self.opensim_config, self.saveVisualizations
+            self.opensim_config,
+            self.saveVisualizations,
         )
         buttonBarLayout.addWidget(self.downloadButton)
 
