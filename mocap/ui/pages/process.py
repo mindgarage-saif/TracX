@@ -11,19 +11,18 @@ from PyQt6.QtWidgets import (
 )
 
 from mocap.constants import APP_ASSETS
-from mocap.core import Experiment, ExperimentMonocular
+from mocap.core import Experiment
 from mocap.ui.tasks import MotionTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
 from ..widgets import (
     EmptyState,
     ExperimentDataWidget,
-    ExperimentMonocularDataWidget,
     LogsWidget,
+    MonocularExperimentDataWidget,
     MotionOptions,
     MotionOptionsMonocular,
     SimulationOptions,
-    SimulationOptionsMonocular,
 )
 from .base import BasePage
 
@@ -68,64 +67,35 @@ class ProcessingPage(BasePage):
 
     def createExperimentMonocularUI(self):
         # Create a layout for the processing page
-        self.experimentMonocularUILayout = QVBoxLayout(self.experimentMonocularUI)
-        self.experimentMonocularUILayout.setContentsMargins(0, 0, 0, 0)
-        self.experimentMonocularUILayout.setSpacing(0)
-        self.experimentMonocularUI.setLayout(self.experimentMonocularUILayout)
+        layout = QVBoxLayout(self.experimentMonocularUI)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        self.experimentMonocularUI.setLayout(layout)
 
-        # Inferencer and visualizer settings
-        self.experimentDataViewMonocular = ExperimentMonocularDataWidget(self)
-        self.experimentMonocularUILayout.addWidget(self.experimentDataViewMonocular)
-        self.experimentMonocularUILayout.addSpacing(PAD_Y)
-
-        self.videoListWidget = QWidget(self)
-        self.experimentMonocularUILayout.addWidget(self.videoListWidget)
-
-        # Create a horizontal layout for the motion estimation settings
-        processingFrame = QWidget(self)
-        processingFrameLayout = QHBoxLayout(processingFrame)
-        processingFrameLayout.setContentsMargins(0, 0, 0, 0)
-        processingFrameLayout.setSpacing(PAD_X)
-        self.experimentMonocularUILayout.addWidget(processingFrame)
-
-        # Create two equal columns for the settings
-        column1 = QFrame(self)
-        column1.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        column1Layout = QVBoxLayout(column1)
-        column1Layout.setContentsMargins(0, 0, 0, 0)
-        column1Layout.setSpacing(PAD_Y)
-
-        column2 = QFrame(self)
-        column2.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        column2Layout = QVBoxLayout(column2)
-        column2Layout.setContentsMargins(0, 0, 0, 0)
-        column2Layout.setSpacing(PAD_Y)
-
-        self.logs_viewMonocular = LogsWidget(self)
-        self.logs_viewMonocular.setSizePolicy(
+        # Experiment data
+        self.experimentDataViewMonocular = MonocularExperimentDataWidget(self)
+        layout.addWidget(self.experimentDataViewMonocular)
+        layout.addSpacing(PAD_Y)
+        self.experimentDataViewMonocular.setSizePolicy(
             QSizePolicy.Policy.Preferred,
             QSizePolicy.Policy.Expanding,
         )
 
-        # Add columns to the horizontal layout with equal stretch factors
-        processingFrameLayout.addWidget(column1, 1)  # Stretch factor 1
-        processingFrameLayout.addWidget(column2, 1)  # Stretch factor 1
-        processingFrameLayout.addWidget(self.logs_viewMonocular, 2)  # Stretch factor 2
+        # Experiment settings
+        settingsFrame = QWidget(self)
+        settingsLayout = QHBoxLayout(settingsFrame)
+        settingsLayout.setContentsMargins(0, 0, 0, 0)
+        settingsLayout.setSpacing(PAD_X)
+        layout.addWidget(settingsFrame)
 
         # Add motion estimation settings in column 1
         self.motionOptionsMonocular = MotionOptionsMonocular(self)
-        self.motionOptionsMonocular.downloadButton.clicked.connect(
+        self.motionOptionsMonocular.download_button.clicked.connect(
             self.downloadMotionData,
         )
-        column1Layout.addWidget(self.motionOptionsMonocular)
-
-        # Add visualizer settings in column 2
-        self.visualizationOptionsMonocular = SimulationOptionsMonocular(self)
-        column2Layout.addWidget(self.visualizationOptionsMonocular)
+        settingsLayout.addWidget(self.motionOptionsMonocular)
 
         # Connect the update event
-        self.motionOptionsMonocular.setEnabled(False)
-        self.visualizationOptionsMonocular.setEnabled(False)
         self.experimentDataViewMonocular.onUpdate = (
             self.onExperimentMonocularDataUploaded
         )
@@ -142,9 +112,6 @@ class ProcessingPage(BasePage):
         self.experimentDataView = ExperimentDataWidget(self)
         self.experimentUILayout.addWidget(self.experimentDataView)
         self.experimentUILayout.addSpacing(PAD_Y)
-
-        self.videoListWidget = QWidget(self)
-        self.experimentUILayout.addWidget(self.videoListWidget)
 
         # Create a horizontal layout for the motion estimation settings
         processingFrame = QWidget(self)
@@ -204,7 +171,6 @@ class ProcessingPage(BasePage):
             self.showAlert(str(result), "Motion Estimation Failed")
 
     def onMotionMoncularEstimated(self, status, result):
-        self.visualizationOptionsMonocular.setEnabled(status)
         if not status:
             self.showAlert(str(result), "Motion Estimation Failed")
 
@@ -253,26 +219,20 @@ class ProcessingPage(BasePage):
                 self.logs_view.start_log_streaming(self.experiment.log_file)
             else:
                 self.motionOptionsMonocular.params.experiment_name = name
-                self.visualizationOptionsMonocular.params.experiment_name = name
-                self.experiment = ExperimentMonocular(name, create=False)
+                self.experiment = Experiment(name, create=False, monocular=True)
                 self.experimentDataViewMonocular.setExperiment(self.experiment)
-                self.experimentDataViewMonocular.videoUploader.previewSelected(
-                    self.experiment.videos,
-                )
+                # self.experimentDataViewMonocular.videoUploader.previewSelected(
+                #     self.experiment.videos,
+                # )
                 hasMotionData = self.experiment.get_motion_file() is not None
-                self.motionOptionsMonocular.estimateMoncularButton.setEnabled(
+                self.motionOptionsMonocular.estimate_button.setEnabled(
                     not hasMotionData,
                 )
-                self.motionOptionsMonocular.downloadButton.setEnabled(hasMotionData)
-                self.visualizationOptionsMonocular.setEnabled(hasMotionData)
+                self.motionOptionsMonocular.download_button.setEnabled(hasMotionData)
 
-                self.motionOptionsMonocular.estimateMoncularButton.log_file = (
+                self.motionOptionsMonocular.estimate_button.log_file = (
                     self.experiment.log_file
                 )
-                self.visualizationOptionsMonocular.createButton.log_file = (
-                    self.experiment.log_file
-                )
-                self.logs_viewMonocular.start_log_streaming(self.experiment.log_file)
             self.log(f"Loaded experiment: {self.experiment}")
 
             self.emptyState.hide()

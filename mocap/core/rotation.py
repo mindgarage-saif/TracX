@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shutil
 import xml.etree.ElementTree as ET
@@ -12,6 +13,85 @@ def get_rotation(videoName, rotation_dict):
         if key in videoName:
             return int(value)
     return None
+
+
+def rotate_video(video_file, rot, save_dir=None):
+    rot = 270 if rot == -90 else rot
+    if rot not in [90, 180, 270]:
+        error = f"Rotation angle {rot} not supported. Skipping video."
+        logging.error(error)
+        raise ValueError(error)
+
+    def read_format(video_path):
+        return video_path.split(".")[-1].lower()
+
+    supported_formats = {
+        "mp4": cv2.VideoWriter_fourcc(*"mp4v"),
+        "avi": cv2.VideoWriter_fourcc(*"XVID"),
+        "mov": cv2.VideoWriter_fourcc(*"mp4v"),
+    }
+
+    video_format = read_format(video_file)
+    if video_format not in supported_formats:
+        logging.error(f"Video format '{video_format}' not supported. Skipping video.")
+        return None
+
+    def rotate_frame(frame, rot):
+        if rot == 180:
+            return cv2.rotate(frame, cv2.ROTATE_180)
+        if rot == 90:
+            return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        if rot == 270:
+            return cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        return None
+
+    # Open the video file
+    logging.info(f"Rotating video '{video_file}' by {rot} degrees.")
+    cap = cv2.VideoCapture(video_file)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    # Create a VideoWriter object
+    video_dir = os.path.dirname(video_file)
+    video_name = os.path.basename(video_file)
+
+    rotated_dir = save_dir if save_dir else video_dir
+    rotated_file = os.path.join(
+        rotated_dir, video_name.split(".")[0] + f"_rot.{video_format}"
+    )
+    # Set output frame size based on rotation
+    if rot in [90, 270]:
+        out = cv2.VideoWriter(
+            rotated_file,
+            supported_formats[video_format],
+            cap.get(cv2.CAP_PROP_FPS),
+            (height, width),  # Swapped dimensions for 90 and 270 degrees
+        )
+    else:
+        out = cv2.VideoWriter(
+            rotated_file,
+            supported_formats[video_format],
+            cap.get(cv2.CAP_PROP_FPS),
+            (width, height),
+        )
+
+    # Process the video frame by frame
+    logging.info(f"Processing video '{video_name}'...")
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame = rotate_frame(frame, rot)
+        if frame is None:
+            logging.error(f"Rotation angle {rot} not supported. Skipping video.")
+            break
+
+        out.write(frame)
+
+    cap.release()
+    logging.info(f"Rotated video '{rotated_file}' saved.")
+    return rotated_file
 
 
 def rotate_videos(video_list, output_dir, camera_parameters):
@@ -74,59 +154,10 @@ def rotate_videos(video_list, output_dir, camera_parameters):
         cap.release()
 
 
-def rotate_video_monocular(video_list, output_dir, rotation):
+def rotate_video_monocular(video_list, output_dir, rot):
+    os.makedirs(output_dir, exist_ok=True)
     for video in video_list:
-        video_name = os.path.basename(video)
-        rot = rotation
-        cap = cv2.VideoCapture(video)
-        ret, frame = cap.read()
-        if not ret:
-            continue
-        if rot == 180:
-            frame = cv2.rotate(frame, cv2.ROTATE_180)
-        elif rot == 90:
-            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        elif rot == -90:
-            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-        else:
-            print(f"Rotation angle {rot} not supported")
-            continue
-        frame_width = frame.shape[1]
-        frame_height = frame.shape[0]
-        # Get original video's width, height, and fps
-        fps = cap.get(cv2.CAP_PROP_FPS)
-
-        # Create a VideoWriter object
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        # Define VideoWriter object for MP4 file
-        out = cv2.VideoWriter(
-            os.path.join(output_dir, video_name.split(".")[0] + "_rot.mp4"),
-            cv2.VideoWriter_fourcc(*"mp4v"),
-            fps,
-            (frame_width, frame_height),
-        )
-
-        # out = cv2.VideoWriter(os.path.join(output_dir, videoName +"_rot.avi"), cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
-        out.write(frame)
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-            # frame = Image.fromarray(frame)
-            # frame = frame.rotate(rot, expand=True)
-            # frame = np.array(frame)
-            if rot == 180:
-                frame = cv2.rotate(frame, cv2.ROTATE_180)
-            elif rot == 90:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            elif rot == -90:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-            # Write the rotated frame to the new video file
-            out.write(frame)
-
-        # Release the VideoCapture and VideoWriter objects
-        cap.release()
+        rotate_video(video, rot, save_dir=output_dir)
 
 
 def unrotate_pose2d(pose_dir, camera_parameters):

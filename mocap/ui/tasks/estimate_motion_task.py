@@ -20,6 +20,7 @@ class MotionTaskConfig(TaskConfig):
             mode="lightweight",
             skeleton="HALPE_26",
             trackedpoint="Neck",
+            rotation=90,
         )
 
 
@@ -34,6 +35,7 @@ class EstimateMotionTask(BaseTask):
         experiment_name = self.config.experiment_name
         correct_rotation = self.config.correct_rotation
         use_marker_augmentation = self.config.use_marker_augmentation
+        rotation = self.config.rotation
         self.path = os.path.abspath(os.path.join(APP_PROJECTS, experiment_name))
         config_path = os.path.join(self.path, "Config.toml")
         mode = self.config.mode
@@ -54,6 +56,8 @@ class EstimateMotionTask(BaseTask):
             correct_rotation=correct_rotation,
             use_marker_augmentation=use_marker_augmentation,
             custom_model=custom_model,
+            mode=self.config.model,
+            rotation=rotation,
         )
 
         print("Motion estimation complete")

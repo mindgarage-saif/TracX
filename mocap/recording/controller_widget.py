@@ -174,7 +174,7 @@ class ControllerWidget(QWidget):
         """
         for (cam_id, view), frame in zip(self._camera.sources, frames):
             if frame is not None:
-                view.show(frame)
+                view.showFrame(frame)
 
     def write_frame(self, cam_id: int, frame: Any):
         """

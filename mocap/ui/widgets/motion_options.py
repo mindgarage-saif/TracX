@@ -24,6 +24,25 @@ index_to_model = {
 
 
 class MotionOptions(Frame):
+    SUPPORTED_MODELS = ["Pose2Sim", "Custom"]
+    SUPPORTED_MODES = ["Lite", "Medium", "Heavy"]
+    MODEL_MODE_MAP = {
+        "Pose2Sim": ["Lite", "Medium", "Heavy"],
+        "Custom": ["Heavy"],
+    }
+    SUPPORTED_SKELTONS = [
+        "Body",
+        "Body + Feet",
+        "Body + Spine",
+        "Hands",
+        "Spine",
+        "Wholebody",
+    ]
+    MODEL_SKELETON_MAP = {
+        "Pose2Sim": ["Body", "Body + Feet", "Hands", "Wholebody"],
+        "Custom": ["Body + Spine", "Spine"],
+    }
+
     def __init__(self, parent):
         super().__init__(parent)
         self.params = MotionTaskConfig()
@@ -33,16 +52,13 @@ class MotionOptions(Frame):
         self.innerLayout.setSpacing(0)
 
         # Section heading (centered, bold, larger font, white text)
-        heading = QLabel("Motion Estimation", self)
+        heading = QLabel("Multiview Motion Estimation", self)
         heading.setProperty("class", "h1")
         self.innerLayout.addWidget(heading)
         self.innerLayout.addSpacing(16)
 
         # Backend
         label = QLabel("Select a Model for 2D estimation", self)
-        label.setToolTip(
-            "Select the model for 2D pose estimation. Lightweight is faster but less accurate. Performance is slower but more accurate.",
-        )
         label.setProperty("class", "h2")
         label.setWordWrap(True)
         self.innerLayout.addWidget(label)

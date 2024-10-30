@@ -1,10 +1,19 @@
+from typing import Optional
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 
 class EmptyState(QWidget):
-    def __init__(self, parent: QWidget, icon: str, label: str, size=300) -> None:
+    def __init__(
+        self,
+        parent: QWidget,
+        icon: str,
+        label: str,
+        action: Optional[str] = None,
+        size=300,
+    ) -> None:
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -31,4 +40,15 @@ class EmptyState(QWidget):
         self.label.setFixedWidth(size)
         self.label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
         layout.addWidget(self.label)
+
+        if action:
+            self.action = QPushButton(action, self)
+            self.action.setSizePolicy(
+                QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+            )
+            layout.addWidget(self.action, alignment=Qt.AlignmentFlag.AlignCenter)
+
         layout.addStretch()
+
+    def setCallback(self, callback):
+        self.action.clicked.connect(callback)

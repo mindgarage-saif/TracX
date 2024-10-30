@@ -24,8 +24,12 @@ from .rotation import rotate_video_monocular, rotate_videos, unrotate_pose2d
 
 
 class Experiment:
-    def __init__(self, name, create=True, base_dir=APP_PROJECTS) -> None:
+    def __init__(
+        self, name, create=True, monocular=False, base_dir=APP_PROJECTS
+    ) -> None:
         self.name = name
+        # TODO: mode should be read from database when create is False
+        self.monocular = monocular
         self.path = os.path.abspath(os.path.join(base_dir, name))
         self.config_file = os.path.join(self.path, "Config.toml")
         self.videos_dir = os.path.join(self.path, "videos")
@@ -258,6 +262,13 @@ class Experiment:
         os.chdir(cwd)
 
     def get_motion_file(self) -> Optional[str]:
+        if self.monocular:
+            pose_3d = [
+                f for f in os.listdir(self.pose3d_dir) if f.endswith("data.json")
+            ]
+            if len(pose_3d) == 0:
+                return None
+            return os.path.join(self.pose3d_dir, pose_3d[0])
         trc_files = [
             f
             for f in os.listdir(self.pose3d_dir)
@@ -266,12 +277,6 @@ class Experiment:
         if len(trc_files) == 0:
             return None
         return os.path.join(self.pose3d_dir, trc_files[0])
-
-        # FIXME: Monoocular mode
-        pose_3d = [f for f in os.listdir(self.pose3d_dir) if f.endswith("data.json")]
-        if len(pose_3d) == 0:
-            return None
-        return os.path.join(self.pose3d_dir, pose_3d[0])
 
     @property
     def log_file(self):
@@ -296,20 +301,20 @@ class Experiment:
 
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        motion_data = MotionSequence.from_pose2sim_trc(motion_file, skeleton)
-        renderer = StickFigureRenderer(motion_data, animation_file)
+        if self.monocular:
+            motion_data = MotionSequence.from_monocular_json(motion_file, fps)
+            renderer = StickFigureRenderer(
+                motion_data,
+                animation_file,
+                monocular=True,
+                elev=-165,
+                azim=155,
+                vertical_axis="y",
+            )
+        else:
+            motion_data = MotionSequence.from_pose2sim_trc(motion_file, skeleton)
+            renderer = StickFigureRenderer(motion_data, animation_file)
         renderer.render(fps=fps)
-
-        # FIXME: Monoocular mode
-        # motion_data = MotionSequence.from_monocular_json(motion_file, fps)
-        # renderer = StickFigureRenderer(
-        #     motion_data,
-        #     animation_file,
-        #     monocular=True,
-        #     elev=-165,
-        #     azim=155,
-        #     vertical_axis="y",
-        # )
 
         return animation_file
 

@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 )
 
 from mocap.constants import APP_PROJECTS
-from mocap.core import Experiment, ExperimentMonocular
+from mocap.core import Experiment
 
 
 class CreateExperimentDialog(QDialog):
@@ -103,7 +103,7 @@ class CreateExperimentDialog(QDialog):
                 Experiment(name=experiment_name, create=True)
             else:
                 estim_type = "monocular"
-                ExperimentMonocular(name=experiment_name, create=True)
+                Experiment(name=experiment_name, create=True, monocular=True)
             experiments["experiments"].append(
                 {"name": experiment_name, "est_type": estim_type},
             )

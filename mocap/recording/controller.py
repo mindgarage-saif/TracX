@@ -167,7 +167,7 @@ class CameraController:
         if self.on_frame_fn is not None:
             frame = self.on_frame_fn(frame)
 
-        view.show(frame)
+        view.showFrame(frame)
 
     def release(self):
         self.pause()

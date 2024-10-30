@@ -40,7 +40,7 @@ class CameraView(QLabel):
         super().__init__()
         self.size = size
         self.flip = flip
-        self.resize(*size)
+        # self.resize(*size)
         self.clear()
 
         # Frame size and padding
@@ -48,7 +48,7 @@ class CameraView(QLabel):
         self.frame_size = size
         self.frame_pad = (0, 0, 0, 0)
 
-    def show(self, frame: np.ndarray):
+    def showFrame(self, frame: np.ndarray):
         try:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = cv2.flip(frame, 1) if self.flip else frame
@@ -72,4 +72,4 @@ class CameraView(QLabel):
     def clear(self):
         image = cv2.imread("assets/nocamera.png")
         image = cv2.flip(image, 1)
-        self.show(image)
+        self.showFrame(image)
