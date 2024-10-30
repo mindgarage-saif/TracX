@@ -1,3 +1,4 @@
+colorlog
 easydict
 matplotlib
 numpy
@@ -7,4 +8,3 @@ pre-commit
 PyQt6
 PyQt6-3D
 qt-material==2.14
-ruff

@@ -188,7 +188,6 @@ class MotionSequence:
 
         # Aggregate data for each frame
         for bp in bodyparts:
-            print(bp)
             bp_X = bp + "_X"
             bp_Y = bp + "_Y"
             bp_Z = bp + "_Z"

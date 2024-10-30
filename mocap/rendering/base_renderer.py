@@ -94,7 +94,6 @@ class MotionRenderer:
             metadata (Dict): Additional metadata for the frame.
 
         """
-        print("Rendering frame2")
         raise NotImplementedError
 
     def render(self):
