@@ -129,7 +129,7 @@ class StickFigureRenderer(MotionRenderer):
         plt.savefig(os.path.join(tmp_dir, f"{frame_idx}.png"))
         plt.close()
 
-    def render(self):
+    def render(self, fps=24):
         tmp_dir = os.path.join(self.output_dir, "tmp")
         os.makedirs(tmp_dir, exist_ok=True)
 
@@ -148,7 +148,7 @@ class StickFigureRenderer(MotionRenderer):
         super().render()
 
         # Create video
-        export_video(tmp_dir, self.output_path, fps=24)
+        export_video(tmp_dir, self.output_path, fps=fps)
 
         # Clean up temporary images
         shutil.rmtree(tmp_dir)

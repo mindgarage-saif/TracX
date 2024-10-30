@@ -56,15 +56,11 @@ def rotate_videos(video_list, output_dir, camera_parameters):
             (frame_width, frame_height),
         )
 
-        # out = cv2.VideoWriter(os.path.join(output_dir, videoName +"_rot.avi"), cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
         out.write(frame)
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-            # frame = Image.fromarray(frame)
-            # frame = frame.rotate(rot, expand=True)
-            # frame = np.array(frame)
             if rot == 180:
                 frame = cv2.rotate(frame, cv2.ROTATE_180)
             elif rot == 270:
@@ -86,9 +82,6 @@ def rotate_video_monocular(video_list, output_dir, rotation):
         ret, frame = cap.read()
         if not ret:
             continue
-        # frame = Image.fromarray(frame)
-        # frame = frame.rotate(rot, expand=True)
-        # frame = np.array(frame)
         if rot == 180:
             frame = cv2.rotate(frame, cv2.ROTATE_180)
         elif rot == 90:

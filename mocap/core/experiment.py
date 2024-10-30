@@ -10,13 +10,17 @@ from easydict import EasyDict as edict
 from Pose2Sim import Pose2Sim
 from Pose2Sim.Utilities import bodykin_from_mot_osim
 
-from mocap.constants import APP_ASSETS, APP_PROJECTS, SUPPORTED_VIDEO_FORMATS
-from mocap.core.pipeline_est2dCustom import estimation_2d_custom
+from mocap.constants import (
+    APP_ASSETS,
+    APP_PROJECTS,
+    OPENSIM_DIR,
+    SUPPORTED_VIDEO_FORMATS,
+)
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
-from ..constants import OPENSIM_DIR
 from .motion import MotionSequence
-from .rotation import rotate_videos, unrotate_pose2d
+from .pose import PoseTracker2D, lift_to_3d
+from .rotation import rotate_video_monocular, rotate_videos, unrotate_pose2d
 
 
 class Experiment:
@@ -129,27 +133,33 @@ class Experiment:
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
 
-    # def process_mocular(self, mode,correct_rotation):
-    #     if correct_rotation:
-    #         rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
-    #         if not os.path.exists(rotated_dir):
-    #             rotate_videos(self.videos, rotated_dir, self.calibration_file)
-    #         else:
-    #             print("Rotated videos already exist. Skipping rotation...")
-
-    #         # Rename the videos directories to use the rotated videos
-    #         if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
-    #             os.rename(self.videos_dir, self.videos_dir + "_original")
-    #             os.rename(rotated_dir, self.videos_dir)
-    #     video_list = os.listdir(self.videos_dir)
-    #     video_path = os.path.join(self.videos_dir,video_list[0])
-    #     moncular_estimation(video_path, mode, self.pose2d_dir,self.pose3d_dir)
     def process(
         self,
         correct_rotation=True,
         use_marker_augmentation=False,
-        custom_model=False,
+        mode="multiview",
+        engine="Pose2Sim",
+        pose2d_model="DFKI_Body43",
+        lifting_model="Baseline",
+        lifting_kwargs={},
     ):
+        assert mode in [
+            "multiview",
+            "monocular",
+        ], "Invalid mode. Use 'multiview' or 'monocular'."
+        assert engine in [
+            "Pose2Sim",
+            "Custom",
+        ], "Invalid engine. Use 'Pose2Sim' or 'Custom'."
+
+        # If monocular mode, set Custom engine and set pose model to Pose2Sim_Halpe26
+        if mode == "monocular":
+            print(
+                "Monocular mode selected. Setting engine to 'Custom' and model to 'Pose2Sim_Halpe26'"
+            )
+            engine = "Custom"
+            pose2d_model = "Pose2Sim_Halpe26"
+
         # Change the working directory to the project directory.
         cwd = os.getcwd()
         os.chdir(self.path)
@@ -160,7 +170,13 @@ class Experiment:
         if correct_rotation:
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
-                rotate_videos(self.videos, rotated_dir, self.calibration_file)
+                rotation = lifting_kwargs["rotation"] = None
+                if rotation == None:
+                    rotate_video_monocular(self.videos, rotated_dir, rotation)
+                elif mode != "monocular":
+                    rotate_videos(self.videos, rotated_dir, self.calibration_file)
+                else:
+                    raise ValueError("Rotation angle is required for monocular mode.")
             else:
                 print("Rotated videos already exist. Skipping rotation...")
 
@@ -169,16 +185,33 @@ class Experiment:
                 os.rename(self.videos_dir, self.videos_dir + "_original")
                 os.rename(rotated_dir, self.videos_dir)
 
+        # Set video format and overwrite flag
+        # TODO: Read these from self.cfg
+        videos_format = os.path.splitext(self.videos[0])[-1].lower()
+        overwrite = False
+
         # Execute the 2D pose estimation
         print("Executing 2D pose estimatioan...")
-        if custom_model:
-            estimation_2d_custom(
-                self.videos_dir,
-                pose_model_path="td-cc_rtmpose-l_coco41-384x288_float32.onnx",
-                json_output_dir=self.pose2d_dir,
-            )
+        res_w, res_h = 0, 0
+        if engine == "Pose2Sim":
+            PoseTracker2D.estimateDefault()
         else:
-            Pose2Sim.poseEstimation()
+            if pose2d_model == "DFKI_Body43":
+                res_w, res_h, _ = PoseTracker2D.estimateBodyWithSpine(
+                    videos=self.videos_dir,
+                    save_dir=self.pose2d_dir,
+                    video_format=videos_format,
+                    overwrite=overwrite,
+                )
+            elif pose2d_model == "Pose2Sim_Halpe26":
+                res_w, res_h, _ = PoseTracker2D.estimateBodyWithFeet(
+                    videos=self.videos_dir,
+                    save_dir=self.pose2d_dir,
+                    video_format=videos_format,
+                    overwrite=overwrite,
+                )
+            else:
+                raise ValueError(f"Unsupported custom pose model '{pose2d_model}'")
 
         # Unrotate the 2D poses
         if correct_rotation:
@@ -189,19 +222,37 @@ class Experiment:
             print("Rotating 2D poses back...")
             unrotate_pose2d(self.pose2d_dir, self.calibration_file)
 
-        # Triangulate the 2D poses to 3D
-        print("Triangulating 2D poses to 3D...")
-        Pose2Sim.calibration()
-        try:
-            # Pose2Sim.synchronization()
-            Pose2Sim.personAssociation()
-        except Exception as e:
-            print(e)
-            raise e
-        Pose2Sim.triangulation()
-        Pose2Sim.filtering()
-        if use_marker_augmentation:
-            Pose2Sim.markerAugmentation()
+        # 2D-to-3D Lifting in Monocular Mode
+        if mode == "monocular":
+            print("Lifting 2D poses to 3D...")
+            if lifting_model == "Baseline":
+                if res_w == 0 or res_h == 0:
+                    raise ValueError(
+                        "Invalid resolution. Something went wrong during 2D pose estimation."
+                    )
+
+                # Lift the 2D poses to 3D
+                model_path = os.path.join(
+                    APP_ASSETS, "models", "lifting", "baseline.onnx"
+                )
+                lift_to_3d(model_path, self.pose2d_dir, self.pose3d_dir, res_w, res_h)
+            else:
+                raise ValueError(f"Unsupported lifting model '{lifting_model}'")
+
+        # Triangulation in Multiview Mode
+        else:
+            print("Triangulating 2D poses to 3D...")
+            Pose2Sim.calibration()
+            try:
+                # Pose2Sim.synchronization()
+                Pose2Sim.personAssociation()
+            except Exception as e:
+                print(e)
+                raise e
+            Pose2Sim.triangulation()
+            Pose2Sim.filtering()
+            if use_marker_augmentation:
+                Pose2Sim.markerAugmentation()
 
         # Restore the working directory
         os.chdir(cwd)
@@ -216,6 +267,12 @@ class Experiment:
             return None
         return os.path.join(self.pose3d_dir, trc_files[0])
 
+        # FIXME: Monoocular mode
+        pose_3d = [f for f in os.listdir(self.pose3d_dir) if f.endswith("data.json")]
+        if len(pose_3d) == 0:
+            return None
+        return os.path.join(self.pose3d_dir, pose_3d[0])
+
     @property
     def log_file(self):
         return os.path.join(self.path, "logs.log")
@@ -226,8 +283,6 @@ class Experiment:
 
     def _visualize_naive(self, motion_file):
         # Create a side-by-side visualization using OpenCV
-        # path = os.path.join(self.output_dir, "animation.mp4")
-        print(self.output_dir)
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         if os.path.exists(animation_file):
             return animation_file
@@ -238,56 +293,25 @@ class Experiment:
         fps = video.get(cv2.CAP_PROP_FPS)
         video.release()
         skeleton = self.read_skeleton()
+
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         motion_data = MotionSequence.from_pose2sim_trc(motion_file, skeleton)
         renderer = StickFigureRenderer(motion_data, animation_file)
-        renderer.render()
+        renderer.render(fps=fps)
+
+        # FIXME: Monoocular mode
+        # motion_data = MotionSequence.from_monocular_json(motion_file, fps)
+        # renderer = StickFigureRenderer(
+        #     motion_data,
+        #     animation_file,
+        #     monocular=True,
+        #     elev=-165,
+        #     azim=155,
+        #     vertical_axis="y",
+        # )
 
         return animation_file
-
-        # # Read the animation video
-        # anim = cv2.VideoCapture(animation_file)
-
-        # # Read the original video
-        # video = cv2.VideoCapture(video_file)
-
-        # # Get the video dimensions
-        # width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        # height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        # size = (width * 2, height)
-
-        # # Create the output video
-        # out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
-
-        # while True:
-        #     ret1, frame1 = video.read()
-        #     ret2, frame2 = anim.read()
-
-        #     if not ret1 or not ret2:
-        #         break
-
-        #     frame1 = cv2.resize(frame1, (width, height))
-        #     frame2 = cv2.resize(frame2, (width, height))
-
-        #     # Concatenate the frames
-        #     frame = cv2.hconcat([frame1, frame2])
-
-        #     # Write the frame
-        #     out.write(frame)
-
-        # # Release the video objects
-        # video.release()
-        # anim.release()
-        # out.release()
-
-        # return path
-
-    def _visualize_mesh(self, motion_file):
-        pass
-
-    def _visualize_mixamo(self, motion_file):
-        pass
 
     def _visualize_opensim(self, motion_file, with_blender=False):
         copy_tree(
@@ -329,10 +353,6 @@ class Experiment:
         supported_modes = ["naive", "mesh", "mixamo", "opensim"]
         if mode == "naive":
             return self._visualize_naive(motion_file, **kwargs)
-        if mode == "mesh":
-            return self._visualize_mesh(motion_file, **kwargs)
-        if mode == "mixamo":
-            return self._visualize_mixamo(motion_file, **kwargs)
         if mode == "opensim":
             return self._visualize_opensim(motion_file, **kwargs)
         raise ValueError(
