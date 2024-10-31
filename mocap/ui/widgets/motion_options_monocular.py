@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.ui.tasks import MotionTaskConfig
+from mocap.ui.tasks import MotionTaskConfig, VisualizeTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
 from .buttons import EstimateMotionButton, VisualizeMotionButton
@@ -31,8 +31,9 @@ class LabelledWidget(QWidget):
 class ModelSelection(QWidget):
     SUPPORTED_MODELS = ["Baseline", "MotionBERT", "RTMPose3D"]
 
-    def __init__(self, parent):
+    def __init__(self, parent, cfg):
         super().__init__(parent)
+        self.cfg = cfg
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.modelComboBox = QComboBox(self)
@@ -41,26 +42,31 @@ class ModelSelection(QWidget):
         self.setLayout(layout)
 
     def on_model_changed(self, callback):
-        self.modelComboBox.currentIndexChanged.connect(callback)
+        def callback_wrapper():
+            selected_model = self.modelComboBox.currentText()
+            self.cfg.model = selected_model
+            callback(selected_model)
+
+        self.modelComboBox.currentIndexChanged.connect(callback_wrapper)
 
 
 class SkeletonSelection(QWidget):
     SUPPORTED_SKELETONS = [
-        "Body",
-        "Body + Feet",
-        "Body + Spine",
-        "Hands",
-        "Spine",
-        "Wholebody",
+        "COCO_17",
+        "COCO_133",
+        "DFKI_Body43",
+        "DFKI_Spine17",
+        "HALPE_26",
     ]
     MODEL_SKELETON_MAP = {
-        "Baseline": ["Body"],
-        "MotionBERT": ["Body"],
-        "RTMPose3D": ["Wholebody"],
+        "Baseline": ["HALPE_26"],
+        "MotionBERT": ["HALPE_26"],
+        "RTMPose3D": ["HALPE_26"],
     }
 
-    def __init__(self, parent):
+    def __init__(self, parent, cfg):
         super().__init__(parent)
+        self.cfg = cfg
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -75,6 +81,14 @@ class SkeletonSelection(QWidget):
         allowed_skeletons = self.MODEL_SKELETON_MAP.get(model_name, [])
         self.skeletonComboBox.clear()
         self.skeletonComboBox.addItems(allowed_skeletons)
+
+    def on_skeleton_changed(self, callback):
+        def callback_wrapper():
+            selected_skeleton = self.skeletonComboBox.currentText()
+            self.cfg.skeleton = selected_skeleton
+            callback(selected_skeleton)
+
+        self.skeletonComboBox.currentIndexChanged.connect(callback_wrapper)
 
 
 class VideoOptions(QWidget):
@@ -113,7 +127,9 @@ class VideoOptions(QWidget):
 class MotionOptionsMonocular(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
-        self.params = MotionTaskConfig()
+        self.cfg = MotionTaskConfig()
+        self.cfg.mode = "monocular"
+        self.cfg.engine = "Custom"
 
         # Main Layout
         main_layout = QVBoxLayout(self)
@@ -129,12 +145,12 @@ class MotionOptionsMonocular(QWidget):
         model_widget.setLayout(model_layout)
 
         # Model Selection
-        self.model_selection = ModelSelection(self)
+        self.model_selection = ModelSelection(self, self.cfg)
         self.model_selection.on_model_changed(self.model_changed)
         model_layout.addWidget(LabelledWidget("Select a Model", self.model_selection))
 
         # Skeleton Selection
-        self.skeleton_selection = SkeletonSelection(self)
+        self.skeleton_selection = SkeletonSelection(self, self.cfg)
         model_layout.addWidget(
             LabelledWidget("Select a Skeleton", self.skeleton_selection)
         )
@@ -160,7 +176,7 @@ class MotionOptionsMonocular(QWidget):
 
         # Estimate Motion Button
         self.estimate_button = EstimateMotionButton(
-            self.params, self.onMotionMonocularEstimated
+            self.cfg, self.onMotionMonocularEstimated
         )
         layout.addWidget(self.estimate_button)
 
@@ -169,8 +185,9 @@ class MotionOptionsMonocular(QWidget):
         self.download_button.setEnabled(False)
         layout.addWidget(self.download_button)
 
+        self.visualize_cfg = VisualizeTaskConfig()
         self.visualize_button = VisualizeMotionButton(
-            self.params,
+            self.visualize_cfg,
             self.onVisualizationsCreated,
         )
         layout.addWidget(self.visualize_button)

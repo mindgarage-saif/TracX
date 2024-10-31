@@ -1,9 +1,6 @@
 import json
-import os
+import logging
 
-import toml
-
-from mocap.constants import APP_PROJECTS
 from mocap.core import Experiment
 
 from .base_task import BaseTask, TaskConfig
@@ -12,16 +9,64 @@ from .base_task import BaseTask, TaskConfig
 class MotionTaskConfig(TaskConfig):
     """Configuration class for motion estimation tasks."""
 
+    SUPPORTED_MODES = ["multiview", "monocular"]
+    SUPPORTED_ENGINES = ["Pose2Sim", "Custom"]
+    SUPPORTED_POSE2SIM_MODELS = ["COCO_17", "COCO_133", "HALPE_26"]
+    SUPPORTED_POSE2SIM_MODES = ["lightweight", "balanced", "performance"]
+    SUPPORTED_CUSTOM_MONOCULAR_MODELS = ["Baseline", "MotionBERT"]
+    SUPPORTED_CUSTOM_MULTIVIEW_MODELS = ["DFKI_Body43", "DFKI_Spine17"]
+
     def __init__(self):
         super().__init__(
             experiment_name=None,
+            mode="multiview",
+            engine="Pose2Sim",
+            pose2d_model="HALPE_26",
+            pose2d_kwargs=dict(mode="lightweight"),
+            lifting_model="Baseline",
+            lifting_kwargs=dict(),
+            trackedpoint="Neck",
             correct_rotation=False,
             use_marker_augmentation=False,
-            mode="lightweight",
-            skeleton="HALPE_26",
-            trackedpoint="Neck",
-            rotation=90,
         )
+
+        if self.mode == "monocular":
+            self.engine = "Custom"
+            self.pose2d_model = "HALPE_26"
+            self.pose2d_kwargs = dict(mode="lightweight")
+
+    def validate(self):
+        """Validates the configuration."""
+        logging.debug(f"Validating motion task configuration: {self}")
+        if self.mode not in self.SUPPORTED_MODES:
+            raise ValueError(f"Invalid mode: {self.mode}")
+
+        if self.engine not in self.SUPPORTED_ENGINES:
+            raise ValueError(f"Invalid engine: {self.engine}")
+
+        if self.mode == "monocular" and self.engine != "Custom":
+            raise ValueError("Monocular mode only supports custom engine")
+
+        if self.engine == "Pose2Sim":
+            if self.pose2d_model not in self.SUPPORTED_POSE2SIM_MODELS:
+                raise ValueError(f"Invalid Pose2Sim model: {self.pose2d_model}")
+            if self.pose2d_kwargs["mode"] not in self.SUPPORTED_POSE2SIM_MODES:
+                raise ValueError(f"Invalid Pose2Sim mode: {self.pose2d_kwargs['mode']}")
+
+        if self.engine == "Custom":
+            if (
+                self.mode == "multiview"
+                and self.pose2d_model not in self.SUPPORTED_CUSTOM_MULTIVIEW_MODELS
+            ):
+                raise ValueError(f"Invalid multiview model: {self.lifting_model}")
+            if (
+                self.mode == "monocular"
+                and self.lifting_model not in self.SUPPORTED_CUSTOM_MONOCULAR_MODELS
+            ):
+                raise ValueError(f"Invalid monocular model: {self.lifting_model}")
+
+        logging.debug("Configuration is valid")
+        return True
 
 
 class EstimateMotionTask(BaseTask):
@@ -31,41 +76,22 @@ class EstimateMotionTask(BaseTask):
         super().__init__(config)
 
     def _execute_impl(self):
-        # Read task configuration
-        experiment_name = self.config.experiment_name
-        correct_rotation = self.config.correct_rotation
-        use_marker_augmentation = self.config.use_marker_augmentation
-        rotation = self.config.rotation
-        self.path = os.path.abspath(os.path.join(APP_PROJECTS, experiment_name))
-        config_path = os.path.join(self.path, "Config.toml")
-        mode = self.config.mode
-        skeleton = self.config.skeleton
-        trackedpoint = self.config.trackedpoint
-        self.change_config(config_path, mode, skeleton, trackedpoint=trackedpoint)
-        custom_model = skeleton == "CUSTOM"
-        # Initialize the experiment
-        print("Loading experiment...")
+        # Read parameters
+        cfg = self.config.copy()
+        experiment_name = cfg.pop("experiment_name")
+        logging.info(
+            f"Preparing experiment '{experiment_name}' for motion estimation..."
+        )
+
+        # Initialize experiment
         experiment = Experiment(experiment_name, create=False)
-        print(
-            f"'{experiment.name}' has {experiment.num_videos} video(s) with configuration:",
-        )
-        print(f"{json.dumps(experiment.cfg, indent=2)}")
+        logging.info("Experiment configuration:")
+        logging.info(f"{json.dumps(experiment.cfg)}")
+        logging.debug(f"Experiment has {experiment.num_videos} video(s)")
 
-        print("Estimating motion...")
-        experiment.process(
-            correct_rotation=correct_rotation,
-            use_marker_augmentation=use_marker_augmentation,
-            custom_model=custom_model,
-            mode=self.config.model,
-            rotation=rotation,
-        )
+        # Estimate motion
+        logging.info("Starting motion estimation...")
+        logging.debug(f"Parameters: {cfg}")
+        experiment.process(**self.config)
 
-        print("Motion estimation complete")
-
-    def change_config(self, path, mode, skeleton, trackedpoint):
-        file = toml.load(path)
-        file["pose"]["pose_model"] = skeleton
-        file["pose"]["mode"] = mode
-        file["personAssociation"]["single_person"]["tracked_keypoint"] = trackedpoint
-        with open(path, "w") as f:
-            toml.dump(file, f)
+        logging.info("Motion estimation completed successfully")

@@ -4,7 +4,6 @@ from typing import Type
 
 import cv2
 import onnxruntime as ort
-import torch
 from Pose2Sim import Pose2Sim
 from rtmlib import BodyWithFeet, PoseTracker
 from tqdm import tqdm
@@ -133,7 +132,7 @@ class PoseTracker2D:
     @staticmethod
     def _select_backend():
         providers = ort.get_available_providers()
-        if torch.cuda.is_available() and "CUDAExecutionProvider" in providers:
+        if "CUDAExecutionProvider" in providers:
             device = "cuda"
             backend = "onnxruntime"
             logging.info("Using ONNXRuntime backend with GPU (CUDA).")

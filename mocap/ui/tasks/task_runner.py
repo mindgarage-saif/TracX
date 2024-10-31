@@ -54,7 +54,11 @@ class TaskRunner(QObject):
             self.finished.emit(True, result)
         except Exception as e:
             # If an error occurs, log it and emit the signal with failure status
-            self.finished.emit(False, e)
+            import traceback
+
+            trace = traceback.format_exc()
+            result = f"{e}\n{trace}"
+            self.finished.emit(False, result)
         finally:
             # Restore the original stdout and stderr
             sys.stdout = original_stdout

@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtCore import QThread
 from PyQt6.QtWidgets import QPushButton
 
@@ -28,6 +30,7 @@ class BaseTaskButton(QPushButton):
 
     def on_click(self):
         if self.task_thread is None or not self.task_thread.isRunning():
+            logging.info(f"Starting task: {self.task.__class__.__name__}")
             self.on_start()
 
             # Create a new worker and thread only if no thread is already running
@@ -46,6 +49,15 @@ class BaseTaskButton(QPushButton):
     def finalize_thread(self, success, result):
         """Ensures the worker thread is properly stopped and cleaned up."""
         if self.task_thread:
+            if success:
+                logging.info(
+                    f"Task completed: {self.task.__class__.__name__} - Success"
+                )
+            else:
+                logging.error(
+                    f"Task completed: {self.task.__class__.__name__} - Failure"
+                )
+            logging.debug(f"Result: {result}")
             self.task_thread.quit()  # Request thread to exit gracefully
             self.task_thread.wait()  # Wait until the thread is fully stopped
             self.task_thread = None  # Clear the thread reference

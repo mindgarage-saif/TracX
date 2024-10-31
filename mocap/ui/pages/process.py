@@ -12,7 +12,6 @@ from PyQt6.QtWidgets import (
 
 from mocap.constants import APP_ASSETS
 from mocap.core import Experiment
-from mocap.ui.tasks import MotionTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
 from ..widgets import (
@@ -30,7 +29,6 @@ from .base import BasePage
 class ProcessingPage(BasePage):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.params = MotionTaskConfig()
 
         # Create an empty state layout
         self.emptyState = EmptyState(
@@ -218,7 +216,7 @@ class ProcessingPage(BasePage):
                 )
                 self.logs_view.start_log_streaming(self.experiment.log_file)
             else:
-                self.motionOptionsMonocular.params.experiment_name = name
+                self.motionOptionsMonocular.cfg.experiment_name = name
                 self.experiment = Experiment(name, create=False, monocular=True)
                 self.experimentDataViewMonocular.setExperiment(self.experiment)
                 # self.experimentDataViewMonocular.videoUploader.previewSelected(

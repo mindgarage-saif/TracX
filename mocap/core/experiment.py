@@ -20,7 +20,7 @@ from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from .motion import MotionSequence
 from .pose import PoseTracker2D, lift_to_3d
-from .rotation import rotate_video_monocular, rotate_videos, unrotate_pose2d
+from .rotation import rotate_videos, unrotate_pose2d
 
 
 class Experiment:
@@ -137,50 +137,56 @@ class Experiment:
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
 
+    def change_config(self, mode, skeleton, trackedpoint):
+        file = toml.load(self.config_file)
+        file["pose"]["pose_model"] = skeleton
+        file["pose"]["mode"] = mode
+        file["personAssociation"]["single_person"]["tracked_keypoint"] = trackedpoint
+        with open(self.config_file, "w") as f:
+            toml.dump(file, f)
+
+        # Update the self.cfg attribute
+        self.cfg = toml.load(self.config_file)
+
     def process(
         self,
-        correct_rotation=True,
-        use_marker_augmentation=False,
         mode="multiview",
         engine="Pose2Sim",
-        pose2d_model="DFKI_Body43",
+        pose2d_model="HALPE_26",
+        pose2d_kwargs=dict(mode="lightweight"),
         lifting_model="Baseline",
         lifting_kwargs={},
+        correct_rotation=True,
+        use_marker_augmentation=False,
+        trackedpoint="Neck",
+        **kwargs,
     ):
         assert mode in [
             "multiview",
             "monocular",
         ], "Invalid mode. Use 'multiview' or 'monocular'."
+        self.monocular = mode == "monocular"
         assert engine in [
             "Pose2Sim",
             "Custom",
         ], "Invalid engine. Use 'Pose2Sim' or 'Custom'."
 
-        # If monocular mode, set Custom engine and set pose model to Pose2Sim_Halpe26
-        if mode == "monocular":
-            print(
-                "Monocular mode selected. Setting engine to 'Custom' and model to 'Pose2Sim_Halpe26'"
-            )
-            engine = "Custom"
-            pose2d_model = "Pose2Sim_Halpe26"
-
         # Change the working directory to the project directory.
         cwd = os.getcwd()
         os.chdir(self.path)
 
+        # Update the configuration file with selected settings
+        if engine == "Pose2Sim":
+            pose2d_mode = pose2d_kwargs.get("mode", "lightweight")
+            self.change_config(pose2d_mode, pose2d_model, trackedpoint=trackedpoint)
+
         if not self.has_videos():
             raise ValueError("No videos found in the project directory.")
 
-        if correct_rotation:
+        if correct_rotation and not self.monocular:
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
-                rotation = lifting_kwargs["rotation"] = None
-                if rotation == None:
-                    rotate_video_monocular(self.videos, rotated_dir, rotation)
-                elif mode != "monocular":
-                    rotate_videos(self.videos, rotated_dir, self.calibration_file)
-                else:
-                    raise ValueError("Rotation angle is required for monocular mode.")
+                rotate_videos(self.videos, rotated_dir, self.calibration_file)
             else:
                 print("Rotated videos already exist. Skipping rotation...")
 
@@ -207,7 +213,7 @@ class Experiment:
                     video_format=videos_format,
                     overwrite=overwrite,
                 )
-            elif pose2d_model == "Pose2Sim_Halpe26":
+            elif pose2d_model == "HALPE_26":
                 res_w, res_h, _ = PoseTracker2D.estimateBodyWithFeet(
                     videos=self.videos_dir,
                     save_dir=self.pose2d_dir,
