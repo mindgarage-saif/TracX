@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.ui.tasks import VisualizeTaskConfig
+from mocap.core.configs import VisualizeTaskConfig
 
 from ..config.constants import PAD_X, PAD_Y
 from .buttons import OpenSimButton, VisualizeMotionButton

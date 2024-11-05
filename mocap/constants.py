@@ -13,7 +13,7 @@ APP_FILES = os.path.join(os.path.expanduser("~"), APP_NAME)
 APP_RECORDINGS = os.path.join(APP_FILES, "Recordings")
 APP_PROJECTS = os.path.join(APP_FILES, "Projects")
 
-OPENSIM_DIR = os.path.join(APP_ASSETS, "opensim", "Pose2Sim_Halpe26")
+OPENSIM_DIR = os.path.join(APP_ASSETS, "models", "3D", "Pose2Sim_Halpe26")
 
 # Define supported formats.
 SUPPORTED_VIDEO_FORMATS = [".mp4", ".avi", ".mov"]

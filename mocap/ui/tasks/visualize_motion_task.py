@@ -2,29 +2,13 @@ import logging
 
 from mocap.core import Experiment
 
-from .base_task import BaseTask, TaskConfig
-
-
-class VisualizeTaskConfig(TaskConfig):
-    """Configuration class for motion estimation tasks."""
-
-    def __init__(self):
-        super().__init__(
-            experiment_name=None,
-            visualization_mode="naive",
-            visualization_args=dict(),
-            # skeleton=motion_config.skeleton if motion_config is not None else None,
-            # visualization_mode = "opensim",
-            # visualization_args = dict(
-            #     with_blender=False,
-            # ),
-        )
+from .base_task import BaseTask
 
 
 class VisualizeMotionTask(BaseTask):
     """Task for visualizing estimated motion."""
 
-    def __init__(self, config: VisualizeTaskConfig):
+    def __init__(self, config):
         super().__init__(config)
 
     def _execute_impl(self):

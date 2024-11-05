@@ -8,7 +8,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.ui.tasks import MotionTaskConfig, VisualizeTaskConfig
+from mocap.core.configs import MotionTaskConfig, VisualizeTaskConfig
+from mocap.core.configs.base import Engine, ExperimentMode, LiftingModel, PoseModel
 
 from ..config.constants import PAD_X, PAD_Y
 from .buttons import EstimateMotionButton, VisualizeMotionButton
@@ -29,15 +30,13 @@ class LabelledWidget(QWidget):
 
 
 class ModelSelection(QWidget):
-    SUPPORTED_MODELS = ["Baseline", "MotionBERT", "RTMPose3D"]
-
     def __init__(self, parent, cfg):
         super().__init__(parent)
         self.cfg = cfg
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.modelComboBox = QComboBox(self)
-        self.modelComboBox.addItems(self.SUPPORTED_MODELS)
+        self.modelComboBox.addItems(LiftingModel.__members__.keys())
         layout.addWidget(self.modelComboBox)
         self.setLayout(layout)
 
@@ -51,17 +50,9 @@ class ModelSelection(QWidget):
 
 
 class SkeletonSelection(QWidget):
-    SUPPORTED_SKELETONS = [
-        "COCO_17",
-        "COCO_133",
-        "DFKI_Body43",
-        "DFKI_Spine17",
-        "HALPE_26",
-    ]
     MODEL_SKELETON_MAP = {
-        "Baseline": ["HALPE_26"],
-        "MotionBERT": ["HALPE_26"],
-        "RTMPose3D": ["HALPE_26"],
+        LiftingModel.BASELINE: [PoseModel.HALPE_26],
+        LiftingModel.MOTIONBERT: [PoseModel.HALPE_26],
     }
 
     def __init__(self, parent, cfg):
@@ -71,7 +62,7 @@ class SkeletonSelection(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.skeletonComboBox = QComboBox(self)
-        self.skeletonComboBox.addItems(self.SUPPORTED_SKELETONS)
+        self.skeletonComboBox.addItems(PoseModel.__members__.keys())
         layout.addWidget(self.skeletonComboBox)
 
         self.setLayout(layout)
@@ -128,8 +119,8 @@ class MotionOptionsMonocular(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.cfg = MotionTaskConfig()
-        self.cfg.mode = "monocular"
-        self.cfg.engine = "Custom"
+        self.cfg.mode = ExperimentMode.MONOCULAR
+        self.cfg.engine = Engine.RTMLIB
 
         # Main Layout
         main_layout = QVBoxLayout(self)

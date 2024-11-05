@@ -17,6 +17,7 @@ from mocap.constants import (
     OPENSIM_DIR,
     SUPPORTED_VIDEO_FORMATS,
 )
+from mocap.core.configs.base import Engine, ExperimentMode, LiftingModel, PoseModel
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from .motion import MotionSequence
@@ -55,14 +56,14 @@ class Experiment:
 
                 # Add the project to the database.
                 experiments = Experiment.list()
-                exp_type = "monocular" if monocular else "multiview"
-                experiments.append({"name": name, "type": exp_type})
+                exp_type = (
+                    ExperimentMode.MONOCULAR if monocular else ExperimentMode.MULTIVIEW
+                )
+                experiments.append({"name": name, "type": exp_type.name.lower()})
                 with open(Experiment.META_FILE, "w") as f:
                     json.dump(experiments, f)
             except Exception:
                 raise ValueError(f"Project '{name}' already exists.")
-        elif not os.path.exists(self.config_file):
-            raise ValueError(f"Project '{name}' is missing configuration file.")
         else:
             # Find experiment in the database
             experiments = Experiment.list()
@@ -74,7 +75,14 @@ class Experiment:
             self._makedirs(exist_ok=True)
 
             # Set monoocular flag
-            self.monocular = experiment.get("type", "multiview") == "monocular"
+            self.monocular = (
+                experiment.get("type", None) == ExperimentMode.MONOCULAR.name.lower()
+            )
+
+            if not os.path.exists(self.config_file):
+                # Copy the default configuration file.
+                default_config = os.path.join(APP_ASSETS, "defaults", "Config.toml")
+                shutil.copy(default_config, self.config_file)
 
         # Read the configuration file.
         self.cfg = toml.load(self.config_file)
@@ -93,6 +101,7 @@ class Experiment:
 
     @staticmethod
     def open(name):
+        logging.info(f"Opening experiment '{name}'...")
         return Experiment(name, create=False)
 
     @staticmethod
@@ -164,42 +173,22 @@ class Experiment:
         # Update the self.cfg attribute
         self.cfg = toml.load(self.config_file)
 
-    def process(
-        self,
-        mode="multiview",
-        engine="Pose2Sim",
-        pose2d_model="HALPE_26",
-        pose2d_kwargs=dict(mode="lightweight"),
-        lifting_model="Baseline",
-        lifting_kwargs={},
-        correct_rotation=True,
-        use_marker_augmentation=False,
-        trackedpoint="Neck",
-        **kwargs,
-    ):
-        assert mode in [
-            "multiview",
-            "monocular",
-        ], "Invalid mode. Use 'multiview' or 'monocular'."
-        self.monocular = mode == "monocular"
-        assert engine in [
-            "Pose2Sim",
-            "Custom",
-        ], "Invalid engine. Use 'Pose2Sim' or 'Custom'."
-
+    def process(self, cfg):
         # Change the working directory to the project directory.
         cwd = os.getcwd()
         os.chdir(self.path)
 
         # Update the configuration file with selected settings
-        if engine == "Pose2Sim":
-            pose2d_mode = pose2d_kwargs.get("mode", "lightweight")
-            self.change_config(pose2d_mode, pose2d_model, trackedpoint=trackedpoint)
+        if cfg.engine == Engine.POSE2SIM:
+            pose2d_mode = cfg.pose2d_kwargs.get("mode", "lightweight")
+            self.change_config(
+                pose2d_mode, cfg.pose2d_model, trackedpoint=cfg.trackedpoint
+            )
 
         if not self.has_videos():
             raise ValueError("No videos found in the project directory.")
 
-        if correct_rotation and not self.monocular:
+        if cfg.correct_rotation and not self.monocular:
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
                 rotate_videos(self.videos, rotated_dir, self.calibration_file)
@@ -219,17 +208,17 @@ class Experiment:
         # Execute the 2D pose estimation
         logging.info("Executing 2D pose estimatioan...")
         res_w, res_h = 0, 0
-        if engine == "Pose2Sim":
+        if cfg.engine == Engine.POSE2SIM:
             PoseTracker2D.estimateDefault()
         else:
-            if pose2d_model == "DFKI_Body43":
+            if cfg.pose2d_model == PoseModel.DFKI_BODY43:
                 res_w, res_h, _ = PoseTracker2D.estimateBodyWithSpine(
                     videos=self.videos_dir,
                     save_dir=self.pose2d_dir,
                     video_format=videos_format,
                     overwrite=overwrite,
                 )
-            elif pose2d_model == "HALPE_26":
+            elif cfg.pose2d_model == PoseModel.HALPE_26:
                 res_w, res_h, _ = PoseTracker2D.estimateBodyWithFeet(
                     videos=self.videos_dir,
                     save_dir=self.pose2d_dir,
@@ -237,10 +226,10 @@ class Experiment:
                     overwrite=overwrite,
                 )
             else:
-                raise ValueError(f"Unsupported custom pose model '{pose2d_model}'")
+                raise ValueError(f"Unsupported custom pose model '{cfg.pose2d_model}'")
 
         # Unrotate the 2D poses
-        if correct_rotation:
+        if cfg.correct_rotation:
             # Restore the original videos
             os.rename(self.videos_dir, self.videos_dir + "_rotated")
             os.rename(self.videos_dir + "_original", self.videos_dir)
@@ -249,9 +238,9 @@ class Experiment:
             unrotate_pose2d(self.pose2d_dir, self.calibration_file)
 
         # 2D-to-3D Lifting in Monocular Mode
-        if mode == "monocular":
+        if cfg.mode == ExperimentMode.MONOCULAR:
             logging.info("Lifting 2D poses to 3D...")
-            if lifting_model == "Baseline":
+            if cfg.lifting_model == LiftingModel.BASELINE:
                 if res_w == 0 or res_h == 0:
                     raise ValueError(
                         "Invalid resolution. Something went wrong during 2D pose estimation."
@@ -267,7 +256,7 @@ class Experiment:
                 )
                 lift_to_3d(model_path, video_pose_dir, self.pose3d_dir, res_w, res_h)
             else:
-                raise ValueError(f"Unsupported lifting model '{lifting_model}'")
+                raise ValueError(f"Unsupported lifting model '{cfg.lifting_model}'")
 
         # Triangulation in Multiview Mode
         else:
@@ -281,7 +270,7 @@ class Experiment:
                 raise e
             Pose2Sim.triangulation()
             Pose2Sim.filtering()
-            if use_marker_augmentation:
+            if cfg.use_marker_augmentation:
                 Pose2Sim.markerAugmentation()
 
         # Restore the working directory
@@ -348,7 +337,7 @@ class Experiment:
 
     def _visualize_opensim(self, motion_file, with_blender=False):
         copy_tree(
-            os.path.join(OPENSIM_DIR, "..", "geometry"),
+            os.path.join(OPENSIM_DIR, "..", "Geometry"),
             os.path.join(self.output_dir, "Geometry"),
         )
         output, mot, scaled_model = create_opensim_vis(

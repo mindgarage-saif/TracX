@@ -10,7 +10,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.ui.tasks import MotionTaskConfig
+from mocap.core.configs import MotionTaskConfig
+from mocap.core.configs.base import Engine, PoseModel
 
 from ..config.constants import PAD_X, PAD_Y
 from .buttons import EstimateMotionButton
@@ -24,23 +25,16 @@ index_to_model = {
 
 
 class MotionOptions(Frame):
-    SUPPORTED_MODELS = ["Pose2Sim", "Custom"]
+    SUPPORTED_ENGINES = Engine.__members__.keys()
     SUPPORTED_MODES = ["Lite", "Medium", "Heavy"]
     MODEL_MODE_MAP = {
-        "Pose2Sim": ["Lite", "Medium", "Heavy"],
-        "Custom": ["Heavy"],
+        Engine.POSE2SIM: ["Lite", "Medium", "Heavy"],
+        Engine.RTMLIB: ["Heavy"],
     }
-    SUPPORTED_SKELTONS = [
-        "Body",
-        "Body + Feet",
-        "Body + Spine",
-        "Hands",
-        "Spine",
-        "Wholebody",
-    ]
+    SUPPORTED_SKELTONS = PoseModel.__members__.keys()
     MODEL_SKELETON_MAP = {
-        "Pose2Sim": ["Body", "Body + Feet", "Hands", "Wholebody"],
-        "Custom": ["Body + Spine", "Spine"],
+        Engine.POSE2SIM: [PoseModel.COCO_17, PoseModel.COCO_133, PoseModel.HALPE_26],
+        Engine.RTMLIB: [PoseModel.DFKI_BODY43, PoseModel.DFKI_SPINE17],
     }
 
     def __init__(self, parent):
@@ -76,10 +70,10 @@ class MotionOptions(Frame):
         self.skeletonWidgetLayout.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.addWidget(skeletonWidget)
         self.sekeltonOptins = QComboBox(self)
-        self.sekeltonOptins.addItems(["Halpe26", "Halpe26 + 17Spine"])
+        self.sekeltonOptins.addItems(self.SUPPORTED_SKELTONS)
         self.sekeltonOptins.setVisible(True)  # Initially hidden
         self.skeletonWidgetLayout.addWidget(self.sekeltonOptins)
-        self.sekeltonOptins.currentIndexChanged.connect(self.sekelton_optins_changed)
+        self.sekeltonOptins.currentIndexChanged.connect(self.toggle_pose_model)
 
         self.modelH26Widget = QWidget(self)
         self.modelH26Widget.setProperty("class", "empty")
@@ -202,39 +196,39 @@ class MotionOptions(Frame):
     def toggleMarkerAugmentation(self):
         self.params.use_marker_augmentation, self.markerAugmentationCheckbox.isChecked()
 
-    def sekelton_optins_changed(self, index):
+    def toggle_pose_model(self, index):
         if index == 0:
             self.modelH26Widget.setVisible(True)
             self.modelH2617Widget.setVisible(False)
-            self.params.skeleton = "HALPE_26"
+            self.params.pose2d_model = PoseModel.HALPE_26
             self.params.trackedpoint = "Neck"
             self.model_changed()
         else:
             self.modelH26Widget.setVisible(False)
             self.modelH2617Widget.setVisible(True)
-            self.params.skeleton = "CUSTOM"
+            self.params.pose2d_model = PoseModel.DFKI_BODY43
             self.params.trackedpoint = "Thoracic1"
             self.model_changedH2617()
 
     def model_changed(self):
         if self.lightweightMode.isChecked():
-            self.params.mode = "lightweight"
+            self.params.pose2d_kwargs.mode = "lightweight"
         elif self.balancedMode.isChecked():
-            self.params.mode = "balanced"
+            self.params.pose2d_kwargs.mode = "balanced"
         elif self.performanceMode.isChecked():
-            self.params.mode = "performance"
+            self.params.pose2d_kwargs.mode = "performance"
         else:
-            raise ValueError("Unknown model")
+            raise ValueError("Unknown mode")
 
     def model_changedH2617(self):
         if self.lightweightMode17.isChecked():
-            self.params.mode = "lightweight"
+            self.params.pose2d_kwargs.mode = "lightweight"
         elif self.balancedMode17.isChecked():
-            self.params.mode = "balanced"
+            self.params.pose2d_kwargs.mode = "balanced"
         elif self.performanceMode17.isChecked():
-            self.params.mode = "performance"
+            self.params.pose2d_kwargs.mode = "performance"
         else:
-            raise ValueError("Unknown model")
+            raise ValueError("Unknown mode")
 
     @property
     def data(self):
