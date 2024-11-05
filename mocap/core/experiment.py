@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shutil
 from distutils.dir_util import copy_tree
@@ -24,12 +25,12 @@ from .rotation import rotate_videos, unrotate_pose2d
 
 
 class Experiment:
+    META_FILE = os.path.join(APP_PROJECTS, "db.json")
+
     def __init__(
-        self, name, create=True, monocular=False, base_dir=APP_PROJECTS
+        self, name, create=False, monocular=False, base_dir=APP_PROJECTS
     ) -> None:
         self.name = name
-        # TODO: mode should be read from database when create is False
-        self.monocular = monocular
         self.path = os.path.abspath(os.path.join(base_dir, name))
         self.config_file = os.path.join(self.path, "Config.toml")
         self.videos_dir = os.path.join(self.path, "videos")
@@ -51,10 +52,29 @@ class Experiment:
                 # Copy the default configuration file.
                 default_config = os.path.join(APP_ASSETS, "defaults", "Config.toml")
                 shutil.copy(default_config, self.config_file)
+
+                # Add the project to the database.
+                experiments = Experiment.list()
+                exp_type = "monocular" if monocular else "multiview"
+                experiments.append({"name": name, "type": exp_type})
+                with open(Experiment.META_FILE, "w") as f:
+                    json.dump(experiments, f)
             except Exception:
                 raise ValueError(f"Project '{name}' already exists.")
         elif not os.path.exists(self.config_file):
             raise ValueError(f"Project '{name}' is missing configuration file.")
+        else:
+            # Find experiment in the database
+            experiments = Experiment.list()
+            experiment = next((e for e in experiments if e["name"] == name), None)
+            if experiment is None:
+                raise ValueError(f"Project '{name}' not found.")
+
+            # Set the project directories
+            self._makedirs(exist_ok=True)
+
+            # Set monoocular flag
+            self.monocular = experiment.get("type", "multiview") == "monocular"
 
         # Read the configuration file.
         self.cfg = toml.load(self.config_file)
@@ -62,18 +82,14 @@ class Experiment:
 
     @staticmethod
     def list():
-        if os.path.exists(os.path.join(APP_PROJECTS, "experiments.json")):
-            with open(os.path.join(APP_PROJECTS, "experiments.json")) as f:
-                data = json.load(f)
-            return sorted(data["experiments"], key=lambda x: x["name"])
-        return []
-        return sorted(
-            [
-                name
-                for name in os.listdir(APP_PROJECTS)
-                if os.path.isdir(os.path.join(APP_PROJECTS, name))
-            ],
-        )
+        if not os.path.exists(Experiment.META_FILE):
+            with open(Experiment.META_FILE, "w") as f:
+                json.dump([], f)
+
+        with open(Experiment.META_FILE) as f:
+            db = json.load(f)
+
+        return sorted(db, key=lambda x: x["name"])
 
     @staticmethod
     def open(name):
@@ -87,8 +103,8 @@ class Experiment:
             base_dir=os.path.dirname(path),
         )
 
-    def _makedirs(self):
-        os.makedirs(self.path)
+    def _makedirs(self, exist_ok=False):
+        os.makedirs(self.path, exist_ok=exist_ok)
         os.makedirs(self.videos_dir, exist_ok=True)
         os.makedirs(self.pose2d_dir, exist_ok=True)
         os.makedirs(self.pose3d_dir, exist_ok=True)
@@ -188,7 +204,7 @@ class Experiment:
             if not os.path.exists(rotated_dir):
                 rotate_videos(self.videos, rotated_dir, self.calibration_file)
             else:
-                print("Rotated videos already exist. Skipping rotation...")
+                logging.info("Rotated videos already exist. Skipping rotation...")
 
             # Rename the videos directories to use the rotated videos
             if os.path.exists(self.videos_dir) and os.path.exists(rotated_dir):
@@ -201,7 +217,7 @@ class Experiment:
         overwrite = False
 
         # Execute the 2D pose estimation
-        print("Executing 2D pose estimatioan...")
+        logging.info("Executing 2D pose estimatioan...")
         res_w, res_h = 0, 0
         if engine == "Pose2Sim":
             PoseTracker2D.estimateDefault()
@@ -229,12 +245,12 @@ class Experiment:
             os.rename(self.videos_dir, self.videos_dir + "_rotated")
             os.rename(self.videos_dir + "_original", self.videos_dir)
 
-            print("Rotating 2D poses back...")
+            logging.info("Rotating 2D poses back...")
             unrotate_pose2d(self.pose2d_dir, self.calibration_file)
 
         # 2D-to-3D Lifting in Monocular Mode
         if mode == "monocular":
-            print("Lifting 2D poses to 3D...")
+            logging.info("Lifting 2D poses to 3D...")
             if lifting_model == "Baseline":
                 if res_w == 0 or res_h == 0:
                     raise ValueError(
@@ -245,19 +261,23 @@ class Experiment:
                 model_path = os.path.join(
                     APP_ASSETS, "models", "lifting", "baseline.onnx"
                 )
-                lift_to_3d(model_path, self.pose2d_dir, self.pose3d_dir, res_w, res_h)
+                video_pose_dir = os.path.join(
+                    self.pose2d_dir,
+                    os.path.basename(self.videos[0]).split(".")[0] + "_json",
+                )
+                lift_to_3d(model_path, video_pose_dir, self.pose3d_dir, res_w, res_h)
             else:
                 raise ValueError(f"Unsupported lifting model '{lifting_model}'")
 
         # Triangulation in Multiview Mode
         else:
-            print("Triangulating 2D poses to 3D...")
+            logging.info("Triangulating 2D poses to 3D...")
             Pose2Sim.calibration()
             try:
                 # Pose2Sim.synchronization()
                 Pose2Sim.personAssociation()
             except Exception as e:
-                print(e)
+                logging.error(e)
                 raise e
             Pose2Sim.triangulation()
             Pose2Sim.filtering()
@@ -308,6 +328,7 @@ class Experiment:
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         if self.monocular:
+            logging.info("Rendering monocular motion sequence...")
             motion_data = MotionSequence.from_monocular_json(motion_file, fps)
             renderer = StickFigureRenderer(
                 motion_data,
@@ -318,6 +339,7 @@ class Experiment:
                 vertical_axis="y",
             )
         else:
+            logging.info("Rendering multiview motion sequence...")
             motion_data = MotionSequence.from_pose2sim_trc(motion_file, skeleton)
             renderer = StickFigureRenderer(motion_data, animation_file)
         renderer.render(fps=fps)

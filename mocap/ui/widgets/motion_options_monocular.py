@@ -45,7 +45,7 @@ class ModelSelection(QWidget):
         def callback_wrapper():
             selected_model = self.modelComboBox.currentText()
             self.cfg.model = selected_model
-            callback(selected_model)
+            callback()
 
         self.modelComboBox.currentIndexChanged.connect(callback_wrapper)
 
@@ -198,7 +198,7 @@ class MotionOptionsMonocular(QWidget):
         self.download_button.setEnabled(status)
 
     def onVisualizationsCreated(self, status, result):
-        print("Saving visualizations:", status, result)
+        pass
 
     def model_changed(self):
         selected_model = self.model_selection.modelComboBox.currentText()

@@ -1,6 +1,3 @@
-import json
-import os
-
 from PyQt6.QtWidgets import (
     QButtonGroup,
     QDialog,
@@ -12,7 +9,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
-from mocap.constants import APP_PROJECTS
 from mocap.core import Experiment
 
 
@@ -90,26 +86,12 @@ class CreateExperimentDialog(QDialog):
     def create_experiment(self):
         experiment_name = self.experiment_name.text().strip()
         pose2Sim = self.pose2Sim.isChecked()
-        experiments = {"experiments": []}
-        if os.path.exists(os.path.join(APP_PROJECTS, "experiments.json")):
-            print("File exists", os.path.join(APP_PROJECTS, "experiments.json"))
-            with open(os.path.join(APP_PROJECTS, "experiments.json")) as f:
-                experiments = json.load(f)
-        try:
-            if experiment_name == "":
-                raise Exception("Experiment name cannot be empty.")
-            if pose2Sim:
-                estim_type = "pose2sim"
-                Experiment(name=experiment_name, create=True)
-            else:
-                estim_type = "monocular"
-                Experiment(name=experiment_name, create=True, monocular=True)
-            experiments["experiments"].append(
-                {"name": experiment_name, "est_type": estim_type},
-            )
-            with open(os.path.join(APP_PROJECTS, "experiments.json"), "w") as f:
-                json.dump(experiments, f, indent=4)
-            self.accept()
-        except Exception as e:
-            print("error")
-            self.error_message.setText(str(e))
+        if experiment_name == "":
+            raise Exception("Experiment name cannot be empty.")
+
+        if pose2Sim:
+            Experiment(name=experiment_name, create=True)
+        else:
+            Experiment(name=experiment_name, create=True, monocular=True)
+
+        self.accept()

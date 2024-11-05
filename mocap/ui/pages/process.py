@@ -193,11 +193,11 @@ class ProcessingPage(BasePage):
 
     def showExperiment(self, name, est_type):
         try:
-            if est_type == "pose2sim":
+            if est_type == "multiview":
                 self.motionOptions.params.experiment_name = name
                 self.visualizationOptions.params.experiment_name = name
                 self.visualizationOptions.opensim_config.experiment_name = name
-                self.experiment = Experiment(name, create=False)
+                self.experiment = Experiment.open(name)
                 self.experimentDataView.setExperiment(self.experiment)
                 self.experimentDataView.videoUploader.previewSelected(
                     self.experiment.videos,
@@ -217,11 +217,11 @@ class ProcessingPage(BasePage):
                 self.logs_view.start_log_streaming(self.experiment.log_file)
             else:
                 self.motionOptionsMonocular.cfg.experiment_name = name
-                self.experiment = Experiment(name, create=False, monocular=True)
+                self.motionOptionsMonocular.visualize_cfg.experiment_name = (
+                    name  # FIXME: This is a hack
+                )
+                self.experiment = Experiment.open(name)
                 self.experimentDataViewMonocular.setExperiment(self.experiment)
-                # self.experimentDataViewMonocular.videoUploader.previewSelected(
-                #     self.experiment.videos,
-                # )
                 hasMotionData = self.experiment.get_motion_file() is not None
                 self.motionOptionsMonocular.estimate_button.setEnabled(
                     not hasMotionData,
@@ -234,13 +234,15 @@ class ProcessingPage(BasePage):
             self.log(f"Loaded experiment: {self.experiment}")
 
             self.emptyState.hide()
-            if est_type == "pose2sim":
+            if est_type == "multiview":
                 self.experimentMonocularUI.hide()
                 self.experimentUI.show()
             else:
                 self.experimentUI.hide()
                 self.experimentMonocularUI.show()
-            # self.experimentUI.show()
 
         except Exception as e:
-            print(e)
+            self.experimentUI.hide()
+            self.experimentMonocularUI.hide()
+            self.emptyState.show()
+            self.showAlert(str(e), "Failed to load experiment")

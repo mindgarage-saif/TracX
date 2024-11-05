@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -50,6 +51,8 @@ class TaskRunner(QObject):
 
         try:
             # Execute the task and capture the result
+            logging.info(f"Running task: {self.task_instance}")
+            logging.debug(f"Task arguments: {self.task_args}, {self.task_kwargs}")
             result = self.task_instance.execute(*self.task_args, **self.task_kwargs)
             self.finished.emit(True, result)
         except Exception as e:

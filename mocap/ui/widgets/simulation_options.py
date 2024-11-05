@@ -17,7 +17,6 @@ from .frame import Frame
 class SimulationOptions(Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.params = VisualizeTaskConfig()
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
         self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
@@ -74,6 +73,7 @@ class SimulationOptions(Frame):
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 
         # Create Button
+        self.params = VisualizeTaskConfig()
         self.createButton = VisualizeMotionButton(
             self.params,
             self.onVisualizationsCreated,
@@ -97,4 +97,4 @@ class SimulationOptions(Frame):
         pass
 
     def saveVisualizations(self, status, result):
-        print("Saving visualizations:", status, result)
+        pass

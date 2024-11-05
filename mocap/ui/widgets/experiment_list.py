@@ -31,7 +31,6 @@ class ExperimentList(QListWidget):
         self.clear()
         for exp in self.experiments:
             item = QListWidgetItem(self)
-            print(exp)
-            item.setData(0x0100, exp["est_type"])
+            item.setData(0x0100, exp["type"])
             item.setText(exp["name"])
             self.addItem(item)

@@ -12,7 +12,7 @@ def create_experiment(
 ) -> Experiment:
     # Create or load the experiment.
     experiment_name = experiment_name or strftime("%Y%m%d_%H%M%S")
-    experiment = Experiment(experiment_name)
+    experiment = Experiment(experiment_name, create=True, monocular=False)
 
     # Add the video files.
     for video_file in video_files:
@@ -66,7 +66,7 @@ def execute_pipeline(
         )
         print(f"Created {experiment} with {experiment.num_videos} video(s)")
     else:
-        experiment = Experiment(experiment_name, create=False)
+        experiment = Experiment.open(experiment_name)
         print(
             f"Loaded experiment '{experiment.name}' with {experiment.num_videos} video(s)",
         )

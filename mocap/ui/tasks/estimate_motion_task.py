@@ -84,7 +84,7 @@ class EstimateMotionTask(BaseTask):
         )
 
         # Initialize experiment
-        experiment = Experiment(experiment_name, create=False)
+        experiment = Experiment.open(experiment_name)
         logging.info("Experiment configuration:")
         logging.info(f"{json.dumps(experiment.cfg)}")
         logging.debug(f"Experiment has {experiment.num_videos} video(s)")

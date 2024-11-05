@@ -1,3 +1,5 @@
+import logging
+
 from mocap.core import Experiment
 
 from .base_task import BaseTask, TaskConfig
@@ -25,21 +27,21 @@ class VisualizeMotionTask(BaseTask):
     def __init__(self, config: VisualizeTaskConfig):
         super().__init__(config)
 
-    def execute(self):
+    def _execute_impl(self):
         # Read task configuration
         experiment_name = self.config.experiment_name
         visualization_mode = self.config.visualization_mode
         visualization_args = self.config.visualization_args
 
         if experiment_name is None:
-            return None
+            raise ValueError("Experiment name is required for visualization")
 
-        print("Visualizing 3D motion...")
+        logging.info("Visualizing 3D motion...")
         experiment = Experiment(experiment_name, create=False)
         result = experiment.visualize(
             mode=visualization_mode,
             **visualization_args,
         )
 
-        print("Pipeline execution complete.")
+        logging.info("Pipeline execution complete.")
         return result
