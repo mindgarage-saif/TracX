@@ -197,18 +197,18 @@ class MotionOptions(Frame):
         self.params.use_marker_augmentation, self.markerAugmentationCheckbox.isChecked()
 
     def toggle_pose_model(self, index):
-        if index == 0:
-            self.modelH26Widget.setVisible(True)
-            self.modelH2617Widget.setVisible(False)
-            self.params.pose2d_model = PoseModel.HALPE_26
-            self.params.trackedpoint = "Neck"
-            self.model_changed()
-        else:
-            self.modelH26Widget.setVisible(False)
-            self.modelH2617Widget.setVisible(True)
-            self.params.pose2d_model = PoseModel.DFKI_BODY43
-            self.params.trackedpoint = "Thoracic1"
-            self.model_changedH2617()
+        self.params.pose2d_model = PoseModel._member_names_[index]
+        # if index == 0:
+        #     self.modelH26Widget.setVisible(True)
+        #     self.modelH2617Widget.setVisible(False)
+        #     self.params.trackedpoint = "Neck"
+        #     self.model_changed()
+        # else:
+        #     self.modelH26Widget.setVisible(False)
+        #     self.modelH2617Widget.setVisible(True)
+        #     self.params.pose2d_model = PoseModel.DFKI_BODY43
+        #     self.params.trackedpoint = "Thoracic1"
+        #     self.model_changedH2617()
 
     def model_changed(self):
         if self.lightweightMode.isChecked():

@@ -31,4 +31,4 @@ class EstimateMotionTask(BaseTask):
 
         # Estimate motion
         logging.info("Estimating motion...")
-        experiment.process(**cfg)
+        experiment.process(cfg)

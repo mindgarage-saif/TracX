@@ -179,6 +179,7 @@ class Experiment:
         os.chdir(self.path)
 
         # Update the configuration file with selected settings
+        cfg = edict(cfg)
         if cfg.engine == Engine.POSE2SIM:
             pose2d_mode = cfg.pose2d_kwargs.get("mode", "lightweight")
             self.change_config(
