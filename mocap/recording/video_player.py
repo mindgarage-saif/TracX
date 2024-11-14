@@ -7,13 +7,16 @@ from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 
 class VideoPlayer(QObject):
+    frame = pyqtSignal(object)
+    progress = pyqtSignal(
+        float, float
+    )  # current time, current progress (time/duration)
     finished = pyqtSignal()
 
-    def __init__(self, view):
+    def __init__(self):
         super().__init__()
         self._source = None
         self._video = None
-        self._view = view
 
         # Video metadata
         self.frame_rate = -1
@@ -47,7 +50,7 @@ class VideoPlayer(QObject):
         # Show the first frame
         ret, frame = self._video.read()
         if ret:
-            self._view.showFrame(frame)
+            self.frame.emit(frame)
 
         # Update metadata
         self.updateMetadata()
@@ -96,7 +99,7 @@ class VideoPlayer(QObject):
         self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)
         ret, frame = self._video.read()
         if ret:
-            self._view.showFrame(frame)
+            self.frame.emit(frame)
 
     def pause(self):
         self.paused = True
@@ -109,22 +112,30 @@ class VideoPlayer(QObject):
         self.paused = False
 
     def _start_stream(self):
-        while self.running:
-            if self.paused:
-                time.sleep(0.1)
-                continue
-
-            ret, frame = self._video.read()
-            if not ret:
-                if self.loop:
-                    self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restart video
+        try:
+            while self.running:
+                if self.paused:
+                    time.sleep(0.1)
                     continue
-                break
 
-            self._view.showFrame(frame)
+                ret, frame = self._video.read()
+                if not ret:
+                    if self.loop:
+                        self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restart video
+                        continue
+                    break
 
-            # Sleep to match the frame rate
-            time.sleep(1 / self.frame_rate)
+                # Emit the frame signal
+                self.frame.emit(frame)
+
+                # Emit the progress signal
+                current_time = self._video.get(cv2.CAP_PROP_POS_MSEC) / 1000
+                self.progress.emit(current_time, current_time / self.duration)
+
+                # Sleep to match the frame rate
+                time.sleep(1 / self.frame_rate)
+        except Exception as e:
+            pass
 
         self.stop()
 

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def resize_with_padding(image: np.ndarray, target_size: Tuple[int, int]) -> np.ndarray:
-    h, w, c = image.shape
+    h, w, _ = image.shape
     target_h, target_w = target_size
 
     # Resize image to fit in target size while maintaining aspect ratio
@@ -41,23 +41,25 @@ class CameraView(QLabel):
 
     def __init__(self, size, flip=True):
         super().__init__()
-        self.size = size
+        self.setStyleSheet("background-color: #000000;")
+        self.previewSize = size
         self.flip = flip
-        # self.resize(*size)
+        self.resize(*size)
         self.clear()
 
-        # Frame size and padding
-        # (used for converting mouse coordinates to image coordinates)
-        self.frame_size = size
-        self.frame_pad = (0, 0, 0, 0)
+        # Last frame (for resizing)
+        self.frame = None
+
+    def resizeEvent(self, event):
+        self.showFrame(self.frame)
 
     def showFrame(self, frame: np.ndarray):
         try:
+            self.frame = frame
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = cv2.flip(frame, 1) if self.flip else frame
-            self.frame_size = frame.shape[:2]
-            frame, pad = resize_with_padding(frame, self.size)
-            self.frame_pad = pad
+            size = self.size().height(), self.size().width()
+            frame, pad = resize_with_padding(frame, size)
             h, w, ch = frame.shape
             bytes_per_line = ch * w
             convert_to_Qt_format = QImage(

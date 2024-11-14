@@ -76,16 +76,15 @@ class CreateExperimentDialog(QDialog):
 
         def update_slug():
             text = self.experiment_name.text()
-            text = text.lower().replace(" ", "-")
-            text = text.lower().replace("_", "-")
-            text = text.replace("--", "-")
+            text = text.upper().replace(" ", "_").replace("-", "_")
+            text = text.replace("__", "_")
 
             # Remove any characters that are not allowed
-            allow_chars = "abcdefghijklmnopqrstuvwxyz-0123456789"
+            allow_chars = "abcdefghijklmnopqrstuvwxyz_0123456789".upper()
             text = "".join([c for c in text if c in allow_chars])
 
-            if len(text) > 20:
-                text = text[:20]
+            if len(text) > 30:
+                text = text[:30]
 
             self.experiment_name.setText(text)
 
@@ -97,7 +96,7 @@ class CreateExperimentDialog(QDialog):
         # hint about size and allowed characters unique name
         self.hint = QLabel(self)
         self.hint.setText(
-            "Experiment name must be unique and contain 3-20 characters. Only letters, numbers and hyphens are allowed.",
+            "Experiment name must be unique and contain 3-30 characters. Only letters, numbers and hyphens are allowed.",
         )
         self.hint.setProperty("class", "body")
         self.hint.setWordWrap(True)
