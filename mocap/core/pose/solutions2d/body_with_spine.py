@@ -16,7 +16,11 @@ class BodyWithSpine:
             "det": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_x_8xb8-300e_humanart-a39d44ed.zip",
             "det_input_size": (640, 640),
             "pose": os.path.join(
-                APP_ASSETS, "assets/models/3D/DFKI_Body43/rtmpose-l_body43-384x288.onnx"
+                APP_ASSETS,
+                "models",
+                "3D",
+                "DFKI_Body43",
+                "rtmpose-l_body43-384x288.onnx",
             ),
             "pose_input_size": (288, 384),
         },

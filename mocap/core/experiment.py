@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import shutil
+from datetime import datetime
 from distutils.dir_util import copy_tree
 from typing import Optional
 
@@ -29,7 +30,13 @@ class Experiment:
     META_FILE = os.path.join(APP_PROJECTS, "db.json")
 
     def __init__(
-        self, name, create=False, monocular=False, base_dir=APP_PROJECTS
+        self,
+        name,
+        create=False,
+        monocular=False,
+        multi_person=False,
+        is_2d=False,
+        base_dir=APP_PROJECTS,
     ) -> None:
         self.name = name
         self.path = os.path.abspath(os.path.join(base_dir, name))
@@ -47,46 +54,55 @@ class Experiment:
 
         if create:
             try:
+                # Set the experiment flags
+                self.monocular = monocular
+                self.multi_person = multi_person
+                self.is_2d = is_2d
+
                 # Create the project directories.
                 self._makedirs()
 
-                # Copy the default configuration file.
-                default_config = os.path.join(APP_ASSETS, "defaults", "Config.toml")
-                shutil.copy(default_config, self.config_file)
-
-                # Add the project to the database.
-                experiments = Experiment.list()
-                exp_type = (
-                    ExperimentMode.MONOCULAR if monocular else ExperimentMode.MULTIVIEW
-                )
-                experiments.append({"name": name, "type": exp_type.name.lower()})
-                with open(Experiment.META_FILE, "w") as f:
-                    json.dump(experiments, f)
+                # Save the metadata
+                self.save_metadata()
             except Exception:
-                raise ValueError(f"Project '{name}' already exists.")
+                raise ValueError(f"Experiment with name '{name}' already exists.")
         else:
             # Find experiment in the database
             experiments = Experiment.list()
             experiment = next((e for e in experiments if e["name"] == name), None)
             if experiment is None:
-                raise ValueError(f"Project '{name}' not found.")
+                raise ValueError(f"No experiment with name '{name}' found.")
+
+            # Read flags
+            self.monocular = experiment.get("monocular", False)
+            self.is_2d = experiment.get("is_2d", False)
+            self.multi_person = experiment.get("multi_person", False)
+            self.created_at = experiment.get("created_at", None)
 
             # Set the project directories
             self._makedirs(exist_ok=True)
 
-            # Set monoocular flag
-            self.monocular = (
-                experiment.get("type", None) == ExperimentMode.MONOCULAR.name.lower()
-            )
-
-            if not os.path.exists(self.config_file):
-                # Copy the default configuration file.
-                default_config = os.path.join(APP_ASSETS, "defaults", "Config.toml")
-                shutil.copy(default_config, self.config_file)
-
         # Read the configuration file.
         self.cfg = toml.load(self.config_file)
         self.cfg = edict(self.cfg)
+
+    def save_metadata(self):
+        metadata = Experiment.list()
+        if any(m["name"] == self.name for m in metadata):
+            return
+
+        metadata.append(
+            {
+                "name": self.name,
+                "monocular": self.monocular,
+                "is_2d": self.is_2d,
+                "multi_person": self.multi_person,
+                "created_at": str(datetime.now()),
+            }
+        )
+
+        with open(Experiment.META_FILE, "w") as f:
+            json.dump(metadata, f)
 
     @staticmethod
     def list():
@@ -97,7 +113,20 @@ class Experiment:
         with open(Experiment.META_FILE) as f:
             db = json.load(f)
 
-        return sorted(db, key=lambda x: x["name"])
+        # Read metadata
+        metadata = []
+        for exp in sorted(db, key=lambda x: x["name"]):
+            metadata.append(
+                {
+                    "name": exp["name"],
+                    "monocular": exp.get("monocular", False),
+                    "is_2d": exp.get("is_2d", False),
+                    "multi_person": exp.get("multi_person", False),
+                    "created_at": exp.get("created_at", None),
+                }
+            )
+
+        return metadata
 
     @staticmethod
     def open(name):
@@ -113,12 +142,30 @@ class Experiment:
         )
 
     def _makedirs(self, exist_ok=False):
+        # Create the project directories.
         os.makedirs(self.path, exist_ok=exist_ok)
         os.makedirs(self.videos_dir, exist_ok=True)
         os.makedirs(self.pose2d_dir, exist_ok=True)
-        os.makedirs(self.pose3d_dir, exist_ok=True)
         os.makedirs(self.output_dir, exist_ok=True)
-        os.makedirs(self.calibration_dir, exist_ok=True)
+        if not self.is_2d:
+            os.makedirs(self.pose3d_dir, exist_ok=True)
+        if not self.monocular:
+            os.makedirs(self.calibration_dir, exist_ok=True)
+
+        # Copy the default configuration file.
+        if not os.path.exists(self.config_file):
+            self.copy_default_config()
+
+    def copy_default_config(self):
+        if self.is_2d:
+            default_config = os.path.join(
+                APP_ASSETS, "defaults", "Config_Sports2D.toml"
+            )
+        else:
+            default_config = os.path.join(
+                APP_ASSETS, "defaults", "Config_Pose2Sim.toml"
+            )
+        shutil.copy(default_config, self.config_file)
 
     @property
     def videos(self) -> list:
@@ -278,6 +325,9 @@ class Experiment:
         os.chdir(cwd)
 
     def get_motion_file(self) -> Optional[str]:
+        if self.is_2d:
+            return None
+        # 3D Monocular
         if self.monocular:
             pose_3d = [
                 f for f in os.listdir(self.pose3d_dir) if f.endswith("data.json")
@@ -285,6 +335,8 @@ class Experiment:
             if len(pose_3d) == 0:
                 return None
             return os.path.join(self.pose3d_dir, pose_3d[0])
+
+        # 3D Multiview
         trc_files = [
             f
             for f in os.listdir(self.pose3d_dir)

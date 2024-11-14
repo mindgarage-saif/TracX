@@ -1,5 +1,6 @@
 import locale
 import logging
+import os
 import signal
 import sys
 from logging.handlers import RotatingFileHandler
@@ -8,8 +9,8 @@ from colorlog import ColoredFormatter
 from PyQt6.QtWidgets import QApplication
 from qt_material import apply_stylesheet
 
-from .constants import APP_NAME, create_directories
-from .ui.studio import StudioWindow
+from .constants import APP_ASSETS, APP_NAME, create_directories
+from .ui.window import StudioWindow
 
 
 class Studio(QApplication):
@@ -68,7 +69,11 @@ def main():
     # Create the application and run it
     logger.info("Starting the application")
     studio = Studio()
-    apply_stylesheet(studio, theme="dark_purple.xml", css_file="assets/styles/app.css")
+    apply_stylesheet(
+        studio,
+        theme="dark_purple.xml",
+        css_file=os.path.join(APP_ASSETS, "styles", "app.css"),
+    )
     studio.run()
 
 
