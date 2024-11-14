@@ -34,6 +34,10 @@ class VideoPlayer(QObject):
         self.thread = QThread()
         self.moveToThread(self.thread)
 
+    @property
+    def isWebcam(self):
+        return isinstance(self._source, int)
+
     def setVideoSource(self, video_source):
         # Check that source is a valid video file
         if isinstance(video_source, str) and not os.path.exists(video_source):
@@ -59,6 +63,13 @@ class VideoPlayer(QObject):
         self.running = False
         self.paused = False
 
+        # Relase the source
+        self._video.release()
+
+        # Auto-start webcams
+        if self.isWebcam:
+            self.start()
+
     def updateMetadata(self):
         self.frame_rate = self._video.get(cv2.CAP_PROP_FPS)
         self.duration = self._video.get(cv2.CAP_PROP_FRAME_COUNT) / self.frame_rate
@@ -68,8 +79,11 @@ class VideoPlayer(QObject):
         )
 
     def start(self):
-        if self.running or self._video is None:
+        if self.running or self._source is None:
             return
+
+        # Acquire the source
+        self._video = cv2.VideoCapture(self._source)
 
         # Connect thread signals
         self.thread.started.connect(self._start_stream)
@@ -85,7 +99,7 @@ class VideoPlayer(QObject):
             self.thread.start()
 
     def stop(self):
-        if not self.running:
+        if not self.running or self._video is None:
             return
 
         # Reset lifecycle flags
@@ -96,10 +110,13 @@ class VideoPlayer(QObject):
         self.finished.emit()
 
         # Reset the video preview
-        self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        ret, frame = self._video.read()
-        if ret:
-            self.frame.emit(frame)
+        if self.isWebcam and self._video.isOpened():
+            self._video.release()
+        else:
+            self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            ret, frame = self._video.read()
+            if ret:
+                self.frame.emit(frame)
 
     def pause(self):
         self.paused = True
@@ -129,11 +146,12 @@ class VideoPlayer(QObject):
                 self.frame.emit(frame)
 
                 # Emit the progress signal
-                current_time = self._video.get(cv2.CAP_PROP_POS_MSEC) / 1000
-                self.progress.emit(current_time, current_time / self.duration)
+                if not self.isWebcam:
+                    current_time = self._video.get(cv2.CAP_PROP_POS_MSEC) / 1000
+                    self.progress.emit(current_time, current_time / self.duration)
 
-                # Sleep to match the frame rate
-                time.sleep(1 / self.frame_rate)
+                    # Sleep to match the frame rate
+                    time.sleep(1 / self.frame_rate)
         except Exception as e:
             pass
 

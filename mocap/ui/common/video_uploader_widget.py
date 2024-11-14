@@ -33,7 +33,7 @@ class VideoUploaderWidget(QFrame):
 
         self.setObjectName("DragDropWidget")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setMinimumHeight(600)
+        self.setMinimumHeight(400)
         self.setAcceptDrops(True)
         self.min_num_videos = minNumVideos
         self.num_max_videos = numMaxVideos
@@ -44,7 +44,7 @@ class VideoUploaderWidget(QFrame):
         self.label.setProperty("class", "body")
         self.label.setWordWrap(True)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label.setMinimumHeight(600)
+        self.label.setMinimumHeight(400)
         layout.addWidget(self.label)
 
         self.gallery = VideoGallery(self)

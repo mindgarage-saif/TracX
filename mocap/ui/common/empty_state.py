@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional, Union
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
@@ -11,7 +11,7 @@ class EmptyState(QWidget):
         parent: QWidget,
         icon: str,
         label: str,
-        action: Optional[str] = None,
+        action: Optional[Union[List[str], str]] = None,
         size=300,
     ) -> None:
         super().__init__(parent)
@@ -41,14 +41,23 @@ class EmptyState(QWidget):
         self.label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
         layout.addWidget(self.label)
 
-        if action:
-            self.action = QPushButton(action, self)
-            self.action.setSizePolicy(
-                QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
-            )
-            layout.addWidget(self.action, alignment=Qt.AlignmentFlag.AlignCenter)
+        if isinstance(action, str):
+            action = [action]
+
+        self.action = []
+        if action is not None:
+            for act in action:
+                button = QPushButton(act, self)
+                button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+                layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
+                self.action.append(button)
 
         layout.addStretch()
 
     def setCallback(self, callback):
-        self.action.clicked.connect(callback)
+        if not isinstance(callback, list):
+            callback = [callback]
+
+        assert len(callback) == len(self.action)
+        for act, fn in zip(self.action, callback):
+            act.clicked.connect(fn)

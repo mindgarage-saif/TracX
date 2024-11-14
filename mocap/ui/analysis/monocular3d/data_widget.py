@@ -26,8 +26,8 @@ class ExperimentDataWidget(Frame):
         self.noCamerasLabel = EmptyState(
             self,
             "assets/empty-state/no-camera-selected.png",
-            "Upload a video to estimate 3D human poses",
-            action="Upload Video",
+            "Get started with markerless motion analysis",
+            action=["Start Webcam", "Upload a Video"],
             size=512,
         )
         self.noCamerasLabel.setSizePolicy(
@@ -42,7 +42,12 @@ class ExperimentDataWidget(Frame):
         self.videoUploader.hide()
 
         # Delegate click event to the video uploader
-        self.noCamerasLabel.setCallback(self.videoUploader.mousePressEvent)
+        self.noCamerasLabel.setCallback(
+            [
+                self.startWebcam,
+                self.videoUploader.mousePressEvent,
+            ]
+        )
 
         # Create a video player widget
         self.videoPlayer = VideoPlayerWidget(self)
@@ -50,6 +55,11 @@ class ExperimentDataWidget(Frame):
         self.videoPlayer.hide()
 
         self.onUpdate = lambda status: None
+
+    def startWebcam(self):
+        self.videoPlayer.setVideoSource(0)
+        self.videoPlayer.show()
+        self.noCamerasLabel.hide()
 
     def setExperiment(self, experiment):
         """Set the experiment object.
