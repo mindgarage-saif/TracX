@@ -2,22 +2,30 @@ import os
 
 import cv2
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QImage, QPainter, QPixmap
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 
-class VideoPreview(QWidget):
+class VideoGalleryItem(QFrame):
     clicked = pyqtSignal(str)
 
-    def __init__(self, parent, path: str, thumbnail_size: int = 150):
+    def __init__(self, parent, path: str, item_height: int = 64):
         super().__init__(parent)
         self.path = path
-        self.thumbnail_size = thumbnail_size
+        self.thumbnail_size = item_height
 
         # Create layout
         self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(16, 16, 16, 16)
-        self.layout.setSpacing(16)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(0)
+
+        self.emptyFrame = QFrame(self)
+        self.emptyFrame.setProperty("class", "video-gallery-item")
+        self.emptyFrame.setFixedHeight(item_height + 16)
+        self.innerLayout = QHBoxLayout(self.emptyFrame)
+        self.innerLayout.setContentsMargins(8, 8, 8, 8)
+        self.innerLayout.setSpacing(16)
+        self.layout.addWidget(self.emptyFrame)
 
         # Create and set up labels
         self.thumbnail_label = QLabel(self)
@@ -28,19 +36,18 @@ class VideoPreview(QWidget):
         self.info_layout.setSpacing(0)
 
         self.filename_label = QLabel(self)
+        self.fileinfo_label = QLabel(self)
         self.info_layout.addWidget(self.filename_label)
+        self.info_layout.addWidget(self.fileinfo_label)
         self.info_layout.addStretch()
 
         # Add labels to layout
-        self.layout.addWidget(self.thumbnail_label)
-        self.layout.addWidget(self.info_widget)
-        self.layout.addStretch()
+        self.innerLayout.addWidget(self.thumbnail_label)
+        self.innerLayout.addWidget(self.info_widget)
+        self.innerLayout.addStretch()
 
         # Create video thumbnail and display
         self.create_thumbnail()
-
-        # Display video file name
-        self.display_filename()
 
         # Connect signals
         self.thumbnail_label.mousePressEvent = self.mousePressEvent
@@ -85,27 +92,18 @@ class VideoPreview(QWidget):
             )
             pixmap = QPixmap.fromImage(q_img)
 
-            # Superimpose metadata on the thumbnail
-            thumbnail_with_text = pixmap.copy()
-            painter = QPainter(thumbnail_with_text)
-            painter.setFont(QFont("Arial", 10))
-            painter.setPen(Qt.GlobalColor.white)
-            painter.drawText(10, 20, f"{width}x{height} px")
-            painter.drawText(10, 40, f"Duration: {duration:.2f}s")
-            painter.drawText(10, 60, f"FPS: {fps:.2f}")
-            painter.end()
-
             # Set the thumbnail pixmap
-            self.thumbnail_label.setPixmap(thumbnail_with_text)
+            self.thumbnail_label.setPixmap(pixmap)
             self.thumbnail_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-    def display_filename(self):
         # Extract the base name of the video file
         filename = os.path.basename(self.path)
         self.filename_label.setText(filename)
         self.filename_label.setStyleSheet(
             "color: white; font-size: 12px; font-weight: bold;"
         )
+
+        self.fileinfo_label.setText(f"{width}x{height}\n{duration:.2f}s\n{fps:.2f} FPS")
 
     def deleteLater(self):
         self.thumbnail_label.deleteLater()

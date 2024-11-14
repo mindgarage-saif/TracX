@@ -41,7 +41,6 @@ class CameraView(QLabel):
 
     def __init__(self, size, flip=True):
         super().__init__()
-        self.setStyleSheet("background-color: #000000;")
         self.previewSize = size
         self.flip = flip
         self.resize(*size)

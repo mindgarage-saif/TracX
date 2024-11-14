@@ -9,8 +9,8 @@ from .radio_group import RadioGroup
 from .tabbed_area import Tab, TabbedArea
 from .task_button import BaseTaskButton
 from .video_gallery import VideoGallery
+from .video_gallery_item import VideoGalleryItem
 from .video_player_widget import VideoPlayerWidget
-from .video_preview import VideoPreview
 from .video_uploader_widget import VideoUploaderWidget
 
 __all__ = [
@@ -27,6 +27,6 @@ __all__ = [
     "TabbedArea",
     "VideoGallery",
     "VideoPlayerWidget",
-    "VideoPreview",
+    "VideoGalleryItem",
     "VideoUploaderWidget",
 ]

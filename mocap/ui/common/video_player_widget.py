@@ -54,7 +54,7 @@ class VideoPlayerWidget(QFrame):
 
         # Add a button bar with toggle play button
         buttonBar = QWidget(self)
-        buttonBar.setStyleSheet("background-color: #333")
+        buttonBar.setStyleSheet("background-color: #aaa;")
         buttonBarLayout = QHBoxLayout(buttonBar)
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -80,7 +80,7 @@ class VideoPlayerWidget(QFrame):
         self.lbl.setFixedWidth(90)
         self.lbl.setUpdatesEnabled(True)
         self.lbl.setStyleSheet(
-            "background-color: transparent; border-radius: 0px; border: 0px; color: white;"
+            "background-color: transparent; border-radius: 0px; border: 0px; color: black;"
         )
         self.lbl.selectionChanged.connect(lambda: self.lbl.setSelection(0, 0))
         buttonBarLayout.addWidget(self.lbl)
@@ -99,7 +99,7 @@ class VideoPlayerWidget(QFrame):
         self.elbl.setFixedWidth(90)
         self.elbl.setUpdatesEnabled(True)
         self.elbl.setStyleSheet(
-            "background-color: transparent; border-radius: 0px; border: 0px; color: white;"
+            "background-color: transparent; border-radius: 0px; border: 0px; color: black;"
         )
         self.elbl.selectionChanged.connect(lambda: self.elbl.setSelection(0, 0))
         buttonBarLayout.addWidget(self.elbl)

@@ -234,3 +234,19 @@ QScrollBar::sub-line:horizontal {{
 .empty {{
     background-color: transparent;
 }}
+
+.video-gallery-item {{
+    border-radius: 0px;
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
+    color: {QTMATERIAL_SECONDARYTEXTCOLOR};
+}}
+
+
+.video-gallery-item:hover {{
+    background-color: {QTMATERIAL_SECONDARYLIGHTCOLOR};
+    color: {QTMATERIAL_SECONDARYTEXTCOLOR};
+}}
+
+.video-gallery-item QWidget {{
+    background-color: transparent;
+}}
