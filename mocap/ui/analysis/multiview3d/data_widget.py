@@ -145,17 +145,17 @@ class ExperimentDataWidget(Frame):
         experimentVideos = experiment.videos
         if experimentVideos:
             self.videoUploader.previewSelected(experimentVideos)
-            self.videoUploader.setEnabled(False)
+            # self.videoUploader.setEnabled(False)
         else:
             self.videoUploader.previewSelected([])
-            self.videoUploader.setEnabled(True)
+            # self.videoUploader.setEnabled(True)
 
         cameraParameters = experiment.get_camera_parameters()
         self.updateCalibrationFile(cameraParameters)
 
         if experimentVideos and cameraParameters:
-            self.setEnabled(False)
+            # self.setEnabled(False)
             self.onUpdate(True)
         else:
-            self.setEnabled(True)
+            # self.setEnabled(True)
             self.onUpdate(False)

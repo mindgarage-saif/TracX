@@ -8,7 +8,7 @@ from .logs_widget import LogsWidget
 from .radio_group import RadioGroup
 from .tabbed_area import Tab, TabbedArea
 from .task_button import BaseTaskButton
-from .video_list import VideoList
+from .video_gallery import VideoGallery
 from .video_player_widget import VideoPlayerWidget
 from .video_preview import VideoPreview
 from .video_uploader_widget import VideoUploaderWidget
@@ -25,7 +25,7 @@ __all__ = [
     "RadioGroup",
     "Tab",
     "TabbedArea",
-    "VideoList",
+    "VideoGallery",
     "VideoPlayerWidget",
     "VideoPreview",
     "VideoUploaderWidget",

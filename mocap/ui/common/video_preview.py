@@ -1,34 +1,53 @@
 import os
 
 import cv2
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QImage, QPainter, QPixmap
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 
 class VideoPreview(QWidget):
+    clicked = pyqtSignal(str)
+
     def __init__(self, parent, path: str, thumbnail_size: int = 150):
         super().__init__(parent)
         self.path = path
         self.thumbnail_size = thumbnail_size
 
         # Create layout
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+        self.layout = QHBoxLayout(self)
+        self.layout.setContentsMargins(16, 16, 16, 16)
+        self.layout.setSpacing(16)
 
         # Create and set up labels
         self.thumbnail_label = QLabel(self)
+
+        self.info_widget = QWidget(self)
+        self.info_layout = QVBoxLayout(self.info_widget)
+        self.info_layout.setContentsMargins(0, 0, 0, 0)
+        self.info_layout.setSpacing(0)
+
         self.filename_label = QLabel(self)
+        self.info_layout.addWidget(self.filename_label)
+        self.info_layout.addStretch()
 
         # Add labels to layout
         self.layout.addWidget(self.thumbnail_label)
-        self.layout.addWidget(self.filename_label)
+        self.layout.addWidget(self.info_widget)
+        self.layout.addStretch()
 
         # Create video thumbnail and display
         self.create_thumbnail()
 
         # Display video file name
         self.display_filename()
+
+        # Connect signals
+        self.thumbnail_label.mousePressEvent = self.mousePressEvent
+        self.filename_label.mousePressEvent = self.mousePressEvent
+
+    def mousePressEvent(self, event):
+        self.clicked.emit(self.path)
 
     def create_thumbnail(self):
         # Capture the video
@@ -84,5 +103,11 @@ class VideoPreview(QWidget):
         # Extract the base name of the video file
         filename = os.path.basename(self.path)
         self.filename_label.setText(filename)
-        self.filename_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.filename_label.setFont(QFont("Arial", 12))
+        self.filename_label.setStyleSheet(
+            "color: white; font-size: 12px; font-weight: bold;"
+        )
+
+    def deleteLater(self):
+        self.thumbnail_label.deleteLater()
+        self.filename_label.deleteLater()
+        super().deleteLater()

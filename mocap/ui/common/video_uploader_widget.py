@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 
 from mocap.constants import MAX_VIDEOS, MIN_VIDEOS, SUPPORTED_VIDEO_FORMATS
 
-from .video_list import VideoList
+from .video_gallery import VideoGallery
 
 
 class VideoUploaderWidget(QFrame):
@@ -33,7 +33,7 @@ class VideoUploaderWidget(QFrame):
 
         self.setObjectName("DragDropWidget")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setFixedHeight(300)
+        self.setMinimumHeight(600)
         self.setAcceptDrops(True)
         self.min_num_videos = minNumVideos
         self.num_max_videos = numMaxVideos
@@ -44,17 +44,16 @@ class VideoUploaderWidget(QFrame):
         self.label.setProperty("class", "body")
         self.label.setWordWrap(True)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label.setFixedHeight(300)
+        self.label.setMinimumHeight(600)
         layout.addWidget(self.label)
 
-        self.preview = VideoList(self, preview_size=200)
-        self.preview.setFixedHeight(268)
-        self.preview.setSizePolicy(
+        self.gallery = VideoGallery(self)
+        self.gallery.setSizePolicy(
             QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
         )
-        self.preview.hide()
-        layout.addWidget(self.preview)
+        self.gallery.hide()
+        layout.addWidget(self.gallery)
         layout.addStretch()
 
         # Callback.
@@ -69,12 +68,12 @@ class VideoUploaderWidget(QFrame):
         """Show the list of selected files."""
         if not selectedVideos:
             self.label.show()
-            self.preview.hide()
+            self.gallery.hide()
             return
 
-        self.preview.populate_list(selectedVideos)
+        self.gallery.setItems(selectedVideos)
         self.label.hide()
-        self.preview.show()
+        self.gallery.show()
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         """Handle drag-enter event."""

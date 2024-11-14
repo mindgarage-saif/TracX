@@ -33,6 +33,7 @@ class VideoPlayerWidget(QFrame):
         self.videoSource = None
 
         # Create an inner layout for the frame
+        self.setStyleSheet("background-color: #000000;")
         self.innerLayout = QVBoxLayout(self)
         self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -53,6 +54,7 @@ class VideoPlayerWidget(QFrame):
 
         # Add a button bar with toggle play button
         buttonBar = QWidget(self)
+        buttonBar.setStyleSheet("background-color: #333")
         buttonBarLayout = QHBoxLayout(buttonBar)
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -134,7 +136,7 @@ class VideoPlayerWidget(QFrame):
     def resizeEvent(self, event):
         max_cam_w = self.size().width()
         max_cam_h = self.size().height() - 48
-        aspect_ratio = 4 / 3
+        aspect_ratio = 16 / 9
         current_aspect_ratio = max_cam_w / max_cam_h
 
         if current_aspect_ratio > aspect_ratio:
@@ -154,6 +156,11 @@ class VideoPlayerWidget(QFrame):
         self.preview.setFixedSize(cam_w, cam_h)
 
     def setVideoSource(self, video_source):
+        self.stop()
+        if video_source is None:
+            self.showEmpty()
+            return
+
         self.videoPlayer.setVideoSource(video_source)
         duration_seconds = int(self.videoPlayer.duration)
         hours, remainder = divmod(duration_seconds, 3600)
@@ -245,4 +252,14 @@ class VideoPlayerWidget(QFrame):
         )
         self.lbl.setText("00:00:00")
         self.positionSlider.setValue(0)
+        self.setFocus()
+
+    def showEmpty(self):
+        self.preview.clear()
+        self.lbl.setText("00:00:00")
+        self.elbl.setText("00:00:00")
+        self.positionSlider.setValue(0)
+        self.playButton.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
+        )
         self.setFocus()
