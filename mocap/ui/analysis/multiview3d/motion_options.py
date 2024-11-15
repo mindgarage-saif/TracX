@@ -1,18 +1,16 @@
 from PyQt6.QtWidgets import (
-    QButtonGroup,
     QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QRadioButton,
     QVBoxLayout,
     QWidget,
 )
 
 from mocap.core.configs import MotionTaskConfig
 from mocap.core.configs.base import Engine, PoseModel
-from mocap.ui.common import Frame
+from mocap.ui.common import Frame, LabeledWidget, RadioGroup
 from mocap.ui.styles import PAD_X, PAD_Y
 
 from ..buttons import EstimateMotionButton
@@ -49,95 +47,25 @@ class MotionOptions(Frame):
         heading = QLabel("Multiview Motion Estimation", self)
         heading.setProperty("class", "h1")
         self.innerLayout.addWidget(heading)
-        self.innerLayout.addSpacing(16)
+        self.innerLayout.addSpacing(8)
 
-        # Backend
-        label = QLabel("Select a Model for 2D estimation", self)
-        label.setProperty("class", "h2")
-        label.setWordWrap(True)
-        self.innerLayout.addWidget(label)
+        # Skeleton to use
+        skeletons = QComboBox(self)
+        skeletons.addItems(self.SUPPORTED_SKELTONS)
+        skeletons.currentIndexChanged.connect(self.toggle_pose_model)
+        self.innerLayout.addWidget(LabeledWidget("Select a Skeleton", skeletons, self))
+        self.innerLayout.addSpacing(8)
 
-        row = QWidget(self)
-        row.setProperty("class", "empty")
-        rowLayout = QHBoxLayout(row)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        self.innerLayout.addWidget(row)
-
-        # Skeleton widget options
-        skeletonWidget = QWidget(self)
-        skeletonWidget.setProperty("class", "empty")
-        self.skeletonWidgetLayout = QVBoxLayout(skeletonWidget)
-        self.skeletonWidgetLayout.setContentsMargins(0, 0, 0, 0)
-        self.innerLayout.addWidget(skeletonWidget)
-        self.sekeltonOptins = QComboBox(self)
-        self.sekeltonOptins.addItems(self.SUPPORTED_SKELTONS)
-        self.sekeltonOptins.setVisible(True)  # Initially hidden
-        self.skeletonWidgetLayout.addWidget(self.sekeltonOptins)
-        self.sekeltonOptins.currentIndexChanged.connect(self.toggle_pose_model)
-
-        self.modelH26Widget = QWidget(self)
-        self.modelH26Widget.setProperty("class", "empty")
-        self.modelH26WidgetLayout = QVBoxLayout(self.modelH26Widget)
-        self.modelH26WidgetLayout.setContentsMargins(0, 0, 0, 0)
-        self.skeletonWidgetLayout.addWidget(self.modelH26Widget)
-
-        self.modelH2617Widget = QWidget(self)
-        self.modelH2617Widget.setProperty("class", "empty")
-        self.modelH2617WidgetLayout = QVBoxLayout(self.modelH2617Widget)
-        self.modelH2617WidgetLayout.setContentsMargins(0, 0, 0, 0)
-        self.skeletonWidgetLayout.addWidget(self.modelH2617Widget)
-        # label H26 for modes
-        labelMode = QLabel("Select a Mode of the 2D Estimator", self)
-        labelMode.setToolTip("Select the options for 3D triangulation.")
-        labelMode.setProperty("class", "h3")
-        labelMode.setWordWrap(True)
-        # label H26+17 for modes
-        labelMode17 = QLabel("Select a Mode of the 2D Estimator", self)
-        labelMode17.setToolTip("Select the options for 3D triangulation.")
-        labelMode17.setProperty("class", "h3")
-        labelMode17.setWordWrap(True)
-
-        # Initialize models
-        self.lightweightMode = QRadioButton("Lightweight", self)
-        self.balancedMode = QRadioButton("Balanced", self)
-        self.performanceMode = QRadioButton("Performance", self)
-
-        # Modes for the Halpe26 Model initially
-        self.lightweightMode.setChecked(True)  # Default
-        self.modelH26 = QButtonGroup(self)
-        self.modelH26.addButton(self.lightweightMode)
-        self.modelH26.addButton(self.balancedMode)
-        self.modelH26.addButton(self.performanceMode)
-        self.modelH26WidgetLayout.addWidget(labelMode)
-        self.modelH26WidgetLayout.addWidget(self.lightweightMode)
-        self.modelH26WidgetLayout.addWidget(self.balancedMode)
-        self.modelH26WidgetLayout.addWidget(self.performanceMode)
-        self.modelH26Widget.setVisible(True)
-        self.modelH26.buttonClicked.connect(self.model_changed)
-
-        # Modes for the Halpe26 + 17Spine Model initially
-        self.lightweightMode17 = QRadioButton("Lightweight", self)
-        self.balancedMode17 = QRadioButton("Balanced", self)
-        self.performanceMode17 = QRadioButton("Performance", self)
-        self.lightweightMode17.setDisabled(True)
-        self.balancedMode17.setDisabled(True)
-        # Modes for the Halpe26 + 17Spine Model initially
-
-        self.performanceMode17.setChecked(True)  # Default
-        self.modelH26_17 = QButtonGroup(self)
-        self.modelH26_17.addButton(self.lightweightMode17)
-        self.modelH26_17.addButton(self.balancedMode17)
-        self.modelH26_17.addButton(self.performanceMode17)
-        self.modelH2617WidgetLayout.addWidget(labelMode17)
-        # not implemented right now
-        self.modelH2617WidgetLayout.addWidget(self.lightweightMode17)
-        self.modelH2617WidgetLayout.addWidget(self.balancedMode17)
-        self.modelH2617WidgetLayout.addWidget(self.performanceMode17)
-        self.modelH2617Widget.setVisible(False)  # Initially hidden
-        self.modelH26_17.buttonClicked.connect(self.model_changedH2617)
+        # Motion estimation performance
+        performance = RadioGroup("Performance", self)
+        performance.addButton("Lite (Fast)")
+        performance.addButton("Medium")
+        performance.addButton("Heavy (Accurate)")
+        performance.selectDefault()
+        self.innerLayout.addWidget(performance)
+        self.innerLayout.addSpacing(8)
 
         # Triangulation options
-        self.innerLayout.addSpacing(16)
         label = QLabel("Triangulation Config", self)
         label.setToolTip("Select the options for 3D triangulation.")
         label.setProperty("class", "h2")
@@ -215,7 +143,7 @@ class MotionOptions(Frame):
             self.params.pose2d_kwargs.mode = "lightweight"
         elif self.balancedMode.isChecked():
             self.params.pose2d_kwargs.mode = "balanced"
-        elif self.performanceMode.isChecked():
+        elif self.modelH26.isChecked():
             self.params.pose2d_kwargs.mode = "performance"
         else:
             raise ValueError("Unknown mode")

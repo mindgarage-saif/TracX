@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 )
 
 from mocap.constants import APP_ASSETS
+from mocap.core.processor import VideoProcessor
 from mocap.core.rotation import rotate_video
 from mocap.recording.video_player import VideoPlayer
 from mocap.ui.common import CameraView
@@ -27,7 +28,6 @@ logger = logging.getLogger(__name__)
 class VideoPlayerWidget(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        # Make all disabled widgets text normal colored
         self.videoPlayer = None
         self.videoSource = None
 
@@ -71,7 +71,9 @@ class VideoPlayerWidget(QFrame):
         self.preview = CameraView((800, 600), flip=True)
         self.gridLayout.addWidget(self.preview, 0, 0)
         self.videoPlayer = VideoPlayer()
-        self.videoPlayer.frame.connect(self.preview.showFrame)
+
+        self.videoProcessor = VideoProcessor(self.videoPlayer)
+        self.videoProcessor.frame.connect(self.preview.showFrame)
         self.videoPlayer.progress.connect(self.updatePosition)
 
         # Add a button bar with toggle play button

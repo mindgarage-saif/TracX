@@ -1,6 +1,7 @@
 import os
 import shutil
 
+import cv2
 from PyQt6.QtWidgets import (
     QFileDialog,
     QSizePolicy,
@@ -9,6 +10,7 @@ from PyQt6.QtWidgets import (
 )
 
 from mocap.core import Experiment
+from mocap.core.analyze2d import process_frame, setup_pose_tracker
 from mocap.ui.styles import PAD_Y
 
 from .data_widget import ExperimentDataWidget
@@ -30,6 +32,7 @@ class MonocularAnalysisPage(QWidget):
 
         # Experiment data
         self.data = ExperimentDataWidget(self)
+        self.data.videoPlayer.videoProcessor.process = self.processFrame
         layout.addWidget(self.data)
         layout.addSpacing(PAD_Y)
         self.data.setSizePolicy(
@@ -46,6 +49,25 @@ class MonocularAnalysisPage(QWidget):
         self.data.onUpdate = self.handleDataUpload
         self.settings.onUpdate = self.handleOptionsChanged
 
+        # mode = self.experiment.cfg.get("pose").get("mode")
+        # tracking = self.experiment.cfg.get("process").get("multiperson")
+        # det_frequency = self.experiment.cfg.get("pose").get("det_frequency")
+        # tracking_mode = self.experiment.cfg.get("pose").get("tracking_mode")
+        # tracking_rtmlib = tracking_mode == "rtmlib" and tracking
+        # self.model = setup_pose_tracker(det_frequency, mode, tracking_rtmlib)
+
+        self.model = setup_pose_tracker(10, "lightweight", False)
+
+        # self.model = PoseTracker(
+        #     BodyWithFeet,
+        #     det_frequency=30,
+        #     tracking=False,
+        #     mode="balanced",
+        #     to_openpose=False,
+        #     backend="onnxruntime",
+        #     device="cuda",
+        # )
+
     def load(self, name):
         self.settings.cfg.experiment_name = name
         self.settings.visualize_cfg.experiment_name = name  # FIXME: This is a hack
@@ -58,6 +80,88 @@ class MonocularAnalysisPage(QWidget):
         self.settings.downloadButton.setEnabled(hasMotionData)
 
         self.settings.estimate_button.log_file = self.experiment.log_file
+
+    def drawRecordingOverlay(self, frame):
+        h, w, _ = frame.shape
+        cv2.line(
+            frame,
+            (int(w * 0.025), int(h * 0.025)),
+            (int(w * 0.1), int(h * 0.025)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.line(
+            frame,
+            (int(w * 0.025), int(h * 0.025)),
+            (int(w * 0.025), int(h * 0.1)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.line(
+            frame,
+            (int(w * 0.975), int(h * 0.025)),
+            (int(w * 0.9), int(h * 0.025)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.line(
+            frame,
+            (int(w * 0.975), int(h * 0.025)),
+            (int(w * 0.975), int(h * 0.1)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.line(
+            frame,
+            (int(w * 0.025), int(h * 0.975)),
+            (int(w * 0.1), int(h * 0.975)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.line(
+            frame,
+            (int(w * 0.025), int(h * 0.975)),
+            (int(w * 0.025), int(h * 0.9)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.line(
+            frame,
+            (int(w * 0.975), int(h * 0.975)),
+            (int(w * 0.9), int(h * 0.975)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.line(
+            frame,
+            (int(w * 0.975), int(h * 0.975)),
+            (int(w * 0.975), int(h * 0.9)),
+            (255, 255, 255),
+            int(w * 0.005),
+        )
+        cv2.circle(frame, (int(w * 0.05), int(h * 0.065)), 5, (0, 0, 255), -1)
+        cv2.putText(
+            frame,
+            "REC",
+            (int(w * 0.07), int(h * 0.075)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,
+        )
+
+    def processFrame(self, frame):
+        # TODO: Perform post-processing
+        # keypoints, scores = self.model(frame)
+        # frame = draw_skeleton(frame, keypoints, scores, openpose_skeleton=False, kpt_thr=0.43)
+
+        return process_frame(self.experiment.cfg, self.model, frame)
+
+        # frame = cv2.flip(frame, 1)
+        # self.drawRecordingOverlay(frame)
+        # frame = cv2.flip(frame, 1)
+        # return frame
 
     def handleDataUpload(self, status):
         self.settings.setEnabled(status)
