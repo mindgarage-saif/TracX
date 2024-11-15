@@ -76,6 +76,11 @@ class StickFigureRenderer(MotionRenderer):
         metadata=None,
     ):
         """Plot and save the 3D skeleton for the given frame."""
+        tmp_dir = os.path.join(self.output_dir, "tmp")
+        tmp_file = os.path.join(tmp_dir, f"{frame_idx}.png")
+        if os.path.exists(tmp_file):
+            return
+
         fig = plt.figure(facecolor="lightgray", figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
 
@@ -125,8 +130,7 @@ class StickFigureRenderer(MotionRenderer):
         plt.tight_layout()
 
         # Save the figure
-        tmp_dir = os.path.join(self.output_dir, "tmp")
-        plt.savefig(os.path.join(tmp_dir, f"{frame_idx}.png"))
+        plt.savefig(tmp_file)
         plt.close()
 
     def render(self, fps=24):
