@@ -11,8 +11,8 @@ from mocap.ui.common import BaseTaskButton
 
 
 class EstimateMotionButton(BaseTaskButton):
-    def __init__(self, task_config, callback):
-        super().__init__(None, EstimateMotionTask, task_config, callback)
+    def __init__(self, callback):
+        super().__init__(None, EstimateMotionTask, None, callback)
         self.setText("Analyze")
 
     def on_start(self):

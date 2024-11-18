@@ -18,7 +18,7 @@ from mocap.constants import (
     OPENSIM_DIR,
     SUPPORTED_VIDEO_FORMATS,
 )
-from mocap.core.configs.base import Engine, ExperimentMode, LiftingModel, PoseModel
+from mocap.core.configs.base import LiftingModel
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from .motion import MotionSequence
@@ -240,17 +240,11 @@ class Experiment:
         os.chdir(self.path)
 
         # Update the configuration file with selected settings
-        cfg = edict(cfg)
-        if cfg.engine == Engine.POSE2SIM:
-            pose2d_mode = cfg.pose2d_kwargs.get("mode", "lightweight")
-            self.change_config(
-                pose2d_mode, cfg.pose2d_model, trackedpoint=cfg.trackedpoint
-            )
-
         if not self.has_videos():
             raise ValueError("No videos found in the project directory.")
 
-        if cfg.correct_rotation and not self.monocular:
+        correct_rotation = cfg.get("correct_rotation", False)
+        if correct_rotation and not self.monocular:
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
                 rotate_videos(self.videos, rotated_dir, self.calibration_file)
@@ -270,28 +264,20 @@ class Experiment:
         # Execute the 2D pose estimation
         logging.info("Executing 2D pose estimatioan...")
         res_w, res_h = 0, 0
-        if cfg.engine == Engine.POSE2SIM:
+        if cfg.pose.pose_model in ["COCO_17", "COCO_133", "HALPE_26"]:
             PoseTracker2D.estimateDefault()
+        elif cfg.pose.pose_model == "DFKI_BODY43":
+            res_w, res_h, _ = PoseTracker2D.estimateBodyWithSpine(
+                videos=self.videos_dir,
+                save_dir=self.pose2d_dir,
+                video_format=videos_format,
+                overwrite=overwrite,
+            )
         else:
-            if cfg.pose2d_model == PoseModel.DFKI_BODY43:
-                res_w, res_h, _ = PoseTracker2D.estimateBodyWithSpine(
-                    videos=self.videos_dir,
-                    save_dir=self.pose2d_dir,
-                    video_format=videos_format,
-                    overwrite=overwrite,
-                )
-            elif cfg.pose2d_model == PoseModel.HALPE_26:
-                res_w, res_h, _ = PoseTracker2D.estimateBodyWithFeet(
-                    videos=self.videos_dir,
-                    save_dir=self.pose2d_dir,
-                    video_format=videos_format,
-                    overwrite=overwrite,
-                )
-            else:
-                raise ValueError(f"Unsupported custom pose model '{cfg.pose2d_model}'")
+            raise ValueError(f"Unsupported custom pose model '{cfg.pose2d_model}'")
 
         # Unrotate the 2D poses
-        if cfg.correct_rotation:
+        if correct_rotation:
             # Restore the original videos
             os.rename(self.videos_dir, self.videos_dir + "_rotated")
             os.rename(self.videos_dir + "_original", self.videos_dir)
@@ -299,8 +285,10 @@ class Experiment:
             logging.info("Rotating 2D poses back...")
             unrotate_pose2d(self.pose2d_dir, self.calibration_file)
 
+        # TODO: Person association should be moved here
+
         # 2D-to-3D Lifting in Monocular Mode
-        if cfg.mode == ExperimentMode.MONOCULAR:
+        if self.monocular:
             logging.info("Lifting 2D poses to 3D...")
             if cfg.lifting_model == LiftingModel.BASELINE:
                 if res_w == 0 or res_h == 0:
@@ -322,18 +310,20 @@ class Experiment:
 
         # Triangulation in Multiview Mode
         else:
-            logging.info("Triangulating 2D poses to 3D...")
-            Pose2Sim.calibration()
-            try:
-                # Pose2Sim.synchronization()
-                Pose2Sim.personAssociation()
-            except Exception as e:
-                logging.error(e)
-                raise e
+            # logging.info("Calibrating cameras...")
+            # Pose2Sim.calibration()
+
+            logging.info("Finding the most prominent person...")
+            Pose2Sim.personAssociation()
+
+            # TODO: Wrap triangulation in a try-except block and throw a nice error message
+            logging.info("Triangulating 3D poses...")
             Pose2Sim.triangulation()
+
+            logging.info("Smoothing triangulated poses...")
             Pose2Sim.filtering()
-            if cfg.use_marker_augmentation:
-                Pose2Sim.markerAugmentation()
+
+        # TODO: Filtering should be moved here
 
         # Restore the working directory
         os.chdir(cwd)

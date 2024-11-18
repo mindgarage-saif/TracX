@@ -73,7 +73,7 @@ class Multiview3DAnalysisPage(QWidget):
             self.experiment.videos,
         )
         hasMotionData = self.experiment.get_motion_file() is not None
-        self.settings.estimateButton.setEnabled(not hasMotionData)
+        # self.settings.estimateButton.setEnabled(not hasMotionData)
         self.settings.downloadButton.setEnabled(hasMotionData)
 
         self.settings.estimateButton.log_file = self.experiment.log_file
@@ -86,7 +86,7 @@ class Multiview3DAnalysisPage(QWidget):
 
     def handleOptionsChanged(self, status, result):
         if not status:
-            self.showAlert(str(result), "Motion Estimation Failed")
+            self.parent().showAlert(str(result), "Motion Estimation Failed")
 
     def downloadMotionData(self):
         try:

@@ -148,9 +148,7 @@ class Monocular3DSettingsPanel(QWidget):
         layout.setSpacing(8)
 
         # Estimate Motion Button
-        self.estimate_button = EstimateMotionButton(
-            self.cfg, self.onMotionMonocularEstimated
-        )
+        self.estimate_button = EstimateMotionButton(self.onMotionMonocularEstimated)
         layout.addWidget(self.estimate_button)
 
         # Download Button

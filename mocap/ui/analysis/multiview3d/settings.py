@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.core.configs import MotionTaskConfig, VisualizeTaskConfig
+from mocap.core.configs import VisualizeTaskConfig
 from mocap.ui.common import IconButton, LabeledWidget, Selection
 from mocap.ui.styles import PAD_Y
 
@@ -413,9 +413,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         layout.addWidget(self.saveButton)
 
         # Create Button
-        self.estimateButton = EstimateMotionButton(
-            MotionTaskConfig(), self.onMotionEstimated
-        )
+        self.estimateButton = EstimateMotionButton(self.onMotionEstimated)
         layout.addWidget(self.estimateButton)
 
         self.downloadButton = IconButton("export.png", 24, self)
@@ -503,7 +501,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         )
 
         # Update buttons
-        self.estimateButton.task.config.experiment_name = self.experiment.name
+        self.estimateButton.task.config = self.experiment.name
         self.createButton.task.config.experiment_name = self.experiment.name
         self.downloadOpenSimButton.task.config.experiment_name = self.experiment.name
 

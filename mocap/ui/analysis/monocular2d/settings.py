@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.core.configs import MotionTaskConfig, VisualizeTaskConfig
+from mocap.core.configs import VisualizeTaskConfig
 from mocap.ui.analysis import EstimateMotionButton, VisualizeMotionButton
 from mocap.ui.common import IconButton, LabeledWidget, MultipleSelection, Selection
 from mocap.ui.styles import PAD_X, PAD_Y
@@ -157,7 +157,6 @@ class Monocular2DSettingsPanel(SettingsPanel):
         scroll_layout.addWidget(heading)
 
         # [pose] pose_model
-        self.cfg = MotionTaskConfig()
         self.pose_model = Selection(
             "Pose Model",
             {"Body + Feet": "body_with_feet"},
@@ -524,7 +523,7 @@ class Monocular2DSettingsPanel(SettingsPanel):
         layout.addWidget(self.saveButton)
 
         # Estimate Motion Button
-        self.analyzeButton = EstimateMotionButton(self.cfg, self.onAnalyzed)
+        self.analyzeButton = EstimateMotionButton(self.onAnalyzed)
         layout.addWidget(self.analyzeButton)
 
         # Download Button
