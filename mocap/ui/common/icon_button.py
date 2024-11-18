@@ -11,18 +11,19 @@ class IconButton(QPushButton):
     def __init__(self, iconFile=None, iconSize=24, parent=None):
         super().__init__(parent)
         self.setObjectName("IconButton")
-        self.setStyleSheet("""
-            QPushButton#IconButton {
+        self.setStyleSheet(f"""
+            QPushButton#IconButton {{
                 background-color: #ccc;
                 color: #000;
-            }
-            QPushButton#IconButton:hover {
+                border-radius: {iconSize * 1.5 // 2}px;
+            }}
+            QPushButton#IconButton:hover {{
                 background-color: #ddd;
-            }
-            QPushButton#IconButton:disabled {
+            }}
+            QPushButton#IconButton:disabled {{
                 background-color: transparent;
                 color: #444;
-            }
+            }}
         """)
 
         self.setIconFile(iconFile, iconSize)

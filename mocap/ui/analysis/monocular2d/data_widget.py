@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from mocap.constants import APP_ASSETS
 from mocap.core import Experiment
 from mocap.ui.common import EmptyState, Frame, VideoPlayerWidget, VideoUploaderWidget
 
@@ -25,7 +26,7 @@ class ExperimentDataWidget(Frame):
         # Placeholder label for "No Cameras Selected"
         self.noCamerasLabel = EmptyState(
             self,
-            "assets/empty-state/no-camera-selected.png",
+            os.path.join(APP_ASSETS, "empty-state", "no-camera-selected.png"),
             "Get started with markerless motion analysis",
             action=["Start Webcam", "Upload a Video"],
             size=512,

@@ -123,6 +123,7 @@ class Experiment:
                     "is_2d": exp.get("is_2d", False),
                     "multi_person": exp.get("multi_person", False),
                     "created_at": exp.get("created_at", None),
+                    "path": os.path.join(APP_PROJECTS, exp["name"]),
                 }
             )
 

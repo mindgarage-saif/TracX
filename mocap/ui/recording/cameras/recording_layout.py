@@ -1,7 +1,9 @@
 import logging
+import os
 
 from PyQt6.QtWidgets import QFrame, QGridLayout, QSizePolicy, QVBoxLayout, QWidget
 
+from mocap.constants import APP_ASSETS
 from mocap.ui.common import CameraView, EmptyState
 
 from .control_panel import ControlPanel
@@ -35,7 +37,7 @@ class RecordingLayout(QFrame):
         # Placeholder label for "No Cameras Selected"
         self.noCamerasLabel = EmptyState(
             self,
-            "assets/empty-state/no-camera-selected.png",
+            os.path.join(APP_ASSETS, "empty-state", "no-camera-selected.png"),
             "No Cameras Selected",
             size=512,
         )
