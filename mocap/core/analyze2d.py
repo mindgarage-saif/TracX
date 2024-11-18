@@ -1401,14 +1401,6 @@ def process_frame(config_dict, pose_tracker, frame):
     if not all(key in config_dict for key in required_keys):
         return frame
 
-    # TODO: Use scaling for faster processing
-    # # Save original frame size and resize keeping aspect ratio
-    # H, W, _ = frame.shape
-    # H_resized = 400
-    # W_resized = int(W * H_resized / H)
-    # frame = cv2.resize(frame, (W_resized, H_resized))
-    frame = cv2.flip(frame, 1)
-
     # Process settings
     tracking = config_dict.get("process").get("multiperson")
     keypoint_likelihood_threshold = config_dict.get("pose").get(
@@ -1536,7 +1528,7 @@ def process_frame(config_dict, pose_tracker, frame):
     )
     img = draw_keypts(img, valid_X, valid_Y, scores, cmap_str="RdYlGn")
     img = draw_skel(img, valid_X, valid_Y, model, colors=colors)
-    img = draw_angles(
+    return draw_angles(
         img,
         valid_X,
         valid_Y,
@@ -1550,10 +1542,6 @@ def process_frame(config_dict, pose_tracker, frame):
         fontSize=fontSize,
         thickness=thickness,
     )
-
-    # Resize image back to original size
-    # img = cv2.resize(img, (W, H))
-    return cv2.flip(img, 1)
 
 
 def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):

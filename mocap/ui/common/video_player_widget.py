@@ -68,7 +68,7 @@ class VideoPlayerWidget(QFrame):
         self.gridLayout.setSpacing(0)
         self.innerLayout.addWidget(self.gridWidget)
 
-        self.preview = CameraView((800, 600), flip=True)
+        self.preview = CameraView((800, 600), flip=False)
         self.gridLayout.addWidget(self.preview, 0, 0)
         self.videoPlayer = VideoPlayer()
 

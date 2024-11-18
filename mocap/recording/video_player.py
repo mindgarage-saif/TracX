@@ -116,7 +116,10 @@ class VideoPlayer(QObject):
             self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)
             ret, frame = self._video.read()
             if ret:
-                self.frame.emit(frame)
+                if self.isWebcam:
+                    self.frame.emit(cv2.flip(frame, 1))
+                else:
+                    self.frame.emit(frame)
 
     def pause(self):
         self.paused = True
