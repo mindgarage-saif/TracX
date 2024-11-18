@@ -31,7 +31,7 @@ class StudioWindow(QMainWindow):
         screen_width, screen_height = screen.width(), screen.height()
 
         # Correct aspect ratio of window size (4:3) and ensure it does not exceed screen size
-        aspect = 1.33  # 4:3
+        aspect = 16 / 9
         if screen_width * 3 > screen_height * 4:  # Wide screen
             width = int(screen_height * aspect)
             height = screen_height
