@@ -2,6 +2,7 @@ import os
 import shutil
 
 import cv2
+import numpy as np
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -68,12 +69,20 @@ class Monocular2DAnalysisPage(QWidget):
             return
 
         # Model setup
+        # TODO: Refresh model when experiment settings are updated
         mode = self.experiment.cfg.get("pose").get("mode")
         det_frequency = self.experiment.cfg.get("pose").get("det_frequency")
         tracking_mode = self.experiment.cfg.get("pose").get("tracking_mode")
         tracking = self.experiment.cfg.get("process").get("multiperson")
         tracking_rtmlib = tracking_mode == "rtmlib" and tracking
         self.model = setup_pose_tracker(det_frequency, mode, tracking_rtmlib)
+
+        self.all_frames_X = []
+        self.all_frames_Y = []
+        self.all_frames_scores = []
+        self.all_frames_angles = []
+        self.postprocessing_kwargs = {}
+        # frame_count, frame_rate, fps, save_pose, pose_output_path, save_angles, angles_output_path
 
     def drawRecordingOverlay(self, frame):
         h, w, _ = frame.shape
@@ -153,12 +162,24 @@ class Monocular2DAnalysisPage(QWidget):
         if self.model is None:
             return frame
 
-        return process_frame(self.experiment.cfg, self.model, frame)
+        frame, (x, y, scores, angles, kwargs) = process_frame(
+            self.experiment.cfg, self.model, frame
+        )
+        self.all_frames_X.append(np.array(x))
+        self.all_frames_Y.append(np.array(y))
+        self.all_frames_scores.append(np.array(scores))
+        self.all_frames_angles.append(np.array(angles))
+        self.postprocessing_kwargs = kwargs
+
+        print(kwargs["keypoint_names"])
+        print(x, y)
+        print(kwargs["angle_names"])
+        print(angles)
 
         # frame = cv2.flip(frame, 1)
         # self.drawRecordingOverlay(frame)
         # frame = cv2.flip(frame, 1)
-        # return frame
+        return frame
 
     def handleDataUpload(self, status):
         self.settings.setEnabled(status)

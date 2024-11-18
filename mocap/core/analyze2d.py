@@ -1528,7 +1528,7 @@ def process_frame(config_dict, pose_tracker, frame):
     )
     img = draw_keypts(img, valid_X, valid_Y, scores, cmap_str="RdYlGn")
     img = draw_skel(img, valid_X, valid_Y, model, colors=colors)
-    return draw_angles(
+    img = draw_angles(
         img,
         valid_X,
         valid_Y,
@@ -1542,6 +1542,298 @@ def process_frame(config_dict, pose_tracker, frame):
         fontSize=fontSize,
         thickness=thickness,
     )
+
+    metadata = {
+        "keypoint_ids": keypoints_ids,
+        "keypoint_names": keypoints_names,
+        "angle_names": angle_names,
+    }
+
+    return img, (valid_X, valid_Y, valid_scores, valid_angles, metadata)
+
+
+def postprocess(
+    config_dict,
+    all_frames_X,
+    all_frames_Y,
+    all_frames_scores,
+    all_frames_angles,
+    keypoints_ids,
+    keypoints_names,
+    angle_names,
+    video_file,
+    frame_count,
+    frame_rate,
+    fps,
+    save_pose,
+    pose_output_path,
+    save_angles,
+    angles_output_path,
+):
+    # Post-processing: Interpolate, filter, and save pose and angles
+    frame_range = [0, frame_count] if video_file == "webcam" else frame_range
+    all_frames_time = pd.Series(
+        np.linspace(frame_range[0] / fps, frame_range[1] / fps, frame_count),
+        name="time",
+    )
+
+    # Post-processing settings
+    interpolate = config_dict.get("post-processing").get("interpolate")
+    interp_gap_smaller_than = config_dict.get("post-processing").get(
+        "interp_gap_smaller_than"
+    )
+    fill_large_gaps_with = config_dict.get("post-processing").get(
+        "fill_large_gaps_with"
+    )
+
+    do_filter = config_dict.get("post-processing").get("filter")
+    show_plots = config_dict.get("post-processing").get("show_graphs")
+    filter_type = config_dict.get("post-processing").get("filter_type")
+    butterworth_filter_order = (
+        config_dict.get("post-processing").get("butterworth").get("order")
+    )
+    butterworth_filter_cutoff = (
+        config_dict.get("post-processing").get("butterworth").get("cut_off_frequency")
+    )
+    gaussian_filter_kernel = (
+        config_dict.get("post-processing").get("gaussian").get("sigma_kernel")
+    )
+    loess_filter_kernel = (
+        config_dict.get("post-processing").get("loess").get("nb_values_used")
+    )
+    median_filter_kernel = (
+        config_dict.get("post-processing").get("median").get("kernel_size")
+    )
+    filter_options = [
+        do_filter,
+        filter_type,
+        butterworth_filter_order,
+        butterworth_filter_cutoff,
+        frame_rate,
+        gaussian_filter_kernel,
+        loess_filter_kernel,
+        median_filter_kernel,
+    ]
+
+    if save_pose:
+        logging.info("\nPost-processing pose:")
+        # Select only the keypoints that are in the model from skeletons.py, invert Y axis, divide pixel values by 1000
+        all_frames_X = make_homogeneous(all_frames_X)
+        all_frames_X = all_frames_X[..., keypoints_ids] / 1000
+        all_frames_Y = make_homogeneous(all_frames_Y)
+        all_frames_Y = -all_frames_Y[..., keypoints_ids] / 1000
+        all_frames_Z_person = pd.DataFrame(
+            np.zeros_like(all_frames_X)[:, 0, :], columns=keypoints_names
+        )
+
+        # Process pose for each person
+        for i in range(all_frames_X.shape[1]):
+            pose_path_person = pose_output_path.parent / (
+                pose_output_path.stem + f"_person{i:02d}.trc"
+            )
+            all_frames_X_person = pd.DataFrame(
+                all_frames_X[:, i, :], columns=keypoints_names
+            )
+            all_frames_Y_person = pd.DataFrame(
+                all_frames_Y[:, i, :], columns=keypoints_names
+            )
+
+            # Delete person if less than 4 valid frames
+            pose_nan_count = len(np.where(all_frames_X_person.sum(axis=1) == 0)[0])
+            if frame_count - pose_nan_count <= 4:
+                logging.info(
+                    f"- Person {i}: Less than 4 valid frames. Deleting person."
+                )
+
+            else:
+                # Interpolate
+                if not interpolate:
+                    logging.info(f"- Person {i}: No interpolation.")
+                    all_frames_X_person_interp = all_frames_X_person
+                    all_frames_Y_person_interp = all_frames_Y_person
+                else:
+                    logging.info(
+                        f"- Person {i}: Interpolating missing sequences if they are smaller than {interp_gap_smaller_than} frames. Large gaps filled with {fill_large_gaps_with}."
+                    )
+                    all_frames_X_person_interp = all_frames_X_person.apply(
+                        interpolate_zeros_nans,
+                        axis=0,
+                        args=[interp_gap_smaller_than, "linear"],
+                    )
+                    all_frames_Y_person_interp = all_frames_Y_person.apply(
+                        interpolate_zeros_nans,
+                        axis=0,
+                        args=[interp_gap_smaller_than, "linear"],
+                    )
+                    if fill_large_gaps_with == "last_value":
+                        all_frames_X_person_interp = all_frames_X_person_interp.ffill(
+                            axis=0
+                        ).bfill(axis=0)
+                        all_frames_Y_person_interp = all_frames_Y_person_interp.ffill(
+                            axis=0
+                        ).bfill(axis=0)
+                    elif fill_large_gaps_with == "zeros":
+                        all_frames_X_person_interp.replace(np.nan, 0, inplace=True)
+                        all_frames_Y_person_interp.replace(np.nan, 0, inplace=True)
+
+                # Filter
+                if not filter_options[0]:
+                    logging.info("No filtering.")
+                    all_frames_X_person_filt = all_frames_X_person_interp
+                    all_frames_Y_person_filt = all_frames_Y_person_interp
+                else:
+                    filter_type = filter_options[1]
+                    if filter_type == "butterworth":
+                        if video_file == "webcam":
+                            cutoff = filter_options[3]
+                            if cutoff / (fps / 2) >= 1:
+                                cutoff_old = cutoff
+                                cutoff = fps / (2 + 0.001)
+                                args = f"\n{cutoff_old:.1f} Hz cut-off framerate too large for a real-time framerate of {fps:.1f} Hz. Using a cut-off framerate of {cutoff:.1f} Hz instead."
+                                filter_options[3] = cutoff
+                        else:
+                            args = ""
+                        args = f"Butterworth filter, {filter_options[2]}th order, {filter_options[3]} Hz."
+                        filter_options[4] = fps
+                    if filter_type == "gaussian":
+                        args = f"Gaussian filter, Sigma kernel {filter_options[5]}."
+                    if filter_type == "loess":
+                        args = (
+                            f"LOESS filter, window size of {filter_options[6]} frames."
+                        )
+                    if filter_type == "median":
+                        args = f"Median filter, kernel of {filter_options[7]}."
+                    logging.info(f"Filtering with {args}")
+                    all_frames_X_person_filt = all_frames_X_person_interp.apply(
+                        filter.filter1d, axis=0, args=filter_options
+                    )
+                    all_frames_Y_person_filt = all_frames_Y_person_interp.apply(
+                        filter.filter1d, axis=0, args=filter_options
+                    )
+
+                # Build TRC file
+                trc_data = make_trc_with_XYZ(
+                    all_frames_X_person_filt,
+                    all_frames_Y_person_filt,
+                    all_frames_Z_person,
+                    all_frames_time,
+                    str(pose_path_person),
+                )
+                logging.info(f"Pose saved to {pose_path_person.resolve()}.")
+
+                # Plotting coordinates before and after interpolation and filtering
+                if show_plots:
+                    trc_data_unfiltered = pd.concat(
+                        [
+                            pd.concat(
+                                [
+                                    all_frames_X_person.iloc[:, kpt],
+                                    all_frames_Y_person.iloc[:, kpt],
+                                    all_frames_Z_person.iloc[:, kpt],
+                                ],
+                                axis=1,
+                            )
+                            for kpt in range(len(all_frames_X_person.columns))
+                        ],
+                        axis=1,
+                    )
+                    trc_data_unfiltered.insert(0, "t", all_frames_time)
+                    pose_plots(trc_data_unfiltered, trc_data, i)  # i = current person
+
+    # Angles post-processing
+    if save_angles:
+        logging.info("\nPost-processing angles:")
+        all_frames_angles = make_homogeneous(all_frames_angles)
+
+        # Process angles for each person
+        for i in range(all_frames_angles.shape[1]):
+            angles_path_person = angles_output_path.parent / (
+                angles_output_path.stem + f"_person{i:02d}.mot"
+            )
+            all_frames_angles_person = pd.DataFrame(
+                all_frames_angles[:, i, :], columns=angle_names
+            )
+
+            # Delete person if less than 4 valid frames
+            angle_nan_count = len(
+                np.where(all_frames_angles_person.sum(axis=1) == 0)[0]
+            )
+            if frame_count - angle_nan_count <= 4:
+                logging.info(
+                    f"- Person {i}: Less than 4 valid frames. Deleting person."
+                )
+
+            else:
+                # Interpolate
+                if not interpolate:
+                    logging.info(f"- Person {i}: No interpolation.")
+                    all_frames_angles_person_interp = all_frames_angles_person
+                else:
+                    logging.info(
+                        f"- Person {i}: Interpolating missing sequences if they are smaller than {interp_gap_smaller_than} frames. Large gaps filled with {fill_large_gaps_with}."
+                    )
+                    all_frames_angles_person_interp = all_frames_angles_person.apply(
+                        interpolate_zeros_nans,
+                        axis=0,
+                        args=[interp_gap_smaller_than, "linear"],
+                    )
+                    if fill_large_gaps_with == "last_value":
+                        all_frames_angles_person_interp = (
+                            all_frames_angles_person_interp.ffill(axis=0).bfill(axis=0)
+                        )
+                    elif fill_large_gaps_with == "zeros":
+                        all_frames_angles_person_interp.replace(np.nan, 0, inplace=True)
+
+                # Filter
+                if not filter_options[0]:
+                    logging.info("No filtering.")
+                    all_frames_angles_person_filt = all_frames_angles_person_interp
+                else:
+                    filter_type = filter_options[1]
+                    if filter_type == "butterworth":
+                        if video_file == "webcam":
+                            cutoff = filter_options[3]
+                            if cutoff / (fps / 2) >= 1:
+                                cutoff_old = cutoff
+                                cutoff = fps / (2 + 0.001)
+                                args = f"\n{cutoff_old:.1f} Hz cut-off framerate too large for a real-time framerate of {fps:.1f} Hz. Using a cut-off framerate of {cutoff:.1f} Hz instead."
+                                filter_options[3] = cutoff
+                        else:
+                            args = ""
+                        args = (
+                            f"Butterworth filter, {filter_options[2]}th order, {filter_options[3]} Hz. "
+                            + args
+                        )
+                        filter_options[4] = fps
+                    if filter_type == "gaussian":
+                        args = f"Gaussian filter, Sigma kernel {filter_options[5]}."
+                    if filter_type == "loess":
+                        args = (
+                            f"LOESS filter, window size of {filter_options[6]} frames."
+                        )
+                    if filter_type == "median":
+                        args = f"Median filter, kernel of {filter_options[7]}."
+                    logging.info(f"Filtering with {args}")
+                    all_frames_angles_person_filt = (
+                        all_frames_angles_person_interp.apply(
+                            filter.filter1d, axis=0, args=filter_options
+                        )
+                    )
+
+                # Build mot file
+                angle_data = make_mot_with_angles(
+                    all_frames_angles_person_filt,
+                    all_frames_time,
+                    str(angles_path_person),
+                )
+                logging.info(f"Angles saved to {angles_path_person.resolve()}.")
+
+                # Plotting angles before and after interpolation and filtering
+                if show_plots:
+                    all_frames_angles_person.insert(0, "t", all_frames_time)
+                    angle_plots(
+                        all_frames_angles_person, angle_data, i
+                    )  # i = current person
 
 
 def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):
@@ -1624,44 +1916,6 @@ def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):
     fontSize = config_dict.get("angles").get("fontSize")
     thickness = 1 if fontSize < 0.8 else 2
     flip_left_right = config_dict.get("angles").get("flip_left_right")
-
-    # Post-processing settings
-    interpolate = config_dict.get("post-processing").get("interpolate")
-    interp_gap_smaller_than = config_dict.get("post-processing").get(
-        "interp_gap_smaller_than"
-    )
-    fill_large_gaps_with = config_dict.get("post-processing").get(
-        "fill_large_gaps_with"
-    )
-
-    do_filter = config_dict.get("post-processing").get("filter")
-    show_plots = config_dict.get("post-processing").get("show_graphs")
-    filter_type = config_dict.get("post-processing").get("filter_type")
-    butterworth_filter_order = (
-        config_dict.get("post-processing").get("butterworth").get("order")
-    )
-    butterworth_filter_cutoff = (
-        config_dict.get("post-processing").get("butterworth").get("cut_off_frequency")
-    )
-    gaussian_filter_kernel = (
-        config_dict.get("post-processing").get("gaussian").get("sigma_kernel")
-    )
-    loess_filter_kernel = (
-        config_dict.get("post-processing").get("loess").get("nb_values_used")
-    )
-    median_filter_kernel = (
-        config_dict.get("post-processing").get("median").get("kernel_size")
-    )
-    filter_options = [
-        do_filter,
-        filter_type,
-        butterworth_filter_order,
-        butterworth_filter_cutoff,
-        frame_rate,
-        gaussian_filter_kernel,
-        loess_filter_kernel,
-        median_filter_kernel,
-    ]
 
     # Create output directories
     if video_file == "webcam":
@@ -1935,229 +2189,21 @@ def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):
         if show_realtime_results:
             cv2.destroyAllWindows()
 
-    # Post-processing: Interpolate, filter, and save pose and angles
-    frame_range = [0, frame_count] if video_file == "webcam" else frame_range
-    all_frames_time = pd.Series(
-        np.linspace(frame_range[0] / fps, frame_range[1] / fps, frame_count),
-        name="time",
+    postprocess(
+        config_dict,
+        all_frames_X,
+        all_frames_Y,
+        all_frames_scores,
+        all_frames_angles,
+        keypoints_ids,
+        keypoints_names,
+        angle_names,
+        video_file,
+        frame_count,
+        frame_rate,
+        fps,
+        save_pose,
+        pose_output_path,
+        save_angles,
+        angles_output_path,
     )
-
-    if save_pose:
-        logging.info("\nPost-processing pose:")
-        # Select only the keypoints that are in the model from skeletons.py, invert Y axis, divide pixel values by 1000
-        all_frames_X = make_homogeneous(all_frames_X)
-        all_frames_X = all_frames_X[..., keypoints_ids] / 1000
-        all_frames_Y = make_homogeneous(all_frames_Y)
-        all_frames_Y = -all_frames_Y[..., keypoints_ids] / 1000
-        all_frames_Z_person = pd.DataFrame(
-            np.zeros_like(all_frames_X)[:, 0, :], columns=keypoints_names
-        )
-
-        # Process pose for each person
-        for i in range(all_frames_X.shape[1]):
-            pose_path_person = pose_output_path.parent / (
-                pose_output_path.stem + f"_person{i:02d}.trc"
-            )
-            all_frames_X_person = pd.DataFrame(
-                all_frames_X[:, i, :], columns=keypoints_names
-            )
-            all_frames_Y_person = pd.DataFrame(
-                all_frames_Y[:, i, :], columns=keypoints_names
-            )
-
-            # Delete person if less than 4 valid frames
-            pose_nan_count = len(np.where(all_frames_X_person.sum(axis=1) == 0)[0])
-            if frame_count - pose_nan_count <= 4:
-                logging.info(
-                    f"- Person {i}: Less than 4 valid frames. Deleting person."
-                )
-
-            else:
-                # Interpolate
-                if not interpolate:
-                    logging.info(f"- Person {i}: No interpolation.")
-                    all_frames_X_person_interp = all_frames_X_person
-                    all_frames_Y_person_interp = all_frames_Y_person
-                else:
-                    logging.info(
-                        f"- Person {i}: Interpolating missing sequences if they are smaller than {interp_gap_smaller_than} frames. Large gaps filled with {fill_large_gaps_with}."
-                    )
-                    all_frames_X_person_interp = all_frames_X_person.apply(
-                        interpolate_zeros_nans,
-                        axis=0,
-                        args=[interp_gap_smaller_than, "linear"],
-                    )
-                    all_frames_Y_person_interp = all_frames_Y_person.apply(
-                        interpolate_zeros_nans,
-                        axis=0,
-                        args=[interp_gap_smaller_than, "linear"],
-                    )
-                    if fill_large_gaps_with == "last_value":
-                        all_frames_X_person_interp = all_frames_X_person_interp.ffill(
-                            axis=0
-                        ).bfill(axis=0)
-                        all_frames_Y_person_interp = all_frames_Y_person_interp.ffill(
-                            axis=0
-                        ).bfill(axis=0)
-                    elif fill_large_gaps_with == "zeros":
-                        all_frames_X_person_interp.replace(np.nan, 0, inplace=True)
-                        all_frames_Y_person_interp.replace(np.nan, 0, inplace=True)
-
-                # Filter
-                if not filter_options[0]:
-                    logging.info("No filtering.")
-                    all_frames_X_person_filt = all_frames_X_person_interp
-                    all_frames_Y_person_filt = all_frames_Y_person_interp
-                else:
-                    filter_type = filter_options[1]
-                    if filter_type == "butterworth":
-                        if video_file == "webcam":
-                            cutoff = filter_options[3]
-                            if cutoff / (fps / 2) >= 1:
-                                cutoff_old = cutoff
-                                cutoff = fps / (2 + 0.001)
-                                args = f"\n{cutoff_old:.1f} Hz cut-off framerate too large for a real-time framerate of {fps:.1f} Hz. Using a cut-off framerate of {cutoff:.1f} Hz instead."
-                                filter_options[3] = cutoff
-                        else:
-                            args = ""
-                        args = f"Butterworth filter, {filter_options[2]}th order, {filter_options[3]} Hz."
-                        filter_options[4] = fps
-                    if filter_type == "gaussian":
-                        args = f"Gaussian filter, Sigma kernel {filter_options[5]}."
-                    if filter_type == "loess":
-                        args = (
-                            f"LOESS filter, window size of {filter_options[6]} frames."
-                        )
-                    if filter_type == "median":
-                        args = f"Median filter, kernel of {filter_options[7]}."
-                    logging.info(f"Filtering with {args}")
-                    all_frames_X_person_filt = all_frames_X_person_interp.apply(
-                        filter.filter1d, axis=0, args=filter_options
-                    )
-                    all_frames_Y_person_filt = all_frames_Y_person_interp.apply(
-                        filter.filter1d, axis=0, args=filter_options
-                    )
-
-                # Build TRC file
-                trc_data = make_trc_with_XYZ(
-                    all_frames_X_person_filt,
-                    all_frames_Y_person_filt,
-                    all_frames_Z_person,
-                    all_frames_time,
-                    str(pose_path_person),
-                )
-                logging.info(f"Pose saved to {pose_path_person.resolve()}.")
-
-                # Plotting coordinates before and after interpolation and filtering
-                if show_plots:
-                    trc_data_unfiltered = pd.concat(
-                        [
-                            pd.concat(
-                                [
-                                    all_frames_X_person.iloc[:, kpt],
-                                    all_frames_Y_person.iloc[:, kpt],
-                                    all_frames_Z_person.iloc[:, kpt],
-                                ],
-                                axis=1,
-                            )
-                            for kpt in range(len(all_frames_X_person.columns))
-                        ],
-                        axis=1,
-                    )
-                    trc_data_unfiltered.insert(0, "t", all_frames_time)
-                    pose_plots(trc_data_unfiltered, trc_data, i)  # i = current person
-
-    # Angles post-processing
-    if save_angles:
-        logging.info("\nPost-processing angles:")
-        all_frames_angles = make_homogeneous(all_frames_angles)
-
-        # Process angles for each person
-        for i in range(all_frames_angles.shape[1]):
-            angles_path_person = angles_output_path.parent / (
-                angles_output_path.stem + f"_person{i:02d}.mot"
-            )
-            all_frames_angles_person = pd.DataFrame(
-                all_frames_angles[:, i, :], columns=angle_names
-            )
-
-            # Delete person if less than 4 valid frames
-            angle_nan_count = len(
-                np.where(all_frames_angles_person.sum(axis=1) == 0)[0]
-            )
-            if frame_count - angle_nan_count <= 4:
-                logging.info(
-                    f"- Person {i}: Less than 4 valid frames. Deleting person."
-                )
-
-            else:
-                # Interpolate
-                if not interpolate:
-                    logging.info(f"- Person {i}: No interpolation.")
-                    all_frames_angles_person_interp = all_frames_angles_person
-                else:
-                    logging.info(
-                        f"- Person {i}: Interpolating missing sequences if they are smaller than {interp_gap_smaller_than} frames. Large gaps filled with {fill_large_gaps_with}."
-                    )
-                    all_frames_angles_person_interp = all_frames_angles_person.apply(
-                        interpolate_zeros_nans,
-                        axis=0,
-                        args=[interp_gap_smaller_than, "linear"],
-                    )
-                    if fill_large_gaps_with == "last_value":
-                        all_frames_angles_person_interp = (
-                            all_frames_angles_person_interp.ffill(axis=0).bfill(axis=0)
-                        )
-                    elif fill_large_gaps_with == "zeros":
-                        all_frames_angles_person_interp.replace(np.nan, 0, inplace=True)
-
-                # Filter
-                if not filter_options[0]:
-                    logging.info("No filtering.")
-                    all_frames_angles_person_filt = all_frames_angles_person_interp
-                else:
-                    filter_type = filter_options[1]
-                    if filter_type == "butterworth":
-                        if video_file == "webcam":
-                            cutoff = filter_options[3]
-                            if cutoff / (fps / 2) >= 1:
-                                cutoff_old = cutoff
-                                cutoff = fps / (2 + 0.001)
-                                args = f"\n{cutoff_old:.1f} Hz cut-off framerate too large for a real-time framerate of {fps:.1f} Hz. Using a cut-off framerate of {cutoff:.1f} Hz instead."
-                                filter_options[3] = cutoff
-                        else:
-                            args = ""
-                        args = (
-                            f"Butterworth filter, {filter_options[2]}th order, {filter_options[3]} Hz. "
-                            + args
-                        )
-                        filter_options[4] = fps
-                    if filter_type == "gaussian":
-                        args = f"Gaussian filter, Sigma kernel {filter_options[5]}."
-                    if filter_type == "loess":
-                        args = (
-                            f"LOESS filter, window size of {filter_options[6]} frames."
-                        )
-                    if filter_type == "median":
-                        args = f"Median filter, kernel of {filter_options[7]}."
-                    logging.info(f"Filtering with {args}")
-                    all_frames_angles_person_filt = (
-                        all_frames_angles_person_interp.apply(
-                            filter.filter1d, axis=0, args=filter_options
-                        )
-                    )
-
-                # Build mot file
-                angle_data = make_mot_with_angles(
-                    all_frames_angles_person_filt,
-                    all_frames_time,
-                    str(angles_path_person),
-                )
-                logging.info(f"Angles saved to {angles_path_person.resolve()}.")
-
-                # Plotting angles before and after interpolation and filtering
-                if show_plots:
-                    all_frames_angles_person.insert(0, "t", all_frames_time)
-                    angle_plots(
-                        all_frames_angles_person, angle_data, i
-                    )  # i = current person
