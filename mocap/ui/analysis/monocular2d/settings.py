@@ -59,12 +59,18 @@ class SettingsPanel(QWidget):
         # Main Layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(PAD_Y)
+        main_layout.setSpacing(0)
 
         # Section heading
+        self.name_label = QLabel("", self)
+        self.name_label.setProperty("class", "h1")
+        main_layout.addWidget(self.name_label)
+
         heading = QLabel(self.title, self)
-        heading.setProperty("class", "h1")
+        heading.setProperty("class", "h2")
+        heading.setStyleSheet("font-weight: normal;")
         main_layout.addWidget(heading)
+        main_layout.addSpacing(PAD_Y)
 
         # Create a scroll area
         scroll_area = QScrollArea(self)
@@ -95,6 +101,7 @@ class SettingsPanel(QWidget):
 
         # Final stretch
         scroll_layout.addStretch()
+        main_layout.addSpacing(PAD_Y)
 
         # Button Bar
         self.initButtonBar(main_layout)
@@ -113,6 +120,7 @@ class SettingsPanel(QWidget):
         if self.experiment is None:
             return
 
+        self.name_label.setText(self.experiment.name)
         cfg = self.experiment.cfg
 
         self.pose_model.setOption(cfg["pose"]["pose_model"])
