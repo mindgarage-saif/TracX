@@ -46,7 +46,6 @@ class Monocular3DAnalysisPage(QWidget):
             QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Preferred,
         )
-        self.settings.setFixedWidth(256)
         self.settings.downloadButton.clicked.connect(self.downloadMotionData)
         layout.addWidget(self.settings)
 
@@ -73,7 +72,7 @@ class Monocular3DAnalysisPage(QWidget):
         #     device="cuda",
         # )
 
-    def load(self, name):
+    def setExperiment(self, name):
         self.settings.cfg.experiment_name = name
         self.settings.visualize_cfg.experiment_name = name  # FIXME: This is a hack
         self.experiment = Experiment.open(name)

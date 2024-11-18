@@ -12,15 +12,15 @@ from mocap.ui.common import BaseTaskButton
 
 class EstimateMotionButton(BaseTaskButton):
     def __init__(self, task_config, callback):
-        super().__init__("Estimate Motion", EstimateMotionTask, task_config, callback)
+        super().__init__(None, EstimateMotionTask, task_config, callback)
+        self.setText("Analyze")
 
     def on_start(self):
         super().on_start()
-        self.setText("Processing...")
+        # TODO: Change icon
 
     def on_finish(self, status, result):
         super().on_finish(status, result)
-        self.setText("Estimate Motion")
         if status:
             self.setEnabled(False)
         else:
@@ -30,7 +30,7 @@ class EstimateMotionButton(BaseTaskButton):
 class OpenSimButton(BaseTaskButton):
     def __init__(self, task_config, callback):
         super().__init__(
-            "Get OpenSim Files",
+            "folder.png",
             VisualizeMotionTask,
             task_config,
             callback,
@@ -38,11 +38,10 @@ class OpenSimButton(BaseTaskButton):
 
     def on_start(self):
         super().on_start()
-        self.setText("Preparing...")
+        # TODO: Change icon
 
     def on_finish(self, status, result):
         super().on_finish(status, result)
-        self.setText("Get OpenSim Files")
         if status and result is not None:
             output_dir, motion_file, model_file = result
             self.download_directory(output_dir)
@@ -73,15 +72,14 @@ class OpenSimButton(BaseTaskButton):
 
 class VisualizeMotionButton(BaseTaskButton):
     def __init__(self, task_config, callback):
-        super().__init__("Preview Motion", VisualizeMotionTask, task_config, callback)
+        super().__init__("visualize.png", VisualizeMotionTask, task_config, callback)
 
     def on_start(self):
         super().on_start()
-        self.setText("Preparing...")
+        # TODO: Change icon
 
     def on_finish(self, status, result):
         super().on_finish(status, result)
-        self.setText("Preview Motion")
         self.preview_video(result)
 
     def preview_video(self, result):

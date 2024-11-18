@@ -47,7 +47,6 @@ class Monocular2DAnalysisPage(QWidget):
             QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Preferred,
         )
-        self.settings.setFixedWidth(256)
         self.settings.exportButton.clicked.connect(self.downloadMotionData)
         layout.addWidget(self.settings)
 

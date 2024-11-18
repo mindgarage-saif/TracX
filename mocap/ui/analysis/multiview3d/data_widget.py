@@ -105,10 +105,10 @@ class ExperimentDataWidget(Frame):
         self.refreshUI()
 
     def selectCalibrationFile(self):
-        """Open a file dialog to select the XML calibration file."""
+        """Open a file dialog to select the TOML calibration file."""
         file_dialog = QFileDialog(self)
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        file_dialog.setNameFilter("XML Files (*.xml)")
+        file_dialog.setNameFilter("TOML File (*.toml)")
         if file_dialog.exec():
             try:
                 selected_file = file_dialog.selectedFiles()[0]

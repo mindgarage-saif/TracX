@@ -1,5 +1,3 @@
-import logging
-
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -20,9 +18,10 @@ from mocap.ui.common import IconButton, LabeledWidget, MultipleSelection, Select
 from mocap.ui.styles import PAD_X, PAD_Y
 
 
-class Monocular2DSettingsPanel(QWidget):
-    def __init__(self, parent):
+class SettingsPanel(QWidget):
+    def __init__(self, title, parent):
         super().__init__(parent)
+        self.title = title
         self.experiment = None
         self.setStyleSheet("""
             QScrollArea {
@@ -49,23 +48,118 @@ class Monocular2DSettingsPanel(QWidget):
         """)
         self.initUI()
 
-    def initPoseOptions(self, main_layout):
+    def initScrollAreaContent(self, scroll_layout):
+        pass
+
+    def initButtonBar(self, main_layout):
+        pass
+
+    def initUI(self):
+        # Main Layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(PAD_Y)
+
+        # Section heading
+        heading = QLabel(self.title, self)
+        heading.setProperty("class", "h1")
+        main_layout.addWidget(heading)
+
+        # Create a scroll area
+        scroll_area = QScrollArea(self)
+        scroll_area.setFixedWidth(256)
+        scroll_area.setSizePolicy(
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
+        )
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        # Create a container widget for the scroll area
+        scroll_content = QWidget(scroll_area)
+        scroll_content.setProperty("class", "empty")
+        scroll_content.setFixedWidth(256)
+        scroll_content.setSizePolicy(
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
+        )
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_content.setLayout(scroll_layout)
+        scroll_layout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
+        scroll_layout.setSpacing(PAD_Y // 4)
+        scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(scroll_area)
+
+        # Add content to the scroll area
+        self.initScrollAreaContent(scroll_layout)
+
+        # Final stretch
+        scroll_layout.addStretch()
+
+        # Button Bar
+        self.initButtonBar(main_layout)
+
+    def setExperiment(self, experiment):
+        """Set the experiment object.
+
+        Args:
+            experiment (Experiment): The experiment object.
+
+        """
+        self.experiment = experiment
+        self.refreshUI()
+
+    def refreshUI(self):
+        if self.experiment is None:
+            return
+
+        cfg = self.experiment.cfg
+
+        self.pose_model.setOption(cfg["pose"]["pose_model"])
+        self.perfomance_mode.setOption(cfg["pose"]["mode"])
+        self.det_frequency.widget.setText(str(cfg["pose"]["det_frequency"]))
+
+    def updateConfig(self, cfg):
+        """Read the configuration from the UI components.
+
+        Args:
+            cfg (dict): The configuration dictionary.
+
+        """
+        # Pose settings
+        cfg["pose"]["pose_model"] = self.pose_model.selected_option
+        cfg["pose"]["mode"] = self.perfomance_mode.selected_option
+        cfg["pose"]["det_frequency"] = int(self.det_frequency.widget.text())
+
+        return cfg
+
+    def applyConfigChanges(self):
+        cfg = self.updateConfig(self.experiment.cfg)
+        self.experiment.update_config(cfg)
+
+
+class Monocular2DSettingsPanel(SettingsPanel):
+    def __init__(self, parent):
+        super().__init__("Monocular 2D Analysis", parent)
+
+    def initPoseOptions(self, scroll_layout):
         # section subheading
         heading = QLabel("Pose Estimation", self)
         heading.setProperty("class", "h2")
-        main_layout.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [pose] pose_model
         self.cfg = MotionTaskConfig()
         self.pose_model = Selection(
             "Pose Model",
-            {"Body With Feet": "body_with_feet"},
+            {"Body + Feet": "body_with_feet"},
             self,
         )
         self.pose_model.setToolTip(
             "Pose model to use. Currently, only 'body_with_feet' is supported."
         )
-        main_layout.addWidget(self.pose_model)
+        scroll_layout.addWidget(self.pose_model)
 
         # [pose] mode
         self.perfomance_mode = Selection(
@@ -80,11 +174,11 @@ class Monocular2DSettingsPanel(QWidget):
         self.perfomance_mode.setToolTip(
             "Performance mode: 'lightweight' for speed, 'balanced' for a mix, and 'performance' for accuracy."
         )
-        main_layout.addWidget(self.perfomance_mode)
+        scroll_layout.addWidget(self.perfomance_mode)
 
         heading = QLabel("Detection", self)
         heading.setProperty("class", "h3")
-        main_layout.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [pose] det_frequency
         self.det_frequency = LabeledWidget(
@@ -98,7 +192,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.det_frequency.widget.setToolTip(
             "Run person detection only every N frames. Tracking is used for intermediate frames."
         )
-        main_layout.addWidget(self.det_frequency)
+        scroll_layout.addWidget(self.det_frequency)
 
         # [pose] keypoint_likelihood_threshold
         self.keypoint_likelihood_threshold = LabeledWidget(
@@ -114,7 +208,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.keypoint_likelihood_threshold.widget.setToolTip(
             "Keypoints with likelihood below this value will be ignored."
         )
-        main_layout.addWidget(self.keypoint_likelihood_threshold)
+        scroll_layout.addWidget(self.keypoint_likelihood_threshold)
 
         # [pose] keypoint_number_threshold
         self.keypoint_number_threshold = LabeledWidget(
@@ -130,7 +224,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.keypoint_number_threshold.widget.setToolTip(
             "Persons with fewer good keypoints than this fraction will be ignored."
         )
-        main_layout.addWidget(self.keypoint_number_threshold)
+        scroll_layout.addWidget(self.keypoint_number_threshold)
 
         # [pose] average_likelihood_threshold
         self.average_likelihood_threshold = LabeledWidget(
@@ -146,11 +240,11 @@ class Monocular2DSettingsPanel(QWidget):
         self.average_likelihood_threshold.widget.setToolTip(
             "Persons with an average keypoint likelihood below this value will be ignored."
         )
-        main_layout.addWidget(self.average_likelihood_threshold)
+        scroll_layout.addWidget(self.average_likelihood_threshold)
 
         heading = QLabel("Tracking", self)
         heading.setProperty("class", "h3")
-        main_layout.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [process] multiperson
         self.multiperson = LabeledWidget(
@@ -163,7 +257,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.multiperson.widget.setToolTip(
             "Multiperson involves tracking: will be faster if false"
         )
-        main_layout.addWidget(self.multiperson)
+        scroll_layout.addWidget(self.multiperson)
 
         # [pose] tracking_mode
         self.tracking_mode = Selection(
@@ -177,7 +271,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.tracking_mode.setToolTip(
             "Tracking mode: 'sports2d' is more accurate, 'rtmlib' may be faster."
         )
-        main_layout.addWidget(self.tracking_mode)
+        scroll_layout.addWidget(self.tracking_mode)
 
     def initAnglesOptions(self, main_layout):
         # section subheading
@@ -279,16 +373,16 @@ class Monocular2DSettingsPanel(QWidget):
         )
         main_layout.addWidget(self.font_size)
 
-    def initPostProcessingOptions(self, main_layout):
+    def initPostProcessingOptions(self, scroll_layout):
         # section subheading
         heading = QLabel("Post-Processing", self)
         heading.setProperty("class", "h2")
-        main_layout.addWidget(heading)
-        main_layout.addSpacing(PAD_Y // 2)
+        scroll_layout.addWidget(heading)
+        scroll_layout.addSpacing(PAD_Y // 2)
 
         heading = QLabel("Interpolation", self)
         heading.setProperty("class", "h3")
-        main_layout.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [post-processing] interpolate
         self.interpolate = LabeledWidget(
@@ -301,7 +395,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.interpolate.widget.setToolTip(
             "Enable interpolation for small gaps in data."
         )
-        main_layout.addWidget(self.interpolate)
+        scroll_layout.addWidget(self.interpolate)
 
         # [post-processing] interp_gap_smaller_than
         self.interp_gap_smaller_than = LabeledWidget(
@@ -315,7 +409,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.interp_gap_smaller_than.widget.setToolTip(
             "Specify the maximum gap size (in frames) for interpolation."
         )
-        main_layout.addWidget(self.interp_gap_smaller_than)
+        scroll_layout.addWidget(self.interp_gap_smaller_than)
 
         # [post-processing] fill_large_gaps_with
         self.fill_large_gaps_with = Selection(
@@ -330,11 +424,11 @@ class Monocular2DSettingsPanel(QWidget):
         self.fill_large_gaps_with.setToolTip(
             "Choose the method for filling large gaps in data: 'last_value', 'nan', or 'zeros'."
         )
-        main_layout.addWidget(self.fill_large_gaps_with)
+        scroll_layout.addWidget(self.fill_large_gaps_with)
 
         heading = QLabel("Filtering", self)
         heading.setProperty("class", "h3")
-        main_layout.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [post-processing] filter
         self.filter = LabeledWidget(
@@ -345,7 +439,7 @@ class Monocular2DSettingsPanel(QWidget):
         )
         self.filter.widget.setFixedWidth(24)
         self.filter.widget.setToolTip("Enable filtering for smoothing the results.")
-        main_layout.addWidget(self.filter)
+        scroll_layout.addWidget(self.filter)
 
         # [post-processing] filter_type
         self.filter_type = Selection(
@@ -361,11 +455,11 @@ class Monocular2DSettingsPanel(QWidget):
         self.filter_type.setToolTip(
             "Select the filter type: Butterworth, Gaussian, LOESS, or Median."
         )
-        main_layout.addWidget(self.filter_type)
+        scroll_layout.addWidget(self.filter_type)
 
         # [post-processing.butterworth] order and cut_off_frequency
         self.butterworth_order = LabeledWidget(
-            "Butterworth Order",
+            "Order",
             QLineEdit(self),
             style="body",
             orientation=Qt.Orientation.Horizontal,
@@ -375,10 +469,10 @@ class Monocular2DSettingsPanel(QWidget):
         self.butterworth_order.widget.setToolTip(
             "Set the order of the Butterworth filter."
         )
-        main_layout.addWidget(self.butterworth_order)
+        scroll_layout.addWidget(self.butterworth_order)
 
         self.butterworth_cut_off_frequency = LabeledWidget(
-            "Butterworth Cut-Off Frequency",
+            "Cut-Off Frequency",
             QLineEdit(self),
             style="body",
             orientation=Qt.Orientation.Horizontal,
@@ -390,7 +484,7 @@ class Monocular2DSettingsPanel(QWidget):
         self.butterworth_cut_off_frequency.widget.setToolTip(
             "Set the cut-off frequency (Hz) for the Butterworth filter."
         )
-        main_layout.addWidget(self.butterworth_cut_off_frequency)
+        scroll_layout.addWidget(self.butterworth_cut_off_frequency)
 
     def initVisualizationOptions(self, main_layout):
         heading = QLabel("Visualizations", self)
@@ -410,7 +504,7 @@ class Monocular2DSettingsPanel(QWidget):
         )
         main_layout.addWidget(self.show_graphs)
 
-    def initButtons(self):
+    def initButtonBar(self, main_layout):
         button_bar = QWidget(self)
         button_bar.setProperty("class", "empty")
         layout = QHBoxLayout(button_bar)
@@ -419,7 +513,7 @@ class Monocular2DSettingsPanel(QWidget):
 
         # Save Button
         self.saveButton = QPushButton("Save", self)
-        self.saveButton.clicked.connect(self.saveConfiguration)
+        self.saveButton.clicked.connect(self.applyConfigChanges)
         layout.addWidget(self.saveButton)
 
         # Estimate Motion Button
@@ -438,43 +532,9 @@ class Monocular2DSettingsPanel(QWidget):
         )
         layout.addWidget(self.visualizeButton)
 
-        return button_bar
+        main_layout.addWidget(button_bar)
 
-    def initUI(self):
-        # Main Layout
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(PAD_Y)
-
-        # Section heading
-        heading = QLabel("2D Analysis", self)
-        heading.setProperty("class", "h1")
-        main_layout.addWidget(heading)
-
-        # Create a scroll area
-        scroll_area = QScrollArea(self)
-        scroll_area.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
-        )
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        # Create a container widget for the scroll area
-        scroll_content = QWidget(scroll_area)
-        scroll_content.setProperty("class", "empty")
-        scroll_content.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
-        )
-        scroll_layout = QVBoxLayout(scroll_content)
-        scroll_content.setLayout(scroll_layout)
-        scroll_layout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
-        scroll_layout.setSpacing(PAD_Y // 4)
-        scroll_area.setWidget(scroll_content)
-        main_layout.addWidget(scroll_area)
-
+    def initScrollAreaContent(self, scroll_layout):
         # Pose settings
         self.initPoseOptions(scroll_layout)
 
@@ -490,24 +550,8 @@ class Monocular2DSettingsPanel(QWidget):
         scroll_layout.addSpacing(PAD_Y // 2)
         self.initVisualizationOptions(scroll_layout)
 
-        # Final stretch
-        scroll_layout.addStretch()
-
-        # Button Bar
-        button_bar = self.initButtons()
-        main_layout.addWidget(button_bar)
-
-    def setExperiment(self, experiment):
-        """Set the experiment object.
-
-        Args:
-            experiment (Experiment): The experiment object.
-
-        """
-        self.experiment = experiment
-        self.refreshUI()
-
     def refreshUI(self):
+        super().refreshUI()
         if self.experiment is None:
             return
 
@@ -516,9 +560,6 @@ class Monocular2DSettingsPanel(QWidget):
 
         # Show experiment pose settings
         self.multiperson.widget.setChecked(cfg["process"]["multiperson"])
-        self.pose_model.setOption(cfg["pose"]["pose_model"])
-        self.perfomance_mode.setOption(cfg["pose"]["mode"])
-        self.det_frequency.widget.setText(str(cfg["pose"]["det_frequency"]))
         self.tracking_mode.setOption(cfg["pose"]["tracking_mode"])
         self.keypoint_likelihood_threshold.widget.setText(
             str(cfg["pose"]["keypoint_likelihood_threshold"])
@@ -565,20 +606,10 @@ class Monocular2DSettingsPanel(QWidget):
         self.exportButton.setEnabled(isAnalyzed)
         self.analyzeButton.log_file = self.experiment.log_file
 
-    def saveConfiguration(self):
-        if self.experiment is None:
-            return
-
-        # Read values from widgets and update experiment config
-        logging.info("Saving configuration")
-        cfg = self.experiment.cfg
-
-        # Pose settings
-        cfg["pose"]["pose_model"] = self.pose_model.selected_option
-        cfg["pose"]["mode"] = self.perfomance_mode.selected_option
+    def updateConfig(self, cfg):
+        cfg = super().updateConfig(cfg)
 
         ## Pose > Detection
-        cfg["pose"]["det_frequency"] = int(self.det_frequency.widget.text())
         cfg["pose"]["keypoint_likelihood_threshold"] = float(
             self.keypoint_likelihood_threshold.widget.text()
         )
@@ -624,7 +655,8 @@ class Monocular2DSettingsPanel(QWidget):
 
         # Visualization settings
         cfg["post-processing"]["show_graphs"] = self.show_graphs.widget.isChecked()
-        self.experiment.update_config(cfg)
+
+        return cfg
 
     def onAnalyzed(self, status, result):
         self.exportButton.setEnabled(status)
