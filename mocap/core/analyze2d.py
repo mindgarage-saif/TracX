@@ -1401,11 +1401,12 @@ def process_frame(config_dict, pose_tracker, frame):
     if not all(key in config_dict for key in required_keys):
         return frame
 
-    # Save original frame size and resize keeping aspect ratio
-    H, W, _ = frame.shape
-    H_resized = 400
-    W_resized = int(W * H_resized / H)
-    frame = cv2.resize(frame, (W_resized, H_resized))
+    # TODO: Use scaling for faster processing
+    # # Save original frame size and resize keeping aspect ratio
+    # H, W, _ = frame.shape
+    # H_resized = 400
+    # W_resized = int(W * H_resized / H)
+    # frame = cv2.resize(frame, (W_resized, H_resized))
     frame = cv2.flip(frame, 1)
 
     # Process settings
@@ -1424,7 +1425,7 @@ def process_frame(config_dict, pose_tracker, frame):
     angle_names = joint_angle_names + segment_angle_names
     angle_names = [angle_name.lower() for angle_name in angle_names]
     display_angle_values_on = config_dict.get("angles").get("display_angle_values_on")
-    fontSize = config_dict.get("angles").get("fontSize")
+    fontSize = config_dict.get("angles").get("fontSize") * frame.shape[0] / 400
     thickness = 1 if fontSize < 0.8 else 2
     flip_left_right = config_dict.get("angles").get("flip_left_right")
 
@@ -1551,7 +1552,7 @@ def process_frame(config_dict, pose_tracker, frame):
     )
 
     # Resize image back to original size
-    img = cv2.resize(img, (W, H))
+    # img = cv2.resize(img, (W, H))
     return cv2.flip(img, 1)
 
 

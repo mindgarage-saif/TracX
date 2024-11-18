@@ -1,9 +1,7 @@
-from .data_widget import ExperimentDataWidget
-from .motion_options import MotionOptions as MotionOptions
-from .page import MonocularAnalysisPage
+from .page import Monocular3DAnalysisPage
+from .settings import Monocular3DSettingsPanel
 
 __all__ = [
-    "ExperimentDataWidget",
-    "MotionOptions",
-    "MonocularAnalysisPage",
+    "Monocular3DSettingsPanel",
+    "Monocular3DAnalysisPage",
 ]

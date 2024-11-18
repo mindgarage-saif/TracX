@@ -250,3 +250,9 @@ QScrollBar::sub-line:horizontal {{
 .video-gallery-item QWidget {{
     background-color: transparent;
 }}
+
+
+QComboBox {{
+    border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
+    border-radius: 8px;
+}}

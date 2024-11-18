@@ -10,7 +10,7 @@ class BaseTask(QObject):
         super().__init__()
         self.config = config
 
-    def _execute_impl(self):
+    def _execute_impl(self, *args, **kwargs):
         """Executes the task. This method should be overridden in subclasses
         to define specific task logic.
         """
@@ -18,6 +18,6 @@ class BaseTask(QObject):
             "Subclasses must implement the `_execute_impl` method."
         )
 
-    def execute(self):
+    def execute(self, *args, **kwargs):
         """Executes the task."""
-        return self._execute_impl()
+        return self._execute_impl(*args, **kwargs)

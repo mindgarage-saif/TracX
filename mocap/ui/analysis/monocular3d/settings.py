@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QHBoxLayout,
-    QPushButton,
+    QLabel,
     QVBoxLayout,
     QWidget,
 )
@@ -10,8 +10,7 @@ from PyQt6.QtWidgets import (
 from mocap.core.configs import MotionTaskConfig, VisualizeTaskConfig
 from mocap.core.configs.base import Engine, ExperimentMode, LiftingModel, PoseModel
 from mocap.ui.analysis import EstimateMotionButton, VisualizeMotionButton
-from mocap.ui.common import LabeledWidget
-from mocap.ui.styles import PAD_X, PAD_Y
+from mocap.ui.common import IconButton, LabeledWidget
 
 
 class ModelSelection(QWidget):
@@ -100,7 +99,7 @@ class VideoOptions(QWidget):
         self.params.rotation = {0: 90, 1: 180, 2: -90}[index]
 
 
-class MotionOptions(QWidget):
+class Monocular3DSettingsPanel(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.cfg = MotionTaskConfig()
@@ -109,25 +108,22 @@ class MotionOptions(QWidget):
 
         # Main Layout
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
-        main_layout.setSpacing(PAD_Y)
-        self.setStyleSheet("QComboBox { border: 2px solid #ccc; border-radius: 8px; }")
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(8)
 
-        model_layout = QHBoxLayout()
-        model_layout.setContentsMargins(0, 0, 0, 0)
-        model_layout.setSpacing(PAD_X)
-        model_widget = QWidget(self)
-        model_widget.setProperty("class", "empty")
-        model_widget.setLayout(model_layout)
+        # Section heading
+        heading = QLabel("Monocular 3D Analysis", self)
+        heading.setProperty("class", "h1")
+        main_layout.addWidget(heading)
 
         # Model Selection
         self.model_selection = ModelSelection(self, self.cfg)
         self.model_selection.on_model_changed(self.model_changed)
-        model_layout.addWidget(LabeledWidget("Select a Model", self.model_selection))
+        main_layout.addWidget(LabeledWidget("Select a Model", self.model_selection))
 
         # Skeleton Selection
         self.skeleton_selection = SkeletonSelection(self, self.cfg)
-        model_layout.addWidget(
+        main_layout.addWidget(
             LabeledWidget("Select a Skeleton", self.skeleton_selection)
         )
 
@@ -136,10 +132,10 @@ class MotionOptions(QWidget):
         # main_layout.addWidget(LabelledWidget(
         #     "Video Options", self.video_options))
 
+        main_layout.addStretch()
+
         # Button Bar
         button_bar = self.create_button_bar()
-
-        main_layout.addWidget(model_widget)
         main_layout.addWidget(button_bar)
 
         self.model_changed()
@@ -149,6 +145,7 @@ class MotionOptions(QWidget):
         button_bar.setProperty("class", "empty")
         layout = QHBoxLayout(button_bar)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
 
         # Estimate Motion Button
         self.estimate_button = EstimateMotionButton(
@@ -157,7 +154,7 @@ class MotionOptions(QWidget):
         layout.addWidget(self.estimate_button)
 
         # Download Button
-        self.downloadButton = QPushButton("Download Motion", self)
+        self.downloadButton = IconButton("export.png", 24, self)
         self.downloadButton.setEnabled(False)
         layout.addWidget(self.downloadButton)
 

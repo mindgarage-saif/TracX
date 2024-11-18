@@ -13,11 +13,11 @@ from mocap.core import Experiment
 from mocap.core.analyze2d import process_frame, setup_pose_tracker
 from mocap.ui.styles import PAD_Y
 
-from ..monocular2d.data_widget import ExperimentDataWidget
-from .settings import Monocular3DSettingsPanel
+from .data_widget import ExperimentDataWidget
+from .settings import Monocular2DSettingsPanel
 
 
-class Monocular3DAnalysisPage(QWidget):
+class Monocular2DAnalysisPage(QWidget):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setSizePolicy(
@@ -31,6 +31,7 @@ class Monocular3DAnalysisPage(QWidget):
         self.setLayout(layout)
 
         # Experiment data
+        self.experiment = None
         self.data = ExperimentDataWidget(self)
         self.data.videoPlayer.videoProcessor.process = self.processFrame
         layout.addWidget(self.data)
@@ -41,50 +42,39 @@ class Monocular3DAnalysisPage(QWidget):
         )
 
         # Experiment settings
-        self.settings = Monocular3DSettingsPanel(self)
+        self.settings = Monocular2DSettingsPanel(self)
         self.settings.setSizePolicy(
             QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Preferred,
         )
         self.settings.setFixedWidth(256)
-        self.settings.downloadButton.clicked.connect(self.downloadMotionData)
+        self.settings.exportButton.clicked.connect(self.downloadMotionData)
         layout.addWidget(self.settings)
 
         # Connect the update event
         self.data.onUpdate = self.handleDataUpload
         self.settings.onUpdate = self.handleOptionsChanged
 
-        # mode = self.experiment.cfg.get("pose").get("mode")
-        # tracking = self.experiment.cfg.get("process").get("multiperson")
-        # det_frequency = self.experiment.cfg.get("pose").get("det_frequency")
-        # tracking_mode = self.experiment.cfg.get("pose").get("tracking_mode")
-        # tracking_rtmlib = tracking_mode == "rtmlib" and tracking
-        # self.model = setup_pose_tracker(det_frequency, mode, tracking_rtmlib)
+        # Model setup
+        self.model = None
 
-        self.model = setup_pose_tracker(10, "lightweight", False)
-
-        # self.model = PoseTracker(
-        #     BodyWithFeet,
-        #     det_frequency=30,
-        #     tracking=False,
-        #     mode="balanced",
-        #     to_openpose=False,
-        #     backend="onnxruntime",
-        #     device="cuda",
-        # )
-
-    def load(self, name):
-        self.settings.cfg.experiment_name = name
-        self.settings.visualize_cfg.experiment_name = name  # FIXME: This is a hack
+    def setExperiment(self, name):
         self.experiment = Experiment.open(name)
         self.data.setExperiment(self.experiment)
-        hasMotionData = self.experiment.get_motion_file() is not None
-        self.settings.estimate_button.setEnabled(
-            not hasMotionData,
-        )
-        self.settings.downloadButton.setEnabled(hasMotionData)
+        self.settings.setExperiment(self.experiment)
+        self.refreshUI()
 
-        self.settings.estimate_button.log_file = self.experiment.log_file
+    def refreshUI(self):
+        if self.experiment is None:
+            return
+
+        # Model setup
+        mode = self.experiment.cfg.get("pose").get("mode")
+        det_frequency = self.experiment.cfg.get("pose").get("det_frequency")
+        tracking_mode = self.experiment.cfg.get("pose").get("tracking_mode")
+        tracking = self.experiment.cfg.get("process").get("multiperson")
+        tracking_rtmlib = tracking_mode == "rtmlib" and tracking
+        self.model = setup_pose_tracker(det_frequency, mode, tracking_rtmlib)
 
     def drawRecordingOverlay(self, frame):
         h, w, _ = frame.shape
@@ -160,6 +150,9 @@ class Monocular3DAnalysisPage(QWidget):
         # TODO: Perform post-processing
         # keypoints, scores = self.model(frame)
         # frame = draw_skeleton(frame, keypoints, scores, openpose_skeleton=False, kpt_thr=0.43)
+
+        if self.model is None:
+            return frame
 
         return process_frame(self.experiment.cfg, self.model, frame)
 

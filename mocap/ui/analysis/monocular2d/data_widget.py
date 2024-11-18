@@ -9,16 +9,16 @@ from PyQt6.QtWidgets import (
 
 from mocap.core import Experiment
 from mocap.ui.common import EmptyState, Frame, VideoPlayerWidget, VideoUploaderWidget
-from mocap.ui.styles import PAD_X, PAD_Y
 
 
 class ExperimentDataWidget(Frame):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
+        self.experiment = None
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
-        self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
+        self.innerLayout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.innerLayout.setSpacing(0)
 

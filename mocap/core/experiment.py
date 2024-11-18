@@ -48,7 +48,7 @@ class Experiment:
         self.calibration_dir = os.path.join(self.path, "calibration")
         self.calibration_file = os.path.join(
             self.calibration_dir,
-            "camera_parameters.qca.txt",
+            "Calib_board.toml",
         )
         self.config_file = os.path.join(self.path, "Config.toml")
 
@@ -199,15 +199,28 @@ class Experiment:
         return self.num_videos > 0
 
     def set_camera_parameters(self, params_file):
-        if params_file.split(".")[-1].lower() != "xml":
+        if params_file.split(".")[-1].lower() != "toml":
             raise ValueError(
-                "Invalid calibration file format. We except a Qualisys calibration file in XML format.",
+                "Invalid calibration file format. We except a calibration file in toml format.",
             )
 
         shutil.copy(params_file, self.calibration_file)
 
     def get_camera_parameters(self):
         return self.calibration_file if os.path.exists(self.calibration_file) else None
+
+    def update_config(self, cfg):
+        def merge_dicts(d1, d2):
+            for key, value in d2.items():
+                if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
+                    merge_dicts(d1[key], value)
+                else:
+                    d1[key] = value
+            return d1
+
+        self.cfg = merge_dicts(self.cfg, cfg)
+        with open(self.config_file, "w") as f:
+            toml.dump(cfg, f)
 
     def change_config(self, mode, skeleton, trackedpoint):
         file = toml.load(self.config_file)
@@ -326,13 +339,16 @@ class Experiment:
 
     def get_motion_file(self) -> Optional[str]:
         if self.is_2d:
+            logging.error("Not implemented for 2D experiments.")
             return None
+
         # 3D Monocular
         if self.monocular:
             pose_3d = [
                 f for f in os.listdir(self.pose3d_dir) if f.endswith("data.json")
             ]
             if len(pose_3d) == 0:
+                logging.error("No 3D pose data found for monocular experiment.")
                 return None
             return os.path.join(self.pose3d_dir, pose_3d[0])
 
@@ -343,6 +359,7 @@ class Experiment:
             if f.endswith("_filt_butterworth.trc")
         ]
         if len(trc_files) == 0:
+            logging.error("No TRC files found for multiview experiment.")
             return None
         return os.path.join(self.pose3d_dir, trc_files[0])
 
