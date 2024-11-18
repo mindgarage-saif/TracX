@@ -14,6 +14,7 @@ class LabeledWidget(QWidget):
         orientation=Qt.Orientation.Vertical,
     ):
         super().__init__(parent)
+        self.widget = widget
         layout = (
             QVBoxLayout(self)
             if orientation == Qt.Orientation.Vertical

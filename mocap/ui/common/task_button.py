@@ -1,12 +1,13 @@
 import logging
 
 from PyQt6.QtCore import QThread
-from PyQt6.QtWidgets import QPushButton
 
 from mocap.tasks import TaskRunner
 
+from .icon_button import IconButton
 
-class BaseTaskButton(QPushButton):
+
+class BaseTaskButton(IconButton):
     """Base class for buttons associated with tasks.
     Clicking the button will trigger the associated task.
     """
@@ -18,9 +19,8 @@ class BaseTaskButton(QPushButton):
             label: The label to display on the button.
             task_class: The class of the task to be executed (must inherit from BaseTask).
             task_config: The configuration for the task.
-
         """
-        super().__init__(label)
+        super().__init__(label, iconSize=24)
         self.task = task_class(task_config)
         self.callback = callback  # Callback function to handle the task result
         self.task_thread = None  # Track thread instance
