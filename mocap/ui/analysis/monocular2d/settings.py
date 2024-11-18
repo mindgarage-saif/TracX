@@ -19,10 +19,11 @@ from mocap.ui.styles import PAD_X, PAD_Y
 
 
 class SettingsPanel(QWidget):
-    def __init__(self, title, parent):
+    def __init__(self, title, parent, width=320):
         super().__init__(parent)
         self.title = title
         self.experiment = None
+        self.setFixedWidth(width)
         self.setStyleSheet("""
             QScrollArea {
                 background: black;
@@ -67,9 +68,8 @@ class SettingsPanel(QWidget):
 
         # Create a scroll area
         scroll_area = QScrollArea(self)
-        scroll_area.setFixedWidth(256)
         scroll_area.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
         scroll_area.setWidgetResizable(True)
@@ -79,9 +79,8 @@ class SettingsPanel(QWidget):
         # Create a container widget for the scroll area
         scroll_content = QWidget(scroll_area)
         scroll_content.setProperty("class", "empty")
-        scroll_content.setFixedWidth(256)
         scroll_content.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
         scroll_layout = QVBoxLayout(scroll_content)
