@@ -2,9 +2,10 @@ colorlog
 easydict
 matplotlib
 numpy
-opencv-python-headless~=4.10.0.84
-Pillow~=10.4.0
+opencv-python-headless
+pose2sim==0.10.1
 pre-commit
+Pillow~=10.4.0
 PyQt6
-PyQt6-3D
 qt-material==2.14
+sports2d==0.4.8
