@@ -13,9 +13,7 @@ class VisualizeMotionTask(BaseTask):
 
     def _execute_impl(self):
         # Read task configuration
-        experiment_name = self.config.experiment_name
-        visualization_mode = self.config.visualization_mode
-        visualization_args = self.config.visualization_args
+        experiment_name = self.config
 
         if experiment_name is None:
             raise ValueError("Experiment name is required for visualization")
@@ -23,8 +21,7 @@ class VisualizeMotionTask(BaseTask):
         logging.info("Visualizing 3D motion...")
         experiment = Experiment(experiment_name, create=False)
         result = experiment.visualize(
-            mode=visualization_mode,
-            **visualization_args,
+            mode="naive",
         )
 
         logging.info("Pipeline execution complete.")

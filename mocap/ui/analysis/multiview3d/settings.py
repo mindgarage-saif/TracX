@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.core.configs import VisualizeTaskConfig
 from mocap.ui.common import IconButton, LabeledWidget, Selection
 from mocap.ui.styles import PAD_Y
 
@@ -420,21 +419,10 @@ class Multiview3DSettingsPanel(SettingsPanel):
         layout.addWidget(self.downloadButton)
 
         # Create Button
-        self.createButton = VisualizeMotionButton(
-            VisualizeTaskConfig(),
-            self.onVisualizationsCreated,
-        )
+        self.createButton = VisualizeMotionButton(self.onVisualized)
         layout.addWidget(self.createButton)
 
-        self.opensim_config = VisualizeTaskConfig()
-        self.opensim_config.visualization_mode = "opensim"
-        self.opensim_config.visualization_args = dict(
-            with_blender=False,
-        )
-        self.downloadOpenSimButton = OpenSimButton(
-            self.opensim_config,
-            self.onExportReady,
-        )
+        self.downloadOpenSimButton = OpenSimButton(self.onExportReady)
         layout.addWidget(self.downloadOpenSimButton)
 
         self.onUpdate = lambda status, result: None
@@ -502,8 +490,8 @@ class Multiview3DSettingsPanel(SettingsPanel):
 
         # Update buttons
         self.estimateButton.task.config = self.experiment.name
-        self.createButton.task.config.experiment_name = self.experiment.name
-        self.downloadOpenSimButton.task.config.experiment_name = self.experiment.name
+        self.createButton.task.config = self.experiment.name
+        self.downloadOpenSimButton.task.config = self.experiment.name
 
     def updateConfig(self, cfg):
         cfg = super().updateConfig(cfg)
@@ -571,7 +559,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.onUpdate(status, result)
         self.downloadButton.setEnabled(status)
 
-    def onVisualizationsCreated(self, status, result):
+    def onVisualized(self, status, result):
         pass
 
     def onExportReady(self, status, result):

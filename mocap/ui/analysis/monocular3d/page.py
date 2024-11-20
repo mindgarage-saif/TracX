@@ -1,194 +1,95 @@
+import logging
 import os
-import shutil
 
-import cv2
+import numpy as np
+import onnxruntime as ort
 from PyQt6.QtWidgets import (
-    QFileDialog,
-    QHBoxLayout,
-    QSizePolicy,
     QWidget,
 )
 
-from mocap.core import Experiment
-from mocap.core.analyze2d import process_frame, setup_pose_tracker
-from mocap.ui.styles import PAD_Y
+from mocap.constants import APP_ASSETS
+from mocap.core.analyze2d import process_frame
 
-from ..monocular2d.data_widget import ExperimentDataWidget
-from .settings import Monocular3DSettingsPanel
+from ..monocular2d.page import Monocular2DAnalysisPage
 
 
-class Monocular3DAnalysisPage(QWidget):
+def normalize_data(data, res_w, res_h):
+    data = data / res_w * 2 - [1, res_h / res_w]
+    return data.astype(np.float32)
+
+
+def lift_to_3d(model, keypoints, res_w, res_h):
+    data_2d = np.array(
+        keypoints[[19, 12, 14, 16, 11, 13, 15, 18, 0, 17, 5, 7, 9, 6, 8, 10], :2],
+        dtype=np.float32,
+    )
+    input2 = normalize_data(data_2d, res_w, res_h)
+    input2 = input2.reshape(1, -1)
+    onnx_input = {"l_x_": input2}
+
+    output = model.run(None, onnx_input)
+    return output[0][0].reshape(16, 3)
+
+
+class Monocular3DAnalysisPage(Monocular2DAnalysisPage):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
-        )
+        self.settings.title_label.setText("Monocular 3D Analysis")
+        self._lifting_model = None
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        self.setLayout(layout)
+    @property
+    def lifting_model(self):
+        if self._lifting_model is not None:
+            return self._lifting_model
 
-        # Experiment data
-        self.data = ExperimentDataWidget(self)
-        self.data.videoPlayer.videoProcessor.process = self.processFrame
-        layout.addWidget(self.data)
-        layout.addSpacing(PAD_Y)
-        self.data.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Preferred,
-        )
+        # Load lifting model
+        model_path = os.path.join(APP_ASSETS, "models", "lifting", "baseline.onnx")
+        logging.info("Loading the 3D lifting model from %s...", model_path)
+        self._lifting_model = ort.InferenceSession(model_path)
+        logging.info("3D lifting model loaded successfully.")
 
-        # Experiment settings
-        self.settings = Monocular3DSettingsPanel(self)
-        self.settings.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
-            QSizePolicy.Policy.Preferred,
-        )
-        self.settings.downloadButton.clicked.connect(self.downloadMotionData)
-        layout.addWidget(self.settings)
+        # Log model inputs and outputs for debugging
+        logging.debug("3D lifting model inputs:")
+        for input in self._lifting_model.get_inputs():
+            logging.debug(
+                "  Name: %s, Shape: %s, Type: %s", input.name, input.shape, input.type
+            )
+        logging.debug("3D lifting model outputs:")
+        for output in self._lifting_model.get_outputs():
+            logging.debug(
+                "  Name: %s, Shape: %s, Type: %s",
+                output.name,
+                output.shape,
+                output.type,
+            )
 
-        # Connect the update event
-        self.data.onUpdate = self.handleDataUpload
-        self.settings.onUpdate = self.handleOptionsChanged
-
-        # mode = self.experiment.cfg.get("pose").get("mode")
-        # tracking = self.experiment.cfg.get("process").get("multiperson")
-        # det_frequency = self.experiment.cfg.get("pose").get("det_frequency")
-        # tracking_mode = self.experiment.cfg.get("pose").get("tracking_mode")
-        # tracking_rtmlib = tracking_mode == "rtmlib" and tracking
-        # self.model = setup_pose_tracker(det_frequency, mode, tracking_rtmlib)
-
-        self.model = setup_pose_tracker(10, "lightweight", False)
-
-        # self.model = PoseTracker(
-        #     BodyWithFeet,
-        #     det_frequency=30,
-        #     tracking=False,
-        #     mode="balanced",
-        #     to_openpose=False,
-        #     backend="onnxruntime",
-        #     device="cuda",
-        # )
-
-    def setExperiment(self, name):
-        self.settings.cfg.experiment_name = name
-        self.settings.visualize_cfg.experiment_name = name  # FIXME: This is a hack
-        self.experiment = Experiment.open(name)
-        self.data.setExperiment(self.experiment)
-        hasMotionData = self.experiment.get_motion_file() is not None
-        self.settings.estimate_button.setEnabled(
-            not hasMotionData,
-        )
-        self.settings.downloadButton.setEnabled(hasMotionData)
-
-        self.settings.estimate_button.log_file = self.experiment.log_file
-
-    def drawRecordingOverlay(self, frame):
-        h, w, _ = frame.shape
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.025)),
-            (int(w * 0.1), int(h * 0.025)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.025)),
-            (int(w * 0.025), int(h * 0.1)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.025)),
-            (int(w * 0.9), int(h * 0.025)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.025)),
-            (int(w * 0.975), int(h * 0.1)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.975)),
-            (int(w * 0.1), int(h * 0.975)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.975)),
-            (int(w * 0.025), int(h * 0.9)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.975)),
-            (int(w * 0.9), int(h * 0.975)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.975)),
-            (int(w * 0.975), int(h * 0.9)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.circle(frame, (int(w * 0.05), int(h * 0.065)), 5, (0, 0, 255), -1)
-        cv2.putText(
-            frame,
-            "REC",
-            (int(w * 0.07), int(h * 0.075)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-            2,
-            cv2.LINE_AA,
-        )
+        return self._lifting_model
 
     def processFrame(self, frame):
-        # TODO: Perform post-processing
-        # keypoints, scores = self.model(frame)
-        # frame = draw_skeleton(frame, keypoints, scores, openpose_skeleton=False, kpt_thr=0.43)
+        if self.model is None:
+            return frame
 
-        return process_frame(self.experiment.cfg, self.model, frame)
+        logging.debug("Estimating 2D pose")
+        frame, (x, y, scores, angles, kwargs) = process_frame(
+            self.experiment.cfg, self.model, frame
+        )
 
-        # frame = cv2.flip(frame, 1)
-        # self.drawRecordingOverlay(frame)
-        # frame = cv2.flip(frame, 1)
-        # return frame
+        # Append frame data
+        self.all_frames_X.append(np.array(x))
+        self.all_frames_Y.append(np.array(y))
+        self.all_frames_scores.append(np.array(scores))
+        self.all_frames_angles.append(np.array(angles))
+        self.postprocessing_kwargs = kwargs
 
-    def handleDataUpload(self, status):
-        self.settings.setEnabled(status)
+        # TODO: Lift to 3D
+        logging.debug("Lifting to 3D")
+        height, width = frame.shape[:2]
+        pose2d = np.array([np.array(x)[0, :], np.array(y)[0, :]]).T
+        logging.debug("Pose2D: %s", pose2d.shape)
+        pose3d = lift_to_3d(self.lifting_model, pose2d, width, height)
+        logging.debug("Pose3D: %s", pose3d.shape)
 
-    def handleOptionsChanged(self, status, result):
-        if not status:
-            self.showAlert(str(result), "Motion Estimation Failed")
+        # TODO: Compute angles
+        logging.debug("Computing angles")
 
-    def downloadMotionData(self):
-        try:
-            motionData = self.experiment.get_motion_file()
-            self.downloadFile(motionData)
-        except Exception as e:
-            self.showAlert(str(e), "Download Failed")
-
-    def downloadFile(self, file_path):
-        # Show a download dialog
-        file_dialog = QFileDialog(self)
-        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-        file_dialog.selectFile(os.path.basename(file_path))
-
-        if file_dialog.exec():
-            save_path = file_dialog.selectedFiles()[0]
-            if save_path:
-                shutil.copyfile(file_path, save_path)
-                # TOOD: Show a success message
+        return frame

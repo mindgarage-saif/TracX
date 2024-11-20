@@ -12,7 +12,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.core.configs import VisualizeTaskConfig
 from mocap.ui.analysis import EstimateMotionButton, VisualizeMotionButton
 from mocap.ui.common import IconButton, LabeledWidget, MultipleSelection, Selection
 from mocap.ui.styles import PAD_X, PAD_Y
@@ -66,10 +65,10 @@ class SettingsPanel(QWidget):
         self.name_label.setProperty("class", "h1")
         main_layout.addWidget(self.name_label)
 
-        heading = QLabel(self.title, self)
-        heading.setProperty("class", "h2")
-        heading.setStyleSheet("font-weight: normal;")
-        main_layout.addWidget(heading)
+        self.title_label = QLabel(self.title, self)
+        self.title_label.setProperty("class", "h2")
+        self.title_label.setStyleSheet("font-weight: normal;")
+        main_layout.addWidget(self.title_label)
         main_layout.addSpacing(PAD_Y)
 
         # Create a scroll area
@@ -531,11 +530,7 @@ class Monocular2DSettingsPanel(SettingsPanel):
         self.exportButton.setEnabled(False)
         layout.addWidget(self.exportButton)
 
-        self.vcfg = VisualizeTaskConfig()
-        self.visualizeButton = VisualizeMotionButton(
-            self.vcfg,
-            self.onVisualized,
-        )
+        self.visualizeButton = VisualizeMotionButton(self.onVisualized)
         layout.addWidget(self.visualizeButton)
 
         main_layout.addWidget(button_bar)
@@ -578,7 +573,7 @@ class Monocular2DSettingsPanel(SettingsPanel):
         )
 
         # Show experiment angles settings
-        display_angle_values_on = cfg["angles"]["display_angle_values_on"]
+        display_angle_values_on = cfg["angles"].get("display_angle_values_on", "Both")
         if isinstance(display_angle_values_on, list):
             display_angle_values_on = "Both"
         self.display_angle_values_on.widget.setCurrentText(display_angle_values_on)
@@ -606,7 +601,6 @@ class Monocular2DSettingsPanel(SettingsPanel):
         )
 
         # Update buttons
-        self.vcfg.experiment_name = self.experiment.name  # FIXME: This is a hack
         isAnalyzed = self.experiment.get_motion_file() is not None
         self.analyzeButton.setEnabled(not isAnalyzed)
         self.exportButton.setEnabled(isAnalyzed)

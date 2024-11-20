@@ -58,7 +58,7 @@ class ExperimentDataWidget(Frame):
         self.onUpdate = lambda status: None
 
     def startWebcam(self):
-        self.videoPlayer.setVideoSource(0)
+        self.videoPlayer.setSource(0)
         self.videoPlayer.show()
         self.noCamerasLabel.hide()
 
@@ -94,7 +94,7 @@ class ExperimentDataWidget(Frame):
 
             # Create a camera stream object
             logging.debug(f"Creating camera stream for {experimentVideos[0]}")
-            self.videoPlayer.setVideoSource(experimentVideos[0])
+            self.videoPlayer.setSource(experimentVideos[0])
             self.videoPlayer.show()
         else:
             self.noCamerasLabel.show()

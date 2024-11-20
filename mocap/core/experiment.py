@@ -18,7 +18,7 @@ from mocap.constants import (
     OPENSIM_DIR,
     SUPPORTED_VIDEO_FORMATS,
 )
-from mocap.core.configs.base import LiftingModel
+from mocap.core.triangulation import triangulate_all
 from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
 from .motion import MotionSequence
@@ -159,13 +159,11 @@ class Experiment:
 
     def copy_default_config(self):
         if self.is_2d:
-            default_config = os.path.join(
-                APP_ASSETS, "defaults", "Config_Sports2D.toml"
-            )
+            default_config = os.path.join(APP_ASSETS, "defaults", "Config_Mono2d.toml")
+        elif self.monocular:
+            default_config = os.path.join(APP_ASSETS, "defaults", "Config_Mono3d.toml")
         else:
-            default_config = os.path.join(
-                APP_ASSETS, "defaults", "Config_Pose2Sim.toml"
-            )
+            default_config = os.path.join(APP_ASSETS, "defaults", "Config_Multi3d.toml")
         shutil.copy(default_config, self.config_file)
 
     @property
@@ -290,7 +288,7 @@ class Experiment:
         # 2D-to-3D Lifting in Monocular Mode
         if self.monocular:
             logging.info("Lifting 2D poses to 3D...")
-            if cfg.lifting_model == LiftingModel.BASELINE:
+            if cfg.pose3d_model == "baseline":
                 if res_w == 0 or res_h == 0:
                     raise ValueError(
                         "Invalid resolution. Something went wrong during 2D pose estimation."
@@ -318,7 +316,7 @@ class Experiment:
 
             # TODO: Wrap triangulation in a try-except block and throw a nice error message
             logging.info("Triangulating 3D poses...")
-            Pose2Sim.triangulation()
+            triangulate_all(self)
 
             logging.info("Smoothing triangulated poses...")
             Pose2Sim.filtering()

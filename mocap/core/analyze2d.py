@@ -792,6 +792,8 @@ def draw_angles(
     OUTPUT:
     - img: image with angles
     """
+    if not display_angle_values_on:
+        display_angle_values_on = ["body", "list"]
 
     color_cycle = it.cycle(colors)
     for person_id, (X, Y, angles, X_flipped) in enumerate(

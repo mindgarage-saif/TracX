@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from mocap.core.configs import VisualizeTaskConfig
 from mocap.ui.common import Frame
 from mocap.ui.styles import PAD_X, PAD_Y
 
@@ -73,28 +72,16 @@ class SimulationOptions(Frame):
         buttonBarLayout.setContentsMargins(0, 0, 0, 0)
 
         # Create Button
-        self.params = VisualizeTaskConfig()
-        self.createButton = VisualizeMotionButton(
-            self.params,
-            self.onVisualizationsCreated,
-        )
+        self.createButton = VisualizeMotionButton(self.onVisualized)
         buttonBarLayout.addWidget(self.createButton)
 
-        self.opensim_config = VisualizeTaskConfig()
-        self.opensim_config.visualization_mode = "opensim"
-        self.opensim_config.visualization_args = dict(
-            with_blender=False,
-        )
-        self.downloadButton = OpenSimButton(
-            self.opensim_config,
-            self.saveVisualizations,
-        )
+        self.downloadButton = OpenSimButton(self.onExportReady)
         buttonBarLayout.addWidget(self.downloadButton)
 
         self.innerLayout.addWidget(buttonBar)
 
-    def onVisualizationsCreated(self, status, result):
+    def onVisualized(self, status, result):
         pass
 
-    def saveVisualizations(self, status, result):
+    def onExportReady(self, status, result):
         pass

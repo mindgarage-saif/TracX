@@ -41,7 +41,6 @@ class AnalysisPage(BasePage):
         self.monocular2d_analysis.hide()
         self.monocular3d_analysis.hide()
         self.multiview3d_analysis.hide()
-        self.experiment = None
 
         # Connect the sidebar event
         parent.analysisTab.experimentSelected.connect(self.showExperiment)
@@ -62,10 +61,18 @@ class AnalysisPage(BasePage):
                 self.monocular2d_analysis.setExperiment(name)
                 self.monocular2d_analysis.show()
 
-            self.log(f"Loaded experiment: {self.experiment}")
+            self.log(f"Opened experiment: {name}")
         except Exception as e:
             self.monocular2d_analysis.hide()
             self.monocular3d_analysis.hide()
             self.multiview3d_analysis.hide()
             self.emptyState.show()
-            self.showAlert(str(e), "Failed to load experiment")
+
+            # Show the error message
+            import traceback
+
+            error_message = (
+                f"Error opening experiment: {str(e)}\n\n{traceback.format_exc()}"
+            )
+            self.showAlert(error_message, "Error")
+            traceback.print_exc()

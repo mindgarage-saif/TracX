@@ -28,11 +28,11 @@ class EstimateMotionButton(BaseTaskButton):
 
 
 class OpenSimButton(BaseTaskButton):
-    def __init__(self, task_config, callback):
+    def __init__(self, callback):
         super().__init__(
             "folder.png",
             VisualizeMotionTask,
-            task_config,
+            {},
             callback,
         )
 
@@ -52,7 +52,7 @@ class OpenSimButton(BaseTaskButton):
         parent_dir = os.path.dirname(output_dir)
         output_zip = os.path.join(
             parent_dir,
-            f"{self.task.config.experiment_name}-opensim",
+            f"{self.task.config}-opensim",
         )
         shutil.make_archive(output_zip, "zip", output_dir)
 
@@ -71,8 +71,8 @@ class OpenSimButton(BaseTaskButton):
 
 
 class VisualizeMotionButton(BaseTaskButton):
-    def __init__(self, task_config, callback):
-        super().__init__("visualize.png", VisualizeMotionTask, task_config, callback)
+    def __init__(self, callback):
+        super().__init__("visualize.png", VisualizeMotionTask, {}, callback)
 
     def on_start(self):
         super().on_start()
