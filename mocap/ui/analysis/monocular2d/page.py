@@ -1,8 +1,6 @@
 import os
 import shutil
 
-import cv2
-import numpy as np
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -12,6 +10,8 @@ from PyQt6.QtWidgets import (
 
 from mocap.core import Experiment
 from mocap.core.analyze2d import process_frame, setup_pose_tracker
+
+# from mocap.streaming import MotionDataStreamer
 from mocap.ui.styles import PAD_Y
 
 from .data_widget import ExperimentDataWidget
@@ -34,7 +34,7 @@ class Monocular2DAnalysisPage(QWidget):
         # Experiment data
         self.experiment = None
         self.data = ExperimentDataWidget(self)
-        self.data.videoPlayer.videoProcessor.process = self.processFrame
+        self.data.videoPlayer.processor.process = self.processFrame
         layout.addWidget(self.data)
         layout.addSpacing(PAD_Y)
         self.data.setSizePolicy(
@@ -58,11 +58,18 @@ class Monocular2DAnalysisPage(QWidget):
         # Model setup
         self.model = None
 
+        # TODO: Data streaming
+        # self.streamer = MotionDataStreamer(host="0.0.0.0", port=8765)
+
     def setExperiment(self, name):
         self.experiment = Experiment.open(name)
         self.data.setExperiment(self.experiment)
         self.settings.setExperiment(self.experiment)
         self.refreshUI()
+
+        # self.streamer.stop()
+        # server_thread = threading.Thread(target=self.streamer.start)
+        # server_thread.start()
 
     def refreshUI(self):
         if self.experiment is None:
@@ -84,101 +91,24 @@ class Monocular2DAnalysisPage(QWidget):
         self.postprocessing_kwargs = {}
         # frame_count, frame_rate, fps, save_pose, pose_output_path, save_angles, angles_output_path
 
-    def drawRecordingOverlay(self, frame):
-        h, w, _ = frame.shape
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.025)),
-            (int(w * 0.1), int(h * 0.025)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.025)),
-            (int(w * 0.025), int(h * 0.1)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.025)),
-            (int(w * 0.9), int(h * 0.025)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.025)),
-            (int(w * 0.975), int(h * 0.1)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.975)),
-            (int(w * 0.1), int(h * 0.975)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.025), int(h * 0.975)),
-            (int(w * 0.025), int(h * 0.9)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.975)),
-            (int(w * 0.9), int(h * 0.975)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.line(
-            frame,
-            (int(w * 0.975), int(h * 0.975)),
-            (int(w * 0.975), int(h * 0.9)),
-            (255, 255, 255),
-            int(w * 0.005),
-        )
-        cv2.circle(frame, (int(w * 0.05), int(h * 0.065)), 5, (0, 0, 255), -1)
-        cv2.putText(
-            frame,
-            "REC",
-            (int(w * 0.07), int(h * 0.075)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-            2,
-            cv2.LINE_AA,
-        )
-
     def processFrame(self, frame):
-        # TODO: Perform post-processing
-        # keypoints, scores = self.model(frame)
-        # frame = draw_skeleton(frame, keypoints, scores, openpose_skeleton=False, kpt_thr=0.43)
-
         if self.model is None:
             return frame
 
-        frame, (x, y, scores, angles, kwargs) = process_frame(
-            self.experiment.cfg, self.model, frame
-        )
-        self.all_frames_X.append(np.array(x))
-        self.all_frames_Y.append(np.array(y))
-        self.all_frames_scores.append(np.array(scores))
-        self.all_frames_angles.append(np.array(angles))
-        self.postprocessing_kwargs = kwargs
+        frame, motion_data = process_frame(self.experiment.cfg, self.model, frame)
 
-        print(kwargs["keypoint_names"])
-        print(x, y)
-        print(kwargs["angle_names"])
-        print(angles)
+        # async def send_motion_data(motion_data):
+        #     x, y, scores, angles, metainfo = motion_data
+        #     data = {
+        #         "keypoints": [{"x": x, "y": y, "score": s} for x, y, s in zip(x, y, scores)],
+        #         "angles": angles,
+        #         "metadata": {"timestamp": time.time(), **metainfo},
+        #     }
+        #     logging.debug(f"Sending motion data: {data}")
+        #     await self.streamer.stream_frame(data)
 
-        # frame = cv2.flip(frame, 1)
-        # self.drawRecordingOverlay(frame)
-        # frame = cv2.flip(frame, 1)
+        # asyncio.run(send_motion_data(motion_data))
+
         return frame
 
     def handleDataUpload(self, status):
@@ -206,3 +136,7 @@ class Monocular2DAnalysisPage(QWidget):
             if save_path:
                 shutil.copyfile(file_path, save_path)
                 # TOOD: Show a success message
+
+    # def __del__(self):
+    #     self.streamer.stop()
+    #     logging.debug("Stopped the WebSocket server.")  # FIXME: Hack
