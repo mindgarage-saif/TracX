@@ -54,6 +54,9 @@ class CameraView(QLabel):
 
     def showFrame(self, frame: np.ndarray):
         try:
+            if frame is None:
+                return
+
             self.frame = frame
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = cv2.flip(frame, 1) if self.flip else frame

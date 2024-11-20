@@ -1,4 +1,5 @@
 import contextlib
+import logging
 import os
 import time
 
@@ -8,9 +9,8 @@ from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 class VideoPlayer(QObject):
     frame = pyqtSignal(object)
-    progress = pyqtSignal(
-        float, float
-    )  # current time, current progress (time/duration)
+    timed_frame = pyqtSignal(object, float)
+    progress = pyqtSignal(float, float)
     finished = pyqtSignal()
 
     def __init__(self):
@@ -38,18 +38,18 @@ class VideoPlayer(QObject):
     def isWebcam(self):
         return isinstance(self._source, int)
 
-    def setVideoSource(self, video_source):
+    def setSource(self, source):
         # Check that source is a valid video file
-        if isinstance(video_source, str) and not os.path.exists(video_source):
-            raise ValueError("Video source does not exist", video_source)
+        if isinstance(source, str) and not os.path.exists(source):
+            raise ValueError("Video source does not exist", source)
 
         # Open the video source
-        self._source = video_source
-        self._video = cv2.VideoCapture(video_source)
+        self._source = source
+        self._video = cv2.VideoCapture(source)
 
         # Check that the video source was opened
         if not self._video.isOpened():
-            raise ValueError("Unable to open video source", video_source)
+            raise ValueError("Unable to open video source", source)
 
         # Show the first frame
         ret, frame = self._video.read()
@@ -65,10 +65,6 @@ class VideoPlayer(QObject):
 
         # Relase the source
         self._video.release()
-
-        # Auto-start webcams
-        if self.isWebcam:
-            self.start()
 
     def updateMetadata(self):
         self.frame_rate = self._video.get(cv2.CAP_PROP_FPS)
@@ -121,6 +117,8 @@ class VideoPlayer(QObject):
                 else:
                     self.frame.emit(frame)
 
+        logging.debug("Video player stopped for source: %s", self._source)
+
     def pause(self):
         self.paused = True
 
@@ -131,32 +129,36 @@ class VideoPlayer(QObject):
 
         self.paused = False
 
+    def emit(self, frame):
+        # Emit the frame signal on the main thread
+        logging.debug("Emitting frame from source: %s", self._source)
+        self.frame.emit(frame)
+        self.timed_frame.emit(frame, time.time())
+
     def _start_stream(self):
-        try:
-            while self.running:
-                if self.paused:
-                    time.sleep(0.1)
+        logging.debug("Video player started for source: %s", self._source)
+        while self.running:
+            if self.paused:
+                time.sleep(0.1)
+                continue
+
+            ret, frame = self._video.read()
+            if not ret:
+                if self.loop:
+                    self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restart video
                     continue
+                break
 
-                ret, frame = self._video.read()
-                if not ret:
-                    if self.loop:
-                        self._video.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restart video
-                        continue
-                    break
+            self.emit(frame)
 
-                # Emit the frame signal
-                self.frame.emit(frame)
+            # Emit the progress signal
+            if not self.isWebcam:
+                current_time = self._video.get(cv2.CAP_PROP_POS_MSEC) / 1000
+                self.progress.emit(current_time, current_time / self.duration)
 
-                # Emit the progress signal
-                if not self.isWebcam:
-                    current_time = self._video.get(cv2.CAP_PROP_POS_MSEC) / 1000
-                    self.progress.emit(current_time, current_time / self.duration)
-
-                    # Sleep to match the frame rate
-                    time.sleep(1 / self.frame_rate)
-        except Exception as e:
-            pass
+                # Sleep to match the frame rate
+                time.sleep(1 / self.frame_rate)
+        logging.debug("Video player finished for source: %s", self._source)
 
         self.stop()
 

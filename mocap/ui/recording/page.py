@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
 
 from mocap.ui.common import BasePage
 
-from .cameras.recording_layout import RecordingLayout
+from .cameras.recording_layout import MultiCameraRecordUI
 
 
 class RecordPage(BasePage):
@@ -13,29 +13,18 @@ class RecordPage(BasePage):
         super().__init__(parent)
 
         # Create the webcam view
-        self.recordingLayout = RecordingLayout(
-            self,
-            on_frame_fn=self.process,
-        )
-        self.recordingLayout.setSizePolicy(
+        self.videoCaptureLayout = MultiCameraRecordUI(self)
+        self.videoCaptureLayout.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
-        self.innerLayout.addWidget(self.recordingLayout)
+        self.innerLayout.addWidget(self.videoCaptureLayout)
 
         # Add camera selection callback
         parent.recordTab.camerasSelected.connect(self.onCamerasSelected)
 
     def onCamerasSelected(self, camera_ids):
-        self.recordingLayout.set_cameras(camera_ids)
-
-    def process(self, frames):
-        """Process frames from the camera system.
-
-        Args:
-            frames (List[ndarray]): A list of synchronized frames from the camera system.
-        """
-        return frames
+        self.videoCaptureLayout.setSource(camera_ids)
 
     def onStop(self):
-        self.recordingLayout.onStop()
+        self.videoCaptureLayout.stop()

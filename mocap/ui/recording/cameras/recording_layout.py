@@ -4,29 +4,21 @@ import os
 from PyQt6.QtWidgets import QFrame, QGridLayout, QSizePolicy, QVBoxLayout, QWidget
 
 from mocap.constants import APP_ASSETS
+from mocap.recording.sync_video_player import SynchronizedVideoPlayer
 from mocap.ui.common import CameraView, EmptyState
 
-from .control_panel import ControlPanel
-from .controller_widget import ControllerWidget
+from .record_layout_controller import RecordLayoutController
 
 logger = logging.getLogger(__name__)
 
 
-class RecordingLayout(QFrame):
+class MultiCameraRecordUI(QFrame):
     def __init__(
         self,
         parent,
-        on_frame_fn=None,
-        cameras=None,
     ):
         super().__init__(parent)
-        self.statusBar = parent.statusBar
-        self.on_frame_fn = on_frame_fn
-        self.cameras = cameras or []
-        self.controller = ControllerWidget()
-        self.controller.on_frame_fn = self.on_frame_fn
-
-        self.setObjectName("RecordingLayout")
+        self.setStyleSheet("background-color: #000000;")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Create an inner layout for the frame
@@ -34,60 +26,62 @@ class RecordingLayout(QFrame):
         self.innerLayout.setContentsMargins(0, 0, 0, 0)
         self.innerLayout.setSpacing(0)
 
-        # Placeholder label for "No Cameras Selected"
-        self.noCamerasLabel = EmptyState(
+        # Create an empty state for when no cameras are selected
+        self.emptyState = EmptyState(
             self,
             os.path.join(APP_ASSETS, "empty-state", "no-camera-selected.png"),
             "No Cameras Selected",
             size=512,
         )
-        self.noCamerasLabel.setSizePolicy(
+        self.emptyState.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
-        self.innerLayout.addWidget(self.noCamerasLabel)
+        self.innerLayout.addWidget(self.emptyState)
 
-        # Grid layout for webcam views
+        # Grid layout for video views
         self.gridWidget = QWidget(self)
         self.gridLayout = QGridLayout(self.gridWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(16)
-        self.gridWidget.setLayout(self.gridLayout)
         self.innerLayout.addWidget(self.gridWidget)
-        self.gridWidget.hide()
 
-        self.cam_views = []
+        # Create the video player
+        self.player = SynchronizedVideoPlayer()
 
-        # Create the control panel, add after the camera grid
-        self.controlPanel = ControlPanel(self.controller, parent=parent)
-        self.innerLayout.addWidget(self.controlPanel)
+        # Create the preview widget
+        self.preview = []
 
-        # If cameras are provided at initialization, populate the grid
-        self.set_cameras(self.cameras)
+        # Create the controller
+        self.controller = RecordLayoutController(self.player, parent=parent)
+        self.innerLayout.addWidget(self.controller)
 
-    def set_cameras(self, cameras):
+        # Show the empty state
+        self.showEmpty()
+
+    def setSource(self, source):
         """Sets the cameras dynamically and creates the grid layout."""
-        camera_ids = [camera["id"] for camera in cameras]
-        # Clear any existing cameras or grid layout
-        self.clear_camera_grid()
-
-        # Hide the "No Cameras Selected" label if cameras are available
-        if camera_ids:
-            self.noCamerasLabel.hide()
-            self.gridWidget.show()
-            self.controlPanel.show()
-        else:
-            self.noCamerasLabel.show()
-            self.gridWidget.hide()
-            self.controlPanel.hide()
+        self.controller.setEnabled(source is not None)
+        if not source:
+            self.controller.clear()
+            self.controller.setEnabled(False)
+            self.showEmpty()
             return
 
-        num_cameras = min(len(camera_ids), 10)
-        camera_ids = camera_ids[:num_cameras]
+        # Create a preview for the cameras
+        cam_w = self.size().width()
+        cam_h = self.size().height() - 48
+        cam_w = max(cam_w, 800)
+        cam_h = max(cam_h, 600)
+        self.createPreview(source, (cam_w, cam_h))
 
-        max_cam_w = self.width()
-        max_cam_h = self.parent().height() - 48
-        aspect_ratio = 4 / 3
+        # Enable the controller
+        self.controller.setEnabled(True)
+
+    def resizeEvent(self, event):
+        max_cam_w = self.size().width()
+        max_cam_h = self.size().height() - 48
+        aspect_ratio = 16 / 9
         current_aspect_ratio = max_cam_w / max_cam_h
 
         if current_aspect_ratio > aspect_ratio:
@@ -103,41 +97,75 @@ class RecordingLayout(QFrame):
                 cam_h = max_cam_h
                 cam_w = int(cam_h * aspect_ratio)
 
-        size = cam_h, cam_w
+        self.resizePreview((cam_w, cam_h))
+
+    def createPreview(self, source, preview_size):
+        # Clear any existing cameras or grid layout
+        self.clear()
+
+        camera_ids = [camera["id"] for camera in source]
+        num_cameras = min(len(camera_ids), 10)
+        camera_ids = camera_ids[:num_cameras]
+        if num_cameras == 0:
+            return
 
         # Determine the grid size dynamically
-        rows = int((num_cameras**0.5) + 0.5)  # Round up for rows
-        cols = (num_cameras // rows) + (
-            num_cameras % rows > 0
-        )  # Calculate the number of columns needed
+        rows = int((num_cameras**0.5) + 0.5)
+        cols = (num_cameras // rows) + (num_cameras % rows > 0)
 
         # Add camera views to the grid layout
+        sources = []
         for i in range(num_cameras):
             row = i // cols
             col = i % cols
-            cam_h_ = size[0] // rows
-            cam_w_ = size[1] // cols
+            cam_h_ = preview_size[1] // rows
+            cam_w_ = preview_size[0] // cols
 
-            cam_view = CameraView((cam_h_, cam_w_), flip=True)
-            cam_view.setFixedHeight(cam_h_ - 16)  # Adjust height for grid
-            cam_view.setFixedWidth(cam_w_ - 16)  # Adjust width for grid
-            self.gridLayout.addWidget(cam_view, row, col)
-            self.cam_views.append(cam_view)
+            view = CameraView((cam_h_, cam_w_), flip=False)
+            view.setFixedHeight(cam_h_ - 16)  # Adjust height for grid
+            view.setFixedWidth(cam_w_ - 16)  # Adjust width for grid
+            self.gridLayout.addWidget(view, row, col)
+            self.preview.append(view)
 
             # Connect the camera to the controller
-            self.controller.add_source(camera_ids.pop(0), cam_view)
+            sources.append((camera_ids.pop(0), view))
 
-        # Add the grid layout to the inner layout
-        self.innerLayout.insertLayout(1, self.gridLayout)
-        self.controller.initialize()
+        self.player.setSources(sources)
 
-    def clear_camera_grid(self):
+        # Hide the empty state
+        self.hideEmpty()
+
+    def resizePreview(self, preview_size):
+        num_cameras = len(self.preview)
+        if num_cameras == 0:
+            return
+
+        rows = int((num_cameras**0.5) + 0.5)
+        cols = (num_cameras // rows) + (num_cameras % rows > 0)
+        for view in enumerate(self.preview):
+            cam_h_ = (preview_size[1] // rows) - 16
+            cam_w_ = (preview_size[0] // cols) - 16
+            view.setFixedSize(cam_w_, cam_h_)
+
+    def clear(self):
         """Clears the camera grid and camera views."""
-        for cam_view in self.cam_views:
-            self.gridLayout.removeWidget(cam_view)
-            cam_view.deleteLater()
-        self.cam_views.clear()
+        for view in self.preview:
+            self.gridLayout.removeWidget(view)
+            view.deleteLater()
+        self.preview.clear()
 
-    def onStop(self):
+    def stop(self):
         """Stop camera controller."""
-        self.controlPanel.onStop()
+        self.player.stop()
+        self.controller.reset()
+
+    def showEmpty(self):
+        """Show the empty state."""
+        self.gridWidget.hide()
+        self.controller.clear()
+        self.emptyState.show()
+
+    def hideEmpty(self):
+        """Hide the empty state."""
+        self.gridWidget.show()
+        self.emptyState.hide()

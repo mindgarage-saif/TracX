@@ -53,7 +53,7 @@ class VideoGallery(QWidget):
 
     def clear(self):
         self.video_player.stop()
-        self.video_player.setVideoSource(None)
+        self.video_player.setSource(None)
 
         # Clear the list of VideoPreviews
         for i in reversed(range(self.scroll_layout.count())):
@@ -69,5 +69,5 @@ class VideoGallery(QWidget):
         # Iterate through the list of video paths and create VideoPreview widgets
         for video_path in video_paths:
             preview = VideoGalleryItem(self, video_path, 64)
-            preview.clicked.connect(self.video_player.setVideoSource)
+            preview.clicked.connect(self.video_player.setSource)
             self.scroll_layout.addWidget(preview)
