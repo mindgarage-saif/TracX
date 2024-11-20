@@ -45,6 +45,13 @@ class VideoProcessor(QObject):
             self.queue_not_empty.wakeAll()  # Signal the processing thread if it’s waiting
             self.queue_mutex.unlock()
 
+        else:
+            logging.warning(
+                "Processor %d is paused or stopped, frame will be emitted directly",
+                id(self),
+            )
+            self.frame.emit(frame)
+
     def _process_frames(self):
         """Process frames in the queue sequentially."""
         while self.is_running:

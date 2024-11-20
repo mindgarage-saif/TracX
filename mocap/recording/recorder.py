@@ -1,3 +1,4 @@
+import contextlib
 import os
 from time import strftime
 
@@ -74,4 +75,5 @@ class Recorder(QObject):
         self.writers.clear()
 
     def __del__(self):
-        self.reset()
+        with contextlib.suppress(Exception):
+            self.reset()

@@ -156,7 +156,7 @@ class MultiCameraRecordUI(QFrame):
 
     def stop(self):
         """Stop camera controller."""
-        self.player.stop()
+        self.player.release()
         self.controller.reset()
 
     def showEmpty(self):

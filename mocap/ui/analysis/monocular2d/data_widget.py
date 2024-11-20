@@ -58,6 +58,7 @@ class ExperimentDataWidget(Frame):
         self.onUpdate = lambda status: None
 
     def startWebcam(self):
+        # FIXME: Provide an option for the use to select which camera to use
         self.videoPlayer.setSource(0)
         self.videoPlayer.show()
         self.noCamerasLabel.hide()

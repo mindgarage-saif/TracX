@@ -196,7 +196,7 @@ class VideoPlayerWidget(QFrame):
 
     def setSource(self, source):
         self.stop()
-        if not source:
+        if source is None:
             self.controller.clear()
             self.controller.setEnabled(False)
             self.showEmpty()

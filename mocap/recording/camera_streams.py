@@ -67,6 +67,12 @@ class CameraStreams(QObject):
                 )
             )
 
+    def resolution(self, cam_id: int) -> Tuple[int, int]:
+        """
+        Get the resolution of a camera.
+        """
+        return self.cams[cam_id].resolution
+
     def handle_frame(self, frame: Any, timestamp: float, cam_id: int):
         """
         Handle frames received from individual cameras.

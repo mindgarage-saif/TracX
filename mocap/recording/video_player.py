@@ -54,6 +54,7 @@ class VideoPlayer(QObject):
         # Show the first frame
         ret, frame = self._video.read()
         if ret:
+            logging.debug("Emitting first frame from source: %s", source)
             self.frame.emit(frame)
 
         # Update metadata
