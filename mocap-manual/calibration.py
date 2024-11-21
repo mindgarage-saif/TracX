@@ -75,7 +75,7 @@ def load_camera_calibration(file_path):
     R = np.array(rotation).reshape((3, 3))
 
     # Compute Euler angles from the rotation matrix
-    rotation_angles = to_rotation_vector(R)
+    rotation_vector = to_rotation_vector(R)
 
     intrinsic = []
     for line in sections.get("Intrinsische Parameter", []):
@@ -104,9 +104,9 @@ def load_camera_calibration(file_path):
         "size": (1300, 900),
         "matrix": K,
         "distortions": np.zeros(4),
-        "rotation": rotation_angles,
+        "rotation": rotation_vector,
         "translation": t,
-        # "P": P,
+        "projection_matrix": P,
         # "P'": P_computed,
     }
 
@@ -129,7 +129,7 @@ def to_toml(calibration_dir):
 
 if __name__ == "__main__":
     # Calibration Data
-    calibration_dir = "data/projects/orthosuper-patient8-trial7/calibration/matrices"
+    calibration_dir = "data/orthosuper/calibration/matrices"
     calibration_files = [
         os.path.join(calibration_dir, f)
         for f in os.listdir(calibration_dir)
@@ -154,13 +154,16 @@ if __name__ == "__main__":
     )
     print(projection_matrices.shape)  # (views, 3, 4)
 
+    # Save the projection matrices to a numpy file
+    projection_matrices_dir = os.path.join(
+        os.path.dirname(calibration_dir), "calibration.npy"
+    )
+    np.save(projection_matrices_dir, projection_matrices)
+
     # Convert the calibration data to a TOML string
     calibration_toml = to_toml(calibration_dir)
-    print(calibration_toml)
-
-    # Save the calibration data to a TOML file
-    with open("calibration.toml", "w") as f:
+    calibration_file_toml = os.path.join(
+        os.path.dirname(calibration_dir), "calibration.toml"
+    )
+    with open(calibration_file_toml, "w") as f:
         f.write(calibration_toml)
-
-    # Save the projection matrices to a numpy file
-    np.save("projection_matrices.npy", projection_matrices)

@@ -11,9 +11,9 @@ class CameraVisualizer:
     def __init__(
         self,
         camera_system,
-        board_width,
-        board_height,
-        square_size,
+        board_width=9,
+        board_height=6,
+        square_size=0.108,
         patternCentric=False,
     ):
         """
