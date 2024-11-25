@@ -1,0 +1,59 @@
+cff-version: 1.2.0
+message: "If you use Pose2Sim or Sports2D, please cite them as below."
+authors:
+  - family-names: "Pagnon"
+    given-names: "David"
+    orcid: "https://orcid.org/0000-0002-6891-8331"
+  - family-names: "Domalain"
+    given-names: "Mathieu"
+    orcid: "https://orcid.org/0000-0002-4518-8479"
+  - family-names: "Reveret"
+    given-names: "Lionel"
+    orcid: "https://orcid.org/0000-0002-0810-5187"
+  - family-names: "Kim"
+    given-names: "HunMin"
+    orcid: "https://orcid.org/0009-0007-7710-8051"
+title: "Pose2Sim and Sports2D: Tools for Markerless Human Motion Analysis"
+version: 1.0.0
+doi: ["10.3390/s21196530", "10.21105/joss.06849"]
+date-released: 2024-09-24
+url:
+  - "https://github.com/perfanalytics/pose2sim"
+  - "https://github.com/perfanalytics/sports2d"
+preferred-citation:
+  - type: article
+    authors:
+      - family-names: "Pagnon"
+        given-names: "David"
+        orcid: "https://orcid.org/0000-0002-6891-8331"
+      - family-names: "Domalain"
+        given-names: "Mathieu"
+        orcid: "https://orcid.org/0000-0002-4518-8479"
+      - family-names: "Reveret"
+        given-names: "Lionel"
+        orcid: "https://orcid.org/0000-0002-0810-5187"
+    title: "Pose2Sim: An End-to-End Workflow for 3D Markerless Sports Kinematics—Part 1: Robustness"
+    journal: "Sensors"
+    volume: 11
+    issue: 19
+    start: 6530
+    end: 6557
+    doi: "10.3390/s21196530"
+    year: 2021
+    month: 9
+  - type: article
+    authors:
+      - family-names: "Pagnon"
+        given-names: "David"
+        orcid: "https://orcid.org/0000-0002-6891-8331"
+      - family-names: "Kim"
+        given-names: "HunMin"
+        orcid: "https://orcid.org/0009-0007-7710-8051"
+    title: "Sports2D: Compute 2D human pose and angles from a video or a webcam"
+    journal: "Journal of Open Source Software"
+    volume: 9
+    issue: 101
+    start: 6849
+    doi: "10.21105/joss.06849"
+    year: 2024
+    month: 9
