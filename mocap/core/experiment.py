@@ -184,7 +184,7 @@ class Experiment:
         with open(self.config_file, "w") as f:
             toml.dump(cfg, f)
 
-    def process(self, cfg):
+    def process(self):
         # Change the working directory to the project directory.
         cwd = os.getcwd()
         os.chdir(self.path)
@@ -193,6 +193,7 @@ class Experiment:
         if not self.has_videos():
             raise ValueError("No videos found in the project directory.")
 
+        cfg = self.cfg
         correct_rotation = cfg.get("pose").get("correct_camera_rotation", False)
         if correct_rotation and not self.monocular:
             calibration_file = os.path.join(

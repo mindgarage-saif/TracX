@@ -2,15 +2,11 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
-    QWidget,
 )
 
-from mocap.ui.analysis import EstimateMotionButton, VisualizeMotionButton
-from mocap.ui.common import IconButton, LabeledWidget, Selection
+from mocap.ui.common import LabeledWidget, Selection
 
 from ..monocular2d.settings import SettingsPanel
 
@@ -147,35 +143,3 @@ class Monocular3DSettingsPanel(SettingsPanel):
             "Tracking mode: 'sports2d' is more accurate, 'rtmlib' may be faster."
         )
         scroll_layout.addWidget(self.tracking_mode)
-
-    def initButtonBar(self, main_layout):
-        button_bar = QWidget(self)
-        button_bar.setProperty("class", "empty")
-        layout = QHBoxLayout(button_bar)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
-
-        # Save Button
-        self.saveButton = QPushButton("Save", self)
-        self.saveButton.clicked.connect(self.applyConfigChanges)
-        layout.addWidget(self.saveButton)
-
-        # Estimate Motion Button
-        self.analyzeButton = EstimateMotionButton(self.onAnalyzed)
-        layout.addWidget(self.analyzeButton)
-
-        # Download Button
-        self.exportButton = IconButton("export.png", 24, self)
-        self.exportButton.setEnabled(False)
-        layout.addWidget(self.exportButton)
-
-        self.visualizeButton = VisualizeMotionButton(self.onVisualized)
-        layout.addWidget(self.visualizeButton)
-
-        main_layout.addWidget(button_bar)
-
-    def onAnalyzed(self, status, result):
-        self.downloadButton.setEnabled(status)
-
-    def onVisualized(self, status, result):
-        pass

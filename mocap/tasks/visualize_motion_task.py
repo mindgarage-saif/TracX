@@ -108,7 +108,7 @@ class VisualizeMotionTask(BaseTask):
 
     def _execute_impl(self):
         # Read task configuration
-        experiment_name = self.config
+        experiment_name = self.experiment
 
         if experiment_name is None:
             raise ValueError("Experiment name is required for visualization")

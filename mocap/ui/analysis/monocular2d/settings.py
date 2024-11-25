@@ -52,7 +52,30 @@ class SettingsPanel(QWidget):
         pass
 
     def initButtonBar(self, main_layout):
-        pass
+        button_bar = QWidget(self)
+        button_bar.setProperty("class", "empty")
+        layout = QHBoxLayout(button_bar)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+
+        # Save Button
+        self.saveButton = QPushButton("Save", self)
+        self.saveButton.clicked.connect(self.applyConfigChanges)
+        layout.addWidget(self.saveButton)
+
+        # Estimate Motion Button
+        self.analyzeButton = EstimateMotionButton(self.onAnalyzed)
+        layout.addWidget(self.analyzeButton)
+
+        # Download Button
+        self.exportButton = IconButton("export.png", 24, self)
+        self.exportButton.setEnabled(False)
+        layout.addWidget(self.exportButton)
+
+        self.visualizeButton = VisualizeMotionButton(self.onVisualized)
+        layout.addWidget(self.visualizeButton)
+
+        main_layout.addWidget(button_bar)
 
     def initUI(self):
         # Main Layout
@@ -126,6 +149,10 @@ class SettingsPanel(QWidget):
         self.perfomance_mode.setOption(cfg["pose"]["mode"])
         self.det_frequency.widget.setText(str(cfg["pose"]["det_frequency"]))
 
+        # Update buttons
+        self.analyzeButton.task.experiment = self.experiment.name
+        self.visualizeButton.task.experiment = self.experiment.name
+
     def updateConfig(self, cfg):
         """Read the configuration from the UI components.
 
@@ -143,6 +170,12 @@ class SettingsPanel(QWidget):
     def applyConfigChanges(self):
         cfg = self.updateConfig(self.experiment.cfg)
         self.experiment.update_config(cfg)
+
+    def onAnalyzed(self, status, result):
+        self.exportButton.setEnabled(status)
+
+    def onVisualized(self, status, result):
+        pass
 
 
 class Monocular2DSettingsPanel(SettingsPanel):
@@ -509,32 +542,6 @@ class Monocular2DSettingsPanel(SettingsPanel):
         )
         main_layout.addWidget(self.show_graphs)
 
-    def initButtonBar(self, main_layout):
-        button_bar = QWidget(self)
-        button_bar.setProperty("class", "empty")
-        layout = QHBoxLayout(button_bar)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
-
-        # Save Button
-        self.saveButton = QPushButton("Save", self)
-        self.saveButton.clicked.connect(self.applyConfigChanges)
-        layout.addWidget(self.saveButton)
-
-        # Estimate Motion Button
-        self.analyzeButton = EstimateMotionButton(self.onAnalyzed)
-        layout.addWidget(self.analyzeButton)
-
-        # Download Button
-        self.exportButton = IconButton("export.png", 24, self)
-        self.exportButton.setEnabled(False)
-        layout.addWidget(self.exportButton)
-
-        self.visualizeButton = VisualizeMotionButton(self.onVisualized)
-        layout.addWidget(self.visualizeButton)
-
-        main_layout.addWidget(button_bar)
-
     def initScrollAreaContent(self, scroll_layout):
         # Pose settings
         self.initPoseOptions(scroll_layout)
@@ -657,9 +664,3 @@ class Monocular2DSettingsPanel(SettingsPanel):
         cfg["post-processing"]["show_graphs"] = self.show_graphs.widget.isChecked()
 
         return cfg
-
-    def onAnalyzed(self, status, result):
-        self.exportButton.setEnabled(status)
-
-    def onVisualized(self, status, result):
-        pass

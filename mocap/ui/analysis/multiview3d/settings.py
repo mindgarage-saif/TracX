@@ -3,19 +3,15 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QSizePolicy,
-    QWidget,
 )
 
 from mocap.core.cameras import CameraSystem, CameraVisualizer
-from mocap.ui.common import IconButton, LabeledWidget, Selection, Tab, TabbedArea
+from mocap.ui.common import LabeledWidget, Selection, Tab, TabbedArea
 from mocap.ui.styles import PAD_Y
 
-from ..buttons import EstimateMotionButton, OpenSimButton, VisualizeMotionButton
 from ..monocular2d.settings import SettingsPanel
 
 
@@ -60,6 +56,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
     def __init__(self, parent):
         super().__init__("Multiview 3D Analysis", parent)
         self.camera_system = None
+        self.onUpdate = lambda status, result: None
 
     def initScrollAreaContent(self, scroll_layout):
         # Create the sidebar
@@ -453,36 +450,6 @@ class Multiview3DSettingsPanel(SettingsPanel):
         )
         self.config_tab.addWidget(self.simulation_type)
 
-    def initButtonBar(self, main_layout):
-        # Button bar
-        button_bar = QWidget(self)
-        button_bar.setProperty("class", "empty")
-        layout = QHBoxLayout(button_bar)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
-        main_layout.addWidget(button_bar)
-
-        # Save Button
-        self.saveButton = QPushButton("Save", self)
-        self.saveButton.clicked.connect(self.applyConfigChanges)
-        layout.addWidget(self.saveButton)
-
-        # Create Button
-        self.estimateButton = EstimateMotionButton(self.onMotionEstimated)
-        layout.addWidget(self.estimateButton)
-
-        self.downloadButton = IconButton("export.png", 24, self)
-        layout.addWidget(self.downloadButton)
-
-        # Create Button
-        self.createButton = VisualizeMotionButton(self.onVisualized)
-        layout.addWidget(self.createButton)
-
-        self.downloadOpenSimButton = OpenSimButton(self.onExportReady)
-        layout.addWidget(self.downloadOpenSimButton)
-
-        self.onUpdate = lambda status, result: None
-
     def refreshUI(self):
         super().refreshUI()
         if self.experiment is None:
@@ -547,11 +514,6 @@ class Multiview3DSettingsPanel(SettingsPanel):
             str(cfg["filtering"]["butterworth"]["cut_off_frequency"])
         )
 
-        # Update buttons
-        self.estimateButton.task.config = self.experiment.name
-        self.createButton.task.config = self.experiment.name
-        self.downloadOpenSimButton.task.config = self.experiment.name
-
     def updateConfig(self, cfg):
         cfg = super().updateConfig(cfg)
 
@@ -614,9 +576,9 @@ class Multiview3DSettingsPanel(SettingsPanel):
         # TODO: Update available modes based on the selected skeleton
         pass
 
-    def onMotionEstimated(self, status, result):
+    def onAnalyzed(self, status, result):
         self.onUpdate(status, result)
-        self.downloadButton.setEnabled(status)
+        self.exportButton.setEnabled(status)
 
     def onVisualized(self, status, result):
         pass

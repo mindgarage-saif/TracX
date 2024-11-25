@@ -58,7 +58,7 @@ class Multiview3DAnalysisPage(QWidget):
             QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Preferred,
         )
-        self.settings.downloadButton.clicked.connect(self.downloadMotionData)
+        self.settings.exportButton.clicked.connect(self.downloadMotionData)
         layout.addWidget(self.settings)
 
         # Events
@@ -74,11 +74,10 @@ class Multiview3DAnalysisPage(QWidget):
         )
         hasMotionData = self.experiment.get_motion_file() is not None
         # self.settings.estimateButton.setEnabled(not hasMotionData)
-        self.settings.downloadButton.setEnabled(hasMotionData)
+        self.settings.exportButton.setEnabled(hasMotionData)
 
-        self.settings.estimateButton.log_file = self.experiment.log_file
-        self.settings.createButton.log_file = self.experiment.log_file
-        self.settings.downloadOpenSimButton.log_file = self.experiment.log_file
+        self.settings.analyzeButton.log_file = self.experiment.log_file
+        self.settings.visualizeButton.log_file = self.experiment.log_file
         self.logs_view.start_log_streaming(self.experiment.log_file)
 
     def handleDataUpload(self, status):

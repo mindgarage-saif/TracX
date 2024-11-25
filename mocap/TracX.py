@@ -94,7 +94,8 @@ def process_mono3d(experiment: Experiment):
 
 
 def process_multi3d(experiment: Experiment):
-    pass
+    # FIXME: Move processing out of the Experiment class
+    experiment.process()
 
 
 def process(name: str):

@@ -6,9 +6,9 @@ class BaseTask(QObject):
     Subclasses should implement the `_execute_impl` method.
     """
 
-    def __init__(self, config):
+    def __init__(self, experiment):
         super().__init__()
-        self.config = config
+        self.experiment = experiment
 
     def _execute_impl(self, *args, **kwargs):
         """Executes the task. This method should be overridden in subclasses
