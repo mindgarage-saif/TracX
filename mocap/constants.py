@@ -1,7 +1,7 @@
 import os
 
 # Define application metadata.
-APP_NAME = "Posimata3D"
+APP_NAME = "TracX"
 APP_NAME_SLUG = APP_NAME.lower().replace(" ", "-")
 APP_VERSION = "0.1.0"
 

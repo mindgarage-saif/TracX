@@ -63,6 +63,7 @@ import numpy as np
 import pandas as pd
 from anytree import PreOrderIter, RenderTree
 from rtmlib import BodyWithFeet, PoseTracker
+from Sports2D.Sports2D import base_params, read_config_file
 from Sports2D.Utilities import filter
 from Sports2D.Utilities.common import *
 from Sports2D.Utilities.skeletons import *
@@ -1680,20 +1681,20 @@ def export_final_video(
             frame, valid_X, valid_Y, np.ones_like(valid_X), cmap_str="RdYlGn"
         )
         frame = draw_skel(frame, valid_X, valid_Y, model=model, colors=colors)
-        frame = draw_angles(
-            frame,
-            valid_X,
-            valid_Y,
-            valid_angles,
-            valid_X,  # Assuming flipped X is the same as X after postprocessing
-            keypoints_ids,
-            keypoints_names,
-            angle_names,
-            display_angle_values_on=display_angle_values_on,
-            colors=colors,
-            fontSize=font_size,
-            thickness=thickness,
-        )
+        # frame = draw_angles(
+        #     frame,
+        #     valid_X,
+        #     valid_Y,
+        #     valid_angles,
+        #     valid_X,  # Assuming flipped X is the same as X after postprocessing
+        #     keypoints_ids,
+        #     keypoints_names,
+        #     angle_names,
+        #     display_angle_values_on=display_angle_values_on,
+        #     colors=colors,
+        #     fontSize=font_size,
+        #     thickness=thickness,
+        # )
 
         # Write to output video
         out_vid.write(frame)
@@ -1989,15 +1990,16 @@ def postprocess(
                         all_frames_angles_person, angle_data, i
                     )  # i = current person
 
-    export_final_video(
-        all_frames_X_person_filt,
-        all_frames_Y_person_filt,
-        all_frames_angles_person_filt,
-        angle_names,
-        video_file,
-        "final_video.mp4",
-        config_dict,
-    )
+    # TODO: Export final video with processed data
+    # export_final_video(
+    #     all_frames_X_person_filt,
+    #     all_frames_Y_person_filt,
+    #     all_frames_angles_person_filt,
+    #     angle_names,
+    #     video_file,
+    #     "final_video.mp4",
+    #     config_dict,
+    # )
 
 
 def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):
@@ -2374,9 +2376,6 @@ def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):
     )
 
 
-from Sports2D.Sports2D import base_params, read_config_file
-
-
 def process(config="Config_demo.toml"):
     """
     Read video or webcam input
@@ -2393,17 +2392,6 @@ def process(config="Config_demo.toml"):
     result_dir.mkdir(parents=True, exist_ok=True)
     with open(result_dir / "logs.txt", "a+") as log_f:
         pass
-    logging.basicConfig(
-        format="%(message)s",
-        level=logging.INFO,
-        force=True,
-        handlers=[
-            logging.handlers.TimedRotatingFileHandler(
-                result_dir / "logs.txt", when="D", interval=7
-            ),
-            logging.StreamHandler(),
-        ],
-    )
 
     for video_file, time_range, frame_rate in zip(
         video_files, time_ranges, frame_rates

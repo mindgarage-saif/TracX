@@ -32,16 +32,22 @@ def do_scaling(path_to_scaling):
 
 
 def do_ik(path_to_ik_setup):
-    opensim.InverseKinematicsTool(path_to_ik_setup).run()
-    print("Inverse Kinematics has been completed")
+    try:
+        opensim.InverseKinematicsTool(path_to_ik_setup).run()
+        print("Inverse Kinematics has been completed")
+    except Exception as e:
+        print("Inverse Kinematics failed")
+        import traceback
+
+        traceback.print_exc()
 
 
 def adapt_scaling_xml(
     setup_file,
     trc_file,
-    time_range,
     output_dir,
     model_path,
+    time_range=None,
 ):
     # Read the file
     tree = ET.parse(setup_file)
@@ -58,8 +64,12 @@ def adapt_scaling_xml(
         item.text = trc_filename
 
     # Change the time range
-    for item in root.iter("time_range"):
-        item.text = str(time_range[0]) + "," + str(time_range[1])
+    if time_range is not None:
+        for item in root.iter("time_range"):
+            item.text = str(time_range[0]) + "," + str(time_range[1])
+    else:
+        for item in root.iter("time_range"):
+            item.text = " "
 
     # Change the output model file
     for item in root.iter("output_model_file"):
@@ -67,9 +77,6 @@ def adapt_scaling_xml(
 
     for item in root.iter("model_file"):
         item.text = model_path
-
-    # for item in root.iter('marker_set_file'):
-    #     item.text = os.path.join(output_dir,'marker_set.xml')
 
     # Write the new file
     filename = os.path.basename(setup_file)
@@ -90,9 +97,9 @@ def adapt_ik_xml(setup_file, trc_file, output_dir, time_range=None):
     if time_range is not None:
         for item in root.iter("time_range"):
             item.text = str(time_range[0]) + " " + str(time_range[1])
-    # else:
-    #     for item in root.iter("time_range"):
-    #         item.text = " "
+    else:
+        for item in root.iter("time_range"):
+            item.text = " "
 
     for item in root.iter("output_motion_file"):
         item.text = os.path.abspath(os.path.join(output_dir, "ik.mot"))
@@ -107,14 +114,12 @@ def adapt_ik_xml(setup_file, trc_file, output_dir, time_range=None):
     tree.write(os.path.join(output_dir, filename))
 
 
-def create_opensim_vis(
+def create_osim_models(
     trc,
     experiment_dir,
-    scaling_time_range=[0.5, 1.0],
     model="Model.osim",
     ik_file="IK_Setup.xml",
     scaling_file="Scaling_Setup.xml",
-    ik_time_range=None,
 ):
     opensim_dir = os.path.join(experiment_dir, "..", "..", OPENSIM_DIR)
 
@@ -138,14 +143,13 @@ def create_opensim_vis(
     adapt_scaling_xml(
         setup_file=scaling_setup_file,
         trc_file=trc,
-        time_range=scaling_time_range,
         output_dir=output_dir,
         model_path=model_path,
     )
     do_scaling(os.path.join(output_dir, scaling_file))
 
     # Inverse Kinematics
-    adapt_ik_xml(ik_setup_path, trc, output_dir, ik_time_range)
+    adapt_ik_xml(ik_setup_path, trc, output_dir)
     do_ik(os.path.join(output_dir, ik_file))
 
     print("The results can be found in: ", output_dir)

@@ -1,5 +1,5 @@
 from .base_renderer import MotionRenderer
-from .opensim import create_opensim_vis
+from .opensim import create_osim_models
 from .stick import StickFigureRenderer
 
-__all__ = ["create_opensim_vis", "MotionRenderer", "StickFigureRenderer"]
+__all__ = ["create_osim_models", "MotionRenderer", "StickFigureRenderer"]

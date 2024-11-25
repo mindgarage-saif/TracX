@@ -9,7 +9,7 @@ from mocap.constants import (
     OPENSIM_DIR,
 )
 from mocap.core import Experiment, MotionSequence
-from mocap.rendering import StickFigureRenderer, create_opensim_vis
+from mocap.rendering import StickFigureRenderer, create_osim_models
 
 from .base_task import BaseTask
 
@@ -60,11 +60,9 @@ class ExperimentVisualizer:
             os.path.join(OPENSIM_DIR, "..", "Geometry"),
             os.path.join(self.output_dir, "Geometry"),
         )
-        output, mot, scaled_model = create_opensim_vis(
+        output, mot, scaled_model = create_osim_models(
             trc=motion_file,
             experiment_dir=self.experiment.path,
-            scaling_time_range=[0.5, 1.0],
-            ik_time_range=None,
         )
 
         if with_blender:
