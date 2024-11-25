@@ -1,6 +1,6 @@
-# MoCap Studio: An Advanced Optical Motion Capture Tool
+# TracX: An Advanced Optical Motion Capture Tool
 
-**MoCap Studio** is an advanced tool designed for optical motion capture (MoCap) of human poses using one or more synchronized cameras. It supports full end-to-end motion capture pipelines, from video recording to 3D motion export for biomechanical analysis.
+**TracX** is an advanced tool designed for optical motion capture of humans using one or more synchronized cameras. It supports full end-to-end motion capture pipelines, from video recording to 3D motion export for biomechanical analysis.
 
 ## Key Features
 
@@ -39,8 +39,8 @@ conda activate Pose2Sim
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/mocap-studio.git
-cd mocap-studio
+git clone https://github.com/mindgarage-saif/TracX.git
+cd TracX
 ```
 
 2. Install the package:
@@ -58,17 +58,17 @@ _Tested on Ubuntu 22.04 with Python 3.10.12_
 To run the camera calibration tool, use the following command:
 
 ```bash
-mocap-calibrate
+TracX-Calibrate
 ```
 
 This tool will guide you through the process of calibrating the cameras using a chessboard pattern. Refer to the [user manual](./docs/calibration-manual.pdf) for more details.
 
-### Launch MoCap Studio
+### Launch TracX GUI
 
 To start the main GUI for the motion capture studio:
 
 ```bash
-mocap-studio
+TracX
 ```
 
 Detailed instructions for the video recording can be found [here](./docs/recording.md) and for the 3D motion capture [here](./docs/motion.md).
@@ -82,7 +82,7 @@ Contributions are very welcome. Open a fresh issue to start a discussion around 
 
 ## Acknowledgments
 
-The camera calibration tool is based on [MRT-Camera-Calibration-Toolbox](https://github.com/MT-MRT/MRT-Camera-Calibration-Toolbox). The MoCap Studio tool is developed by the Augmented Vision Group at the German Research Center for Artificial Intelligence (DFKI) by the following contributors:
+The camera calibration tool is based on [MRT-Camera-Calibration-Toolbox](https://github.com/MT-MRT/MRT-Camera-Calibration-Toolbox). The TracX tool is developed by the Augmented Vision Group at the German Research Center for Artificial Intelligence (DFKI) by the following contributors:
 
 - [Muhammad Saif Ullah Khan](https://github.com/saifkhichi96/)
 - [Jeremias Krauss](#)
@@ -92,9 +92,9 @@ The camera calibration tool is based on [MRT-Camera-Calibration-Toolbox](https:/
 Please use the following BibTeX entry to cite this repository:
 
 ```bibtex
-@misc{mocap-studio,
+@misc{tracx2024khan,
   author = {Khan, Muhammad Saif Ullah and Krauss, Jeremias},
-  title = {MoCap Studio: An Advanced Optical Motion Capture Tool},
+  title = {TracX: An Advanced Optical Motion Capture Tool},
   year = {2022},
   publisher = {GitHub},
   journal = {GitHub repository},

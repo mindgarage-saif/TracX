@@ -1,6 +1,6 @@
-# Estimating 3D Motion in MoCap Studio
+# Estimating 3D Motion in TracX
 
-This document describes the process of estimating 3D motion from 2D video data in MoCap Studio. The software uses a combination of 2D pose estimation and camera calibration to reconstruct 3D poses of human subjects, and is based on the Pose2Sim library.
+This document describes the process of estimating 3D motion from 2D video data in TracX. The software uses a combination of 2D pose estimation and camera calibration to reconstruct 3D poses of human subjects, and is based on the Pose2Sim library.
 
 ## Prequisites
 
@@ -8,13 +8,13 @@ Before you can start estimating 3D motion, you need to have the following:
 1. Synced video recordings of the subject from multiple cameras.
 2. The camera paramters file in the Qualisys format (`.xml`).
 
-The recordings can be obtained using the recording tool in MoCap Studio.
+The recordings can be obtained using the recording tool in TracX.
 
 > [!WARNING]
-> The camera calibration tool is not yet implemented in the current version of MoCap Studio. You need to calibrate the cameras using an external tool and provide the camera parameters file in the Qualisys format.
+> The camera calibration tool is not yet implemented in the current version of TracX. You need to calibrate the cameras using an external tool and provide the camera parameters file in the Qualisys format.
 
 > [!TIP]
-> In the LIHS dataset, many videos are rotated. For optimal 2D detection, use `util/rotator.py` to fix the videos. After the 2D detection is done, the keypoints need to be rotated back to the original view with `util/jsonMMPOSE_CMU.py`. This is also supported through the MoCap Studio UI.
+> In the LIHS dataset, many videos are rotated. For optimal 2D detection, use `util/rotator.py` to fix the videos. After the 2D detection is done, the keypoints need to be rotated back to the original view with `util/jsonMMPOSE_CMU.py`. This is also supported through the TracX UI.
 
 ## Usage
 

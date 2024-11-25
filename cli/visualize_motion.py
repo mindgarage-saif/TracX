@@ -1,7 +1,7 @@
 import argparse
 
-from mocap.core import MotionSequence
-from mocap.rendering.stick import StickFigureRenderer
+from TracX.core import MotionSequence
+from TracX.rendering.stick import StickFigureRenderer
 
 
 def visualize_motion(motion_file, output_path):
