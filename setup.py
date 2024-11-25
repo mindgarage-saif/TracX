@@ -1,17 +1,7 @@
-from setuptools import find_packages, setup
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-with open("requirements.txt") as f:
-    required = f.read().splitlines()
+import setuptools
 
-setup(
-    name="TracX",
-    version="1.0.0",
-    packages=find_packages(),
-    include_package_data=True,
-    install_requires=required,
-    entry_points="""
-        [console_scripts]
-        TracX=TracX.studio:main
-        TracX-Calibrate=TracX.calibrate:main
-    """,
-)
+if __name__ == "__main__":
+    setuptools.setup()

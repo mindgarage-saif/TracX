@@ -1,0 +1,3 @@
+git+https://github.com/MarilynKeller/aitviewer-skel.git
+nimblephysics
+pyvista
