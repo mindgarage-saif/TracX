@@ -73,6 +73,8 @@ class Monocular3DAnalysisPage(Monocular2DAnalysisPage):
         frame, (x, y, scores, angles, kwargs) = process_frame(
             self.experiment.cfg, self.model, frame
         )
+        if frame is None:
+            return frame
 
         # Append frame data
         self.all_frames_X.append(np.array(x))

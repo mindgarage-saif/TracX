@@ -5,11 +5,8 @@
 
 # Configure your project parameters here.
 
-[metadata]
-name = '{{timestamp}}'  # Name of the project
-type = 'multi3d'  # 'mono2d', 'mono3d', 'multi3d'
-
 [project]
+type = 'multi3d'
 multi_person = false # true for trials with multiple participants. If false, only the main person in scene is analyzed (and it run much faster).
 participant_height = 1.72 # m # float if single person, list of float if multi-person (same order as the Static trials) # Only used for marker augmentation
 participant_mass = 70.0 # kg # Only used for marker augmentation and scaling

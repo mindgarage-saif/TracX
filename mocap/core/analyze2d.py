@@ -2,54 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-"""
-    ##############################################################
-    ## Compute pose and angles from video input       ##
-    ##############################################################
-
-    Detects 2D joint centers from a video with RTMLib.
-    Computes selected joint and segment angles.
-    Optionally saves processed image files and video file.
-    Optionally saves processed poses as a TRC file, and angles as a MOT file (OpenSim compatible).
-
-    This scripts:
-    - loads skeleton information
-    - reads stream from a video
-    - sets up the RTMLib pose tracker from RTMlib with specified parameters
-    - detects poses within the selected time range
-    - tracks people so that their IDs are consistent across frames
-    - retrieves the keypoints with high enough confidence, and only keeps the persons with enough high-confidence keypoints
-    - computes joint and segment angles, and flips those on the left/right side them if the respective foot is pointing to the left
-    - draws bounding boxes around each person with their IDs
-    - draws joint and segment angles on the body, and writes the values either near the joint/segment, or on the upper-left of the image with a progress bar
-    - draws the skeleton and the keypoints, with a green to red color scale to account for their confidence
-    - optionally show processed images, saves them, or saves them as a video
-    - interpolates missing pose and angle sequences if gaps are not too large
-    - filters them with the selected filter and parameters
-    - optionally plots pose and angle data before and after processing for comparison
-    - optionally saves poses for each person as a trc file, and angles as a mot file
-
-    /!\ Warning /!\
-    - The pose detection is only as good as the pose estimation algorithm, i.e., it is not perfect.
-    - It will lead to reliable results only if the persons move in the 2D plane (sagittal or frontal plane).
-    - The persons need to be filmed as perpendicularly as possible from their side.
-    If you need research-grade markerless joint kinematics, consider using several cameras,
-    and constraining angles to a biomechanically accurate model. See Pose2Sim for example:
-    https://github.com/perfanalytics/pose2sim
-
-    INPUTS:
-    - a video
-    - a dictionary obtained from a configuration file (.toml extension)
-    - a skeleton model
-
-    OUTPUTS:
-    - one trc file of joint coordinates per detected person
-    - one mot file of joint angles per detected person
-    - image files, video
-    - a logs.txt file
-"""
-
 ## INIT
+import contextlib
 import itertools as it
 import logging
 from datetime import datetime
@@ -62,6 +16,7 @@ import numpy as np
 import pandas as pd
 from anytree import PreOrderIter, RenderTree
 from rtmlib import BodyWithFeet, PoseTracker
+from Sports2D.process import setup_video, sort_people_rtmlib, sort_people_sports2d
 from Sports2D.Utilities import filter
 from Sports2D.Utilities.common import *
 from Sports2D.Utilities.skeletons import *
@@ -147,57 +102,6 @@ __status__ = "Development"
 
 
 # FUNCTIONS
-def setup_video(video_file_path, save_vid, vid_output_path):
-    """
-    Set up video capture with OpenCV.
-
-    INPUTS:
-    - video_file_path: Path. The path to the video file
-    - save_vid: bool. Whether to save the video output
-    - vid_output_path: Path. The path to save the video output
-
-    OUTPUTS:
-    - cap: cv2.VideoCapture. The video capture object
-    - out_vid: cv2.VideoWriter. The video writer object
-    - cam_width: int. The width of the video
-    - cam_height: int. The height of the video
-    - fps: int. The frame rate of the video
-    """
-
-    if video_file_path.name == video_file_path.stem:
-        raise ValueError(
-            "Please set video_input to a video file (with extension) in Config.toml"
-        )
-    try:
-        cap = cv2.VideoCapture(video_file_path)
-        if not cap.isOpened():
-            raise
-    except:
-        raise NameError(
-            f"{video_file_path} is not a video. Check video_dir and video_input in your Config.toml file."
-        )
-
-    cam_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    cam_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    out_vid = None
-    if save_vid:
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        if fps == 0:
-            fps = 30
-        # try:
-        #     fourcc = cv2.VideoWriter_fourcc(*'avc1') # =h264. better compression and quality but may fail on some systems
-        #     out_vid = cv2.VideoWriter(vid_output_path, fourcc, fps, (cam_width, cam_height))
-        #     if not out_vid.isOpened():
-        #         raise ValueError("Failed to open video writer with 'avc1' (h264)")
-        # except Exception:
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        out_vid = cv2.VideoWriter(vid_output_path, fourcc, fps, (cam_width, cam_height))
-        # logging.info("Failed to open video writer with 'avc1' (h264). Using 'mp4v' instead.")
-
-    return cap, out_vid, cam_width, cam_height, fps
-
-
 def setup_pose_tracker(config_dict):
     """
     Set up the RTMLib pose tracker with the appropriate model and backend.
@@ -433,106 +337,6 @@ def min_with_single_indices(L, T):
             i += 1
 
     return np.array(minL), np.array(argminL), np.array(T_minL)
-
-
-def sort_people_sports2d(keyptpre, keypt, scores):
-    """
-    Associate persons across frames (Pose2Sim method)
-    Persons' indices are sometimes swapped when changing frame
-    A person is associated to another in the next frame when they are at a small distance
-
-    N.B.: Requires min_with_single_indices and euclidian_distance function (see common.py)
-
-    INPUTS:
-    - keyptpre: array of shape K, L, M with K the number of detected persons,
-    L the number of detected keypoints, M their 2D coordinates
-    - keypt: idem keyptpre, for current frame
-    - score: array of shape K, L with K the number of detected persons,
-    L the confidence of detected keypoints
-
-    OUTPUTS:
-    - sorted_prev_keypoints: array with reordered persons with values of previous frame if current is empty
-    - sorted_keypoints: array with reordered persons
-    - sorted_scores: array with reordered scores
-    """
-
-    # Generate possible person correspondences across frames
-    if len(keyptpre) < len(keypt):
-        keyptpre = np.concatenate(
-            (keyptpre, np.full((len(keypt) - len(keyptpre), keypt.shape[1], 2), np.nan))
-        )
-    if len(keypt) < len(keyptpre):
-        keypt = np.concatenate(
-            (keypt, np.full((len(keyptpre) - len(keypt), keypt.shape[1], 2), np.nan))
-        )
-        scores = np.concatenate(
-            (scores, np.full((len(keyptpre) - len(scores), scores.shape[1]), np.nan))
-        )
-    personsIDs_comb = sorted(it.product(range(len(keyptpre)), range(len(keypt))))
-
-    # Compute distance between persons from one frame to another
-    frame_by_frame_dist = []
-    for comb in personsIDs_comb:
-        frame_by_frame_dist += [euclidean_distance(keyptpre[comb[0]], keypt[comb[1]])]
-
-    # Sort correspondences by distance
-    _, _, associated_tuples = min_with_single_indices(
-        frame_by_frame_dist, personsIDs_comb
-    )
-
-    # Associate points to same index across frames, nan if no correspondence
-    sorted_keypoints, sorted_scores = [], []
-    for i in range(len(keyptpre)):
-        id_in_old = associated_tuples[:, 1][associated_tuples[:, 0] == i].tolist()
-        if len(id_in_old) > 0:
-            sorted_keypoints += [keypt[id_in_old[0]]]
-            sorted_scores += [scores[id_in_old[0]]]
-        else:
-            sorted_keypoints += [keypt[i]]
-            sorted_scores += [scores[i]]
-    sorted_keypoints, sorted_scores = (
-        np.array(sorted_keypoints),
-        np.array(sorted_scores),
-    )
-
-    # Keep track of previous values even when missing for more than one frame
-    sorted_prev_keypoints = np.where(
-        np.isnan(sorted_keypoints) & ~np.isnan(keyptpre), keyptpre, sorted_keypoints
-    )
-
-    return sorted_prev_keypoints, sorted_keypoints, sorted_scores
-
-
-def sort_people_rtmlib(pose_tracker, keypoints, scores):
-    """
-    Associate persons across frames (RTMLib method)
-
-    INPUTS:
-    - pose_tracker: PoseTracker. The initialized RTMLib pose tracker object
-    - keypoints: array of shape K, L, M with K the number of detected persons,
-    L the number of detected keypoints, M their 2D coordinates
-    - scores: array of shape K, L with K the number of detected persons,
-    L the confidence of detected keypoints
-
-    OUTPUT:
-    - sorted_keypoints: array with reordered persons
-    - sorted_scores: array with reordered scores
-    """
-
-    try:
-        desired_size = max(pose_tracker.track_ids_last_frame) + 1
-        sorted_keypoints = np.full((desired_size, keypoints.shape[1], 2), np.nan)
-        sorted_keypoints[pose_tracker.track_ids_last_frame] = keypoints[
-            : len(pose_tracker.track_ids_last_frame), :, :
-        ]
-        sorted_scores = np.full((desired_size, scores.shape[1]), np.nan)
-        sorted_scores[pose_tracker.track_ids_last_frame] = scores[
-            : len(pose_tracker.track_ids_last_frame), :
-        ]
-    except:
-        sorted_keypoints, sorted_scores = keypoints, scores
-
-    return sorted_keypoints, sorted_scores
 
 
 def draw_dotted_line(
@@ -1531,20 +1335,21 @@ def process_frame(config_dict, pose_tracker, frame):
     )
     img = draw_keypts(img, valid_X, valid_Y, scores, cmap_str="RdYlGn")
     img = draw_skel(img, valid_X, valid_Y, model, colors=colors)
-    img = draw_angles(
-        img,
-        valid_X,
-        valid_Y,
-        valid_angles,
-        valid_X_flipped,
-        keypoints_ids,
-        keypoints_names,
-        angle_names,
-        display_angle_values_on=display_angle_values_on,
-        colors=colors,
-        fontSize=fontSize,
-        thickness=thickness,
-    )
+    with contextlib.suppress(Exception):
+        img = draw_angles(
+            img,
+            valid_X,
+            valid_Y,
+            valid_angles,
+            valid_X_flipped,
+            keypoints_ids,
+            keypoints_names,
+            angle_names,
+            display_angle_values_on=display_angle_values_on,
+            colors=colors,
+            fontSize=fontSize,
+            thickness=thickness,
+        )
 
     metadata = {
         "keypoint_ids": keypoints_ids,

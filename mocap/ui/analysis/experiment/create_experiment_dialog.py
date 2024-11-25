@@ -41,15 +41,6 @@ class CreateExperimentDialog(QDialog):
         self.innerLayout.addWidget(self.motion_setup)
         self.innerLayout.addSpacing(PAD_Y)
 
-        self.detection_setup = RadioGroup(
-            "Detection Mode", self, Qt.Orientation.Horizontal
-        )
-        self.detection_setup.addButton("Single Person")
-        self.detection_setup.addButton("Multi Person")
-        self.detection_setup.addStretch()
-        self.innerLayout.addWidget(self.detection_setup)
-        self.innerLayout.addSpacing(PAD_Y)
-
         self.camera_setup = RadioGroup(
             "Camera Configuration", self, Qt.Orientation.Horizontal
         )
@@ -60,7 +51,6 @@ class CreateExperimentDialog(QDialog):
         self.innerLayout.addSpacing(PAD_Y)
 
         self.motion_setup.selectDefault()
-        self.detection_setup.selectDefault()
         self.camera_setup.selectDefault()
 
         self.label = QLabel(self)
@@ -133,7 +123,6 @@ class CreateExperimentDialog(QDialog):
                 raise Exception("Experiment name cannot be empty.")
 
             motionType = self.motion_setup.checkedButton().text()
-            detectionMode = self.detection_setup.checkedButton().text()
             cameraConfig = self.camera_setup.checkedButton().text()
 
             # Create a new experiment
@@ -141,7 +130,6 @@ class CreateExperimentDialog(QDialog):
                 name=name,
                 create=True,
                 monocular=cameraConfig == "Monocular",
-                multi_person=detectionMode == "Multi Person",
                 is_2d=motionType == "2D",
             )
 

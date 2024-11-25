@@ -1,8 +1,6 @@
-import json
 import logging
 import os
 import shutil
-from datetime import datetime
 from typing import Optional
 
 import toml
@@ -21,14 +19,11 @@ from .rotation import rotate_videos, unrotate_pose2d
 
 
 class Experiment:
-    META_FILE = os.path.join(APP_PROJECTS, "db.json")
-
     def __init__(
         self,
         name,
         create=False,
         monocular=False,
-        multi_person=False,
         is_2d=False,
         base_dir=APP_PROJECTS,
     ) -> None:
@@ -37,6 +32,7 @@ class Experiment:
         self.config_file = os.path.join(self.path, "Config.toml")
         self.videos_dir = os.path.join(self.path, "videos")
         self.pose2d_dir = os.path.join(self.path, "pose")
+        self.pose2d_associated_dir = os.path.join(self.path, "pose-associated")
         self.pose3d_dir = os.path.join(self.path, "pose-3d")
         self.output_dir = os.path.join(self.path, "output")
         self.calibration_dir = os.path.join(self.path, "calibration")
@@ -50,78 +46,51 @@ class Experiment:
             try:
                 # Set the experiment flags
                 self.monocular = monocular
-                self.multi_person = multi_person
                 self.is_2d = is_2d
 
                 # Create the project directories.
                 self._makedirs()
 
-                # Save the metadata
-                self.save_metadata()
+                # Read the configuration file.
+                self.cfg = toml.load(self.config_file)
+                self.cfg = edict(self.cfg)
             except Exception:
                 raise ValueError(f"Experiment with name '{name}' already exists.")
         else:
-            # Find experiment in the database
-            experiments = Experiment.list()
-            experiment = next((e for e in experiments if e["name"] == name), None)
-            if experiment is None:
-                raise ValueError(f"No experiment with name '{name}' found.")
+            if not os.path.exists(self.path) or not os.path.exists(self.config_file):
+                raise FileNotFoundError(f"No experiment with name '{name}' found.")
 
-            # Read flags
-            self.monocular = experiment.get("monocular", False)
-            self.is_2d = experiment.get("is_2d", False)
-            self.multi_person = experiment.get("multi_person", False)
-            self.created_at = experiment.get("created_at", None)
+            # Read the configuration file.
+            self.cfg = toml.load(self.config_file)
+            self.cfg = edict(self.cfg)
+
+            project_type = self.cfg.get("project", {}).get("type", "").lower()
+            self.monocular = "mono" in project_type
+            self.is_2d = "2d" in project_type
 
             # Set the project directories
             self._makedirs(exist_ok=True)
 
-        # Read the configuration file.
-        self.cfg = toml.load(self.config_file)
-        self.cfg = edict(self.cfg)
-
-    def save_metadata(self):
-        metadata = Experiment.list()
-        if any(m["name"] == self.name for m in metadata):
-            return
-
-        metadata.append(
-            {
-                "name": self.name,
-                "monocular": self.monocular,
-                "is_2d": self.is_2d,
-                "multi_person": self.multi_person,
-                "created_at": str(datetime.now()),
-            }
-        )
-
-        with open(Experiment.META_FILE, "w") as f:
-            json.dump(metadata, f)
-
     @staticmethod
     def list():
-        if not os.path.exists(Experiment.META_FILE):
-            with open(Experiment.META_FILE, "w") as f:
-                json.dump([], f)
+        experiments = []
+        for f in sorted(os.listdir(APP_PROJECTS)):
+            if not os.path.isdir(os.path.join(APP_PROJECTS, f)):
+                continue
 
-        with open(Experiment.META_FILE) as f:
-            db = json.load(f)
+            # Open the experiment and read the metadata
+            e = Experiment.open(f)
 
-        # Read metadata
-        metadata = []
-        for exp in sorted(db, key=lambda x: x["name"]):
-            metadata.append(
+            experiments.append(
                 {
-                    "name": exp["name"],
-                    "monocular": exp.get("monocular", False),
-                    "is_2d": exp.get("is_2d", False),
-                    "multi_person": exp.get("multi_person", False),
-                    "created_at": exp.get("created_at", None),
-                    "path": os.path.join(APP_PROJECTS, exp["name"]),
+                    "name": f,
+                    "monocular": e.monocular,
+                    "is_2d": e.is_2d,
+                    "path": os.path.join(APP_PROJECTS, f),
                 }
             )
 
-        return metadata
+        return experiments
 
     @staticmethod
     def open(name):
@@ -224,11 +193,14 @@ class Experiment:
         if not self.has_videos():
             raise ValueError("No videos found in the project directory.")
 
-        correct_rotation = cfg.get("correct_rotation", False)
+        correct_rotation = cfg.get("pose").get("correct_camera_rotation", False)
         if correct_rotation and not self.monocular:
+            calibration_file = os.path.join(
+                self.calibration_dir, "camera_parameters.qca.txt"
+            )
             rotated_dir = os.path.join(self.path, self.videos_dir + "_rotated")
             if not os.path.exists(rotated_dir):
-                rotate_videos(self.videos, rotated_dir, self.calibration_file)
+                rotate_videos(self.videos, rotated_dir, calibration_file)
             else:
                 logging.info("Rotated videos already exist. Skipping rotation...")
 
@@ -255,7 +227,7 @@ class Experiment:
                 overwrite=overwrite,
             )
         else:
-            raise ValueError(f"Unsupported custom pose model '{cfg.pose2d_model}'")
+            raise ValueError(f"Unsupported custom pose model '{cfg.pose.pose_model}'")
 
         # Unrotate the 2D poses
         if correct_rotation:
@@ -264,9 +236,11 @@ class Experiment:
             os.rename(self.videos_dir + "_original", self.videos_dir)
 
             logging.info("Rotating 2D poses back...")
-            unrotate_pose2d(self.pose2d_dir, self.calibration_file)
+            unrotate_pose2d(self.pose2d_dir, calibration_file)
 
-        # TODO: Person association should be moved here
+        # Person association
+        logging.info("Finding the most prominent person...")
+        Pose2Sim.personAssociation()
 
         # 2D-to-3D Lifting in Monocular Mode
         if self.monocular:
@@ -293,9 +267,6 @@ class Experiment:
         else:
             # logging.info("Calibrating cameras...")
             # Pose2Sim.calibration()
-
-            logging.info("Finding the most prominent person...")
-            Pose2Sim.personAssociation()
 
             # TODO: Wrap triangulation in a try-except block and throw a nice error message
             logging.info("Triangulating 3D poses...")

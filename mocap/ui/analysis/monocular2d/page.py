@@ -77,12 +77,7 @@ class Monocular2DAnalysisPage(QWidget):
 
         # Model setup
         # TODO: Refresh model when experiment settings are updated
-        mode = self.experiment.cfg.get("pose").get("mode")
-        det_frequency = self.experiment.cfg.get("pose").get("det_frequency")
-        tracking_mode = self.experiment.cfg.get("pose").get("tracking_mode")
-        tracking = self.experiment.cfg.get("process").get("multiperson")
-        tracking_rtmlib = tracking_mode == "rtmlib" and tracking
-        self.model = setup_pose_tracker(det_frequency, mode, tracking_rtmlib)
+        self.model = setup_pose_tracker(self.experiment.cfg)
 
         self.all_frames_X = []
         self.all_frames_Y = []

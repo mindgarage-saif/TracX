@@ -4,11 +4,8 @@
 
 # Configure your project parameters here
 
-[metadata]
-name = '{{timestamp}}'  # Name of the project
-type = 'mono2d'  # 'mono2d', 'mono3d', 'multi3d'
-
 [project]
+type = 'mono2d'
 video_input = 'demo.mp4' # 'webcam' or '<video_path.ext>', or ['video1_path.mp4', 'video2_path.avi>', ...]. Beware that images won't be saved if paths contain non ASCII characters.
 
 # Video parameters
@@ -24,7 +21,7 @@ input_size = [1280, 720] # [W, H]. Lower resolution will be faster but less prec
 multiperson = true # Multiperson involves tracking: will be faster if false
 show_realtime_results = true
 save_vid = true
-save_img = true
+save_img = false
 save_pose = true
 save_angles = true
 result_dir = '' # BETWEEN SINGLE QUOTES! # If empty, project dir is current dir
