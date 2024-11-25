@@ -29,13 +29,13 @@ def process_mono2d(experiment: Experiment):
     process2d(config_dict)
 
     # Post-process paths
-    logging.info("Updating paths")
+    logging.info("Cleaning up temporary files")
     save_dir = os.path.join(
         experiment.path, os.path.basename(video_path).split(".")[0] + "_Sports2D"
     )
     for file in os.listdir(save_dir):
         dest_dir = (
-            experiment.pose3d_dir if file.endswith(".trc") else experiment.output_dir
+            experiment.pose2d_dir if file.endswith(".trc") else experiment.output_dir
         )
         dest_path = os.path.join(dest_dir, file)
         if os.path.exists(dest_path):
@@ -46,7 +46,6 @@ def process_mono2d(experiment: Experiment):
         shutil.move(os.path.join(save_dir, file), dest_dir)
 
     # Delete the temporary directory
-    logging.info("Cleaning up")
     shutil.rmtree(save_dir)
 
 
@@ -55,8 +54,8 @@ def process_mono3d(experiment: Experiment):
 
     logging.info("Lifting 2D poses to 3D")
     pose2d_files = [
-        os.path.join(experiment.pose3d_dir, f)
-        for f in os.listdir(experiment.pose3d_dir)
+        os.path.join(experiment.pose2d_dir, f)
+        for f in os.listdir(experiment.pose2d_dir)
         if f.endswith(".trc") and "Sports2D" in f
     ]
 
@@ -71,6 +70,7 @@ def process_mono3d(experiment: Experiment):
     res_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     cap.release()
 
+    os.makedirs(experiment.pose3d_dir, exist_ok=True)
     for pose2d_file in pose2d_files:
         pose3d_file = os.path.join(
             experiment.pose3d_dir, os.path.basename(pose2d_file).replace("Sports2D", "")
@@ -105,21 +105,6 @@ def process(name: str):
         print(f"Experiment {name} not found.")
         return
 
-    # Setup logging
-    root_dir = experiment.path
-    logfile = os.path.join(root_dir, "logs.txt")
-    with open(logfile, "a+") as log_f:
-        pass
-    logging.basicConfig(
-        format="%(message)s",
-        level=logging.INFO,
-        force=True,
-        handlers=[
-            logging.handlers.TimedRotatingFileHandler(logfile, when="D", interval=7),
-            logging.StreamHandler(),
-        ],
-    )
-
     if len(experiment.videos) == 0:
         logging.info(f"No videos found for experiment {experiment.name}")
         return
@@ -131,7 +116,7 @@ def process(name: str):
     if experiment.monocular:
         if experiment.is_2d:
             logging.info(f"Processing 2D single-camera experiment '{experiment.name}'")
-            process_fun = process_mono3d
+            process_fun = process_mono2d
         else:
             logging.info(f"Processing 3D single-camera experiment '{experiment.name}'")
             process_fun = process_mono3d
@@ -146,5 +131,3 @@ def process(name: str):
 
     # Run the processing function
     process_fun(experiment)
-
-    logging.shutdown()

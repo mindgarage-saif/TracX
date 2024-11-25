@@ -1857,7 +1857,7 @@ def process(config_dict):
     video.release()
 
     # Setup result directory
-    result_dir = Path(project_config.get("results_dir", "results")).resolve()
+    result_dir = Path(config_dict.get("process", {}).get("result_dir", "")).resolve()
     result_dir.mkdir(parents=True, exist_ok=True)
 
     current_time = datetime.now()
@@ -1870,7 +1870,7 @@ def process(config_dict):
     logging.info(f"Start Time: {current_time.strftime('%A, %d %B %Y, %H:%M:%S')}")
 
     # Call the processing function
-    process_fun(config_dict, video_path.name, time_range, frame_rate, result_dir)
+    process_fun(config_dict, video_path, time_range, frame_rate, result_dir)
 
     # Calculate and log elapsed time
     elapsed_time = (datetime.now() - current_time).total_seconds()
