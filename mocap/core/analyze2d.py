@@ -702,26 +702,56 @@ def draw_skel(img, X, Y, model, colors=[(255, 0, 0), (0, 255, 0), (0, 0, 255)]):
     node_pairs = [list(x) for x in {tuple(x) for x in node_pairs}]
 
     # Draw lines
+    colors = [(192, 192, 192)]
     color_cycle = it.cycle(colors)
     for x, y in zip(X, Y):
         c = next(color_cycle)
         if not np.isnan(x).all():
-            [
-                cv2.line(
-                    img,
-                    (int(x[n[0]]), int(y[n[0]])),
-                    (int(x[n[1]]), int(y[n[1]])),
-                    c,
-                    thickness,
-                )
-                for n in node_pairs
+            for n in node_pairs:
                 if not (
                     np.isnan(x[n[0]])
                     or np.isnan(y[n[0]])
                     or np.isnan(x[n[1]])
                     or np.isnan(y[n[1]])
-                )
-            ]
+                ):
+                    pt1 = (int(x[n[0]]), int(y[n[0]]))
+                    pt2 = (int(x[n[1]]), int(y[n[1]]))
+
+                    # Calculate the direction vector from pt1 to pt2
+                    dx, dy = pt2[0] - pt1[0], pt2[1] - pt1[1]
+                    length = np.sqrt(dx**2 + dy**2)
+
+                    # Normalize the direction vector
+                    if length == 0:
+                        return None  # Avoid division by zero
+                    nx, ny = dx / length, dy / length
+
+                    # Perpendicular vector for the triangular width
+                    px, py = -ny, nx
+
+                    # Calculate the half-width of the triangle
+                    thickness = 20
+                    half_width = thickness // 2
+
+                    # Define the triangle points
+                    pt1_left = (
+                        int(pt1[0] + px * half_width),
+                        int(pt1[1] + py * half_width),
+                    )
+                    pt1_right = (
+                        int(pt1[0] - px * half_width),
+                        int(pt1[1] - py * half_width),
+                    )
+                    pt2_top = (int(pt2[0]), int(pt2[1]))
+
+                    # Draw the triangular shaft
+                    triangle_points = np.array(
+                        [pt1_left, pt1_right, pt2_top], dtype=np.int32
+                    )
+                    cv2.fillPoly(img, [triangle_points], c)
+
+                    # Draw the circular cap on the larger end
+                    cv2.circle(img, pt2, half_width, c, -1, cv2.LINE_AA)
 
     return img
 
@@ -1041,6 +1071,9 @@ def draw_joint_angle(img, ang_coords, flip, right_angle):
                 end_angle += 360
         cv2.ellipse(
             img, app_point, (20, 20), 0, start_angle, end_angle, (0, 255, 0), thickness
+        )
+        cv2.ellipse(
+            img, app_point, (20, 20), 0, start_angle, end_angle, (0, 255, 0), -1
         )
 
         return app_point, unit_segment_direction, unit_parentsegment_direction
@@ -1554,6 +1587,124 @@ def process_frame(config_dict, pose_tracker, frame):
     return img, (valid_X, valid_Y, valid_scores, valid_angles, metadata)
 
 
+def export_final_video(
+    all_frames_X_person_filt,
+    all_frames_Y_person_filt,
+    all_frames_angles_person_filt,
+    angle_names,
+    input_video_path,
+    output_video_path,
+    config_dict,
+):
+    """
+    Exports a final video with post-processed motion data visualized on it.
+
+    INPUTS:
+    - all_frames_X_person_filt: pd.DataFrame. Filtered X-coordinates for each frame.
+    - all_frames_Y_person_filt: pd.DataFrame. Filtered Y-coordinates for each frame.
+    - all_frames_angles_person_filt: pd.DataFrame. Filtered angle data for each frame.
+    - angle_names: list. Names of angles to display.
+    - keypoints_names: list. Names of keypoints in the skeleton.
+    - keypoints_ids: list. IDs of keypoints in the skeleton.
+    - input_video_path: str. Path to the input video file.
+    - output_video_path: str. Path to save the output video.
+    - config_dict: dict. Configuration dictionary.
+
+    OUTPUT:
+    - Saves the final visualized video to the specified output path.
+    """
+    logging.info(f"Exporting final video to {output_video_path}")
+
+    # Retrieve keypoint names from model
+    model = eval("body_with_feet")
+    keypoints_ids = [node.id for _, _, node in RenderTree(model) if node.id != None]
+    keypoints_names = [node.name for _, _, node in RenderTree(model) if node.id != None]
+
+    # Open the input video
+    cap = cv2.VideoCapture(input_video_path)
+    if not cap.isOpened():
+        raise ValueError(f"Could not open input video: {input_video_path}")
+
+    # Set up video writer for output
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    out_vid = cv2.VideoWriter(
+        output_video_path, fourcc, fps, (frame_width, frame_height)
+    )
+
+    # Visualization settings
+    font_size = config_dict.get("angles").get("fontSize", 0.3)
+    thickness = 1 if font_size < 0.8 else 2
+    display_angle_values_on = config_dict.get("angles").get(
+        "display_angle_values_on", ["body"]
+    )
+    colors = config_dict.get("process").get(
+        "colors", [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+    )
+
+    # Iterate through frames in the video
+    frame_count = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break  # Exit when no more frames
+
+        if frame_count >= len(all_frames_X_person_filt):
+            logging.warning(
+                "Frame count exceeds available processed frames. Exiting early."
+            )
+            break
+
+        # Extract filtered data for this frame
+        valid_X = all_frames_X_person_filt.iloc[frame_count].values
+        valid_Y = all_frames_Y_person_filt.iloc[frame_count].values
+        valid_angles = all_frames_angles_person_filt.iloc[frame_count].values
+
+        # Convert data into required format for visualization functions
+        valid_X = np.array(valid_X).reshape(-1, 1).T
+        valid_Y = np.array(valid_Y).reshape(-1, 1).T
+        valid_angles = np.array(valid_angles).reshape(1, -1)
+
+        # Draw bounding box, keypoints, skeletons, and angles
+        frame = draw_bounding_box(
+            frame,
+            valid_X,
+            valid_Y,
+            colors=colors,
+            fontSize=font_size,
+            thickness=thickness,
+        )
+        frame = draw_keypts(
+            frame, valid_X, valid_Y, np.ones_like(valid_X), cmap_str="RdYlGn"
+        )
+        frame = draw_skel(frame, valid_X, valid_Y, model=model, colors=colors)
+        frame = draw_angles(
+            frame,
+            valid_X,
+            valid_Y,
+            valid_angles,
+            valid_X,  # Assuming flipped X is the same as X after postprocessing
+            keypoints_ids,
+            keypoints_names,
+            angle_names,
+            display_angle_values_on=display_angle_values_on,
+            colors=colors,
+            fontSize=font_size,
+            thickness=thickness,
+        )
+
+        # Write to output video
+        out_vid.write(frame)
+        frame_count += 1
+
+    # Clean up
+    cap.release()
+    out_vid.release()
+    logging.info(f"Final video saved to {output_video_path}")
+
+
 def postprocess(
     config_dict,
     all_frames_X,
@@ -1566,6 +1717,7 @@ def postprocess(
     video_file,
     frame_count,
     frame_rate,
+    frame_range,
     fps,
     save_pose,
     pose_output_path,
@@ -1836,6 +1988,16 @@ def postprocess(
                     angle_plots(
                         all_frames_angles_person, angle_data, i
                     )  # i = current person
+
+    export_final_video(
+        all_frames_X_person_filt,
+        all_frames_Y_person_filt,
+        all_frames_angles_person_filt,
+        angle_names,
+        video_file,
+        "final_video.mp4",
+        config_dict,
+    )
 
 
 def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):
@@ -2203,9 +2365,66 @@ def process_fun(config_dict, video_file, time_range, frame_rate, result_dir):
         video_file,
         frame_count,
         frame_rate,
+        frame_range,
         fps,
         save_pose,
         pose_output_path,
         save_angles,
         angles_output_path,
     )
+
+
+from Sports2D.Sports2D import base_params, read_config_file
+
+
+def process(config="Config_demo.toml"):
+    """
+    Read video or webcam input
+    Compute 2D pose with RTMPose
+    Compute joint and segment angles
+    Optionally interpolate missing data, filter them, and display figures
+    Save image and video results, save pose as trc files, save angles as csv files
+    """
+    config_dict = config if type(config) == dict else read_config_file(config)
+    video_dir, video_files, frame_rates, time_ranges, result_dir = base_params(
+        config_dict
+    )
+
+    result_dir.mkdir(parents=True, exist_ok=True)
+    with open(result_dir / "logs.txt", "a+") as log_f:
+        pass
+    logging.basicConfig(
+        format="%(message)s",
+        level=logging.INFO,
+        force=True,
+        handlers=[
+            logging.handlers.TimedRotatingFileHandler(
+                result_dir / "logs.txt", when="D", interval=7
+            ),
+            logging.StreamHandler(),
+        ],
+    )
+
+    for video_file, time_range, frame_rate in zip(
+        video_files, time_ranges, frame_rates
+    ):
+        currentDateAndTime = datetime.now()
+        time_range_str = (
+            f" from {time_range[0]} to {time_range[1]} seconds" if time_range else ""
+        )
+
+        logging.info(
+            "\n\n---------------------------------------------------------------------"
+        )
+        logging.info(f"Processing {video_file}{time_range_str}")
+        logging.info(f"On {currentDateAndTime.strftime('%A %d. %B %Y, %H:%M:%S')}")
+        logging.info(
+            "---------------------------------------------------------------------"
+        )
+
+        process_fun(config_dict, video_file, time_range, frame_rate, result_dir)
+
+        elapsed_time = (datetime.now() - currentDateAndTime).total_seconds()
+        logging.info(f"\nProcessing {video_file} took {elapsed_time:.2f} s.")
+
+    logging.shutdown()

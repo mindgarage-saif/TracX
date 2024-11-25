@@ -80,7 +80,8 @@ class VisualizeMotionButton(BaseTaskButton):
 
     def on_finish(self, status, result):
         super().on_finish(status, result)
-        self.preview_video(result)
+        if status and result is not None:
+            self.preview_video(result)
 
     def preview_video(self, result):
         if result is None:

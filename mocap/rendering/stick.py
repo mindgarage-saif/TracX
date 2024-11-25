@@ -1,12 +1,10 @@
 import os
-import shutil
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
 from mocap.rendering.base_renderer import MotionRenderer
-
-from .utils import export_video
 
 
 class StickFigureRenderer(MotionRenderer):
@@ -36,12 +34,17 @@ class StickFigureRenderer(MotionRenderer):
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
 
+        # Create a video writer
+        self.writer = None
+        self.fps = 25
+
         self.output_path = output_path
         self.output_dir = output_dir
         self.monocular = monocular
         self.elev = elev
         self.azim = azim
         self.vertical_axis = vertical_axis
+
         # Footstep rendering
         self.footsteps = None
         self.show_footsteps = False
@@ -129,14 +132,25 @@ class StickFigureRenderer(MotionRenderer):
         # Minimize whitespace
         plt.tight_layout()
 
-        # Save the figure
-        plt.savefig(tmp_file)
-        plt.close()
+        # Convert the plot to an image array
+        fig.canvas.draw()
+        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+        # Initialize the video writer if not already initialized
+        if self.writer is None:
+            height, width, _ = image.shape
+            self.writer = cv2.VideoWriter(
+                self.output_path,
+                cv2.VideoWriter_fourcc(*"mp4v"),
+                self.fps,
+                (width, height),
+            )
+
+        # Write the image to the video
+        self.writer.write(image)
 
     def render(self, fps=24):
-        tmp_dir = os.path.join(self.output_dir, "tmp")
-        os.makedirs(tmp_dir, exist_ok=True)
-
         # Get the footsteps
         if self.show_footsteps:
             footsteps = []
@@ -149,10 +163,6 @@ class StickFigureRenderer(MotionRenderer):
                 footsteps.append(pose[min_foot_joint])
             self.footsteps = np.array(footsteps)
 
+        # Render each frame
+        self.fps = fps
         super().render()
-
-        # Create video
-        export_video(tmp_dir, self.output_path, fps=fps)
-
-        # Clean up temporary images
-        shutil.rmtree(tmp_dir)

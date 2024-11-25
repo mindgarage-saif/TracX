@@ -3,25 +3,19 @@ import logging
 import os
 import shutil
 from datetime import datetime
-from distutils.dir_util import copy_tree
 from typing import Optional
 
-import cv2
 import toml
 from easydict import EasyDict as edict
 from Pose2Sim import Pose2Sim
-from Pose2Sim.Utilities import bodykin_from_mot_osim
 
 from mocap.constants import (
     APP_ASSETS,
     APP_PROJECTS,
-    OPENSIM_DIR,
     SUPPORTED_VIDEO_FORMATS,
 )
 from mocap.core.triangulation import triangulate_all
-from mocap.rendering import StickFigureRenderer, create_opensim_vis
 
-from .motion import MotionSequence
 from .pose import PoseTracker2D, lift_to_3d
 from .rotation import rotate_videos, unrotate_pose2d
 
@@ -221,17 +215,6 @@ class Experiment:
         with open(self.config_file, "w") as f:
             toml.dump(cfg, f)
 
-    def change_config(self, mode, skeleton, trackedpoint):
-        file = toml.load(self.config_file)
-        file["pose"]["pose_model"] = skeleton
-        file["pose"]["mode"] = mode
-        file["personAssociation"]["single_person"]["tracked_keypoint"] = trackedpoint
-        with open(self.config_file, "w") as f:
-            toml.dump(file, f)
-
-        # Update the self.cfg attribute
-        self.cfg = toml.load(self.config_file)
-
     def process(self, cfg):
         # Change the working directory to the project directory.
         cwd = os.getcwd()
@@ -357,88 +340,7 @@ class Experiment:
         return os.path.join(self.path, "logs.log")
 
     def read_skeleton(self):
-        file = toml.load(self.config_file)
-        return file["pose"]["pose_model"]
-
-    def _visualize_naive(self, motion_file):
-        # Create a side-by-side visualization using OpenCV
-        animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        if os.path.exists(animation_file):
-            return animation_file
-
-        # Find FPS of the first camera video
-        video_file = self.videos[0]
-        video = cv2.VideoCapture(video_file)
-        fps = video.get(cv2.CAP_PROP_FPS)
-        video.release()
-        skeleton = self.read_skeleton()
-
-        # Create the visualization
-        animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        if self.monocular:
-            logging.info("Rendering monocular motion sequence...")
-            motion_data = MotionSequence.from_monocular_json(motion_file, fps)
-            renderer = StickFigureRenderer(
-                motion_data,
-                animation_file,
-                monocular=True,
-                elev=-165,
-                azim=155,
-                vertical_axis="y",
-            )
-        else:
-            logging.info("Rendering multiview motion sequence...")
-            motion_data = MotionSequence.from_pose2sim_trc(motion_file, skeleton)
-            renderer = StickFigureRenderer(motion_data, animation_file)
-        renderer.render(fps=fps)
-
-        return animation_file
-
-    def _visualize_opensim(self, motion_file, with_blender=False):
-        copy_tree(
-            os.path.join(OPENSIM_DIR, "..", "Geometry"),
-            os.path.join(self.output_dir, "Geometry"),
-        )
-        output, mot, scaled_model = create_opensim_vis(
-            trc=motion_file,
-            experiment_dir=self.path,
-            scaling_time_range=[0.5, 1.0],
-            ik_time_range=None,
-        )
-
-        if with_blender:
-            bodykin_from_mot_osim.bodykin_from_mot_osim_func(
-                mot,
-                scaled_model,
-                os.path.join(output, "bodykin.csv"),
-            )
-
-        return output, mot, scaled_model
-
-    def visualize(self, mode="naive", **kwargs):
-        """Visualize the results of the experiment.
-
-        Args:
-            mode (str): The visualization mode. Supported modes include ['naive', 'mesh', mixamo', 'opensim'].
-            **kwargs: Additional keyword arguments to pass to the visualization function for the selected mode.
-                      See the documentation of the corresponding visualization function for more details.
-
-        """
-        motion_file = self.get_motion_file()
-        if motion_file is None:
-            raise ValueError(
-                "Call the .process() method first before visualizing the results.",
-            )
-
-        # Check the visualization mode
-        supported_modes = ["naive", "mesh", "mixamo", "opensim"]
-        if mode == "naive":
-            return self._visualize_naive(motion_file, **kwargs)
-        if mode == "opensim":
-            return self._visualize_opensim(motion_file, **kwargs)
-        raise ValueError(
-            f"Unsupported visualization mode '{mode}'. Use one of {supported_modes}",
-        )
+        return self.cfg.get("pose", {}).get("pose_model", "HALPE_26")
 
     def __str__(self):
         return f"Experiment(name={self.name}, path={self.path})"

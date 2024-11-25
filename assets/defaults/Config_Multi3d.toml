@@ -4,18 +4,10 @@
 
 
 # Configure your project parameters here.
-#
-# IMPORTANT:
-# If a parameter is not found here, Pose2Sim will look for its value in the
-# Config.toml file of the level above. This way, you can set global
-# instructions for the Session and alter them for specific Participants or Trials.
-#
-# If you wish to overwrite a parameter for a specific trial or participant,
-# edit its Config.toml file by uncommenting its key (e.g., [project])
-# and editing its value (e.g., frame_range = [10,300]). Or else, uncomment
-# [filtering.butterworth] and set cut_off_frequency = 10, etc.
 
-
+[metadata]
+name = '{{timestamp}}'  # Name of the project
+type = 'multi3d'  # 'mono2d', 'mono3d', 'multi3d'
 
 [project]
 multi_person = false # true for trials with multiple participants. If false, only the main person in scene is analyzed (and it run much faster).

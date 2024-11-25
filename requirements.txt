@@ -10,3 +10,6 @@ PyQt6
 qt-material==2.14
 sports2d==0.4.8
 websockets
+git+https://github.com/MarilynKeller/aitviewer-skel.git
+nimblephysics
+pyvista

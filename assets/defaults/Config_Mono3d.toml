@@ -4,12 +4,9 @@
 
 # Configure your project parameters here
 
-# Then open an Anaconda prompt and enter:
-# conda activate Sports2D
-# ipython
-# from Sports2D import Sports2D
-# Sports2D.process('Config_demo.toml')
-
+[metadata]
+name = '{{timestamp}}'  # Name of the project
+type = 'mono3d'  # 'mono2d', 'mono3d', 'multi3d'
 
 [project]
 video_input = 'demo.mp4' # 'webcam' or '<video_path.ext>', or ['video1_path.mp4', 'video2_path.avi>', ...]. Beware that images won't be saved if paths contain non ASCII characters.
@@ -49,6 +46,8 @@ keypoint_likelihood_threshold = 0.3 # Keypoints whose likelihood is lower will n
 average_likelihood_threshold = 0.5 # Person will be ignored if average likelihood of good keypoints is lower than this value
 keypoint_number_threshold = 0.3 # Person will be ignored if the number of good keypoints is less than this fraction
 
+[lifting]
+lifting_model = 'baseline' # 'baseline', 'motionbert'
 
 [angles]
 display_angle_values_on = ['body','list'] # 'body', 'list', ['body', 'list'], None. Display angle values on the body, as a list in the upper left of the image, both, or do not display them.
