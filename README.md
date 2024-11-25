@@ -80,6 +80,12 @@ Contributions are very welcome. Open a fresh issue to start a discussion around 
 > [!NOTE]
 > The repository cotains many unused utiltity functions under `util/` directory which provide  some planned features. We are working on merging them into the main codebase.
 
+Some of the planned updates include:
+- [ ] Migrate `Pose2Sim/` and `Sports2D/` to PyQt6
+- [ ] Enabled 2D tracking with all rtmlib models
+- [ ] Create GUI for configuring the camera system
+- [ ] Add support for calibrating cameras from the GUI
+
 ## Acknowledgments
 
 The camera calibration tool is based on [MRT-Camera-Calibration-Toolbox](https://github.com/MT-MRT/MRT-Camera-Calibration-Toolbox). The TracX tool is developed by the Augmented Vision Group at the German Research Center for Artificial Intelligence (DFKI) by the following contributors:
