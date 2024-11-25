@@ -35,8 +35,8 @@ class Studio(QApplication):
 
 
 def configure_logging():
-    # Set up file handler with rotating logs, limited to 1MB per file with 5 backup files
-    file_handler = RotatingFileHandler("mocap.log", maxBytes=1_000_000, backupCount=5)
+    # Set up file handler with rotating logs, limited to 1MB per file with 0 backup files
+    file_handler = RotatingFileHandler("tracx.log", maxBytes=1_000_000, backupCount=0)
     file_handler.setLevel(logging.DEBUG)  # TODO: Change to logging.INFO for production
     file_format = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     file_handler.setFormatter(file_format)
