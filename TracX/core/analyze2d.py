@@ -25,6 +25,7 @@ from TracX_rtmlib import (
     Body,
     BodyWithFeet,
     BodyWithSpine,
+    Hand,
     PoseTracker,
     Wholebody,
     draw_skeleton,
@@ -196,9 +197,12 @@ def setup_pose_tracker(config_dict):
     elif pose_model.upper() == "BODY_43":
         ModelClass = BodyWithSpine
         logging.info("Using BODY_43 model (body and spine) for pose estimation.")
+    elif pose_model.upper() == "HAND_21":
+        ModelClass = Hand
+        logging.info("Using HAND_21 model (hands) for pose estimation.")
     else:
         raise ValueError(
-            f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17' or 'BODY_43'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation."
+            f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17', 'HAND_21' or 'BODY_43'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation."
         )
     logging.info(f"Pose tracking set up for {ModelClass} model in {mode} mode. \n")
 
@@ -1153,7 +1157,7 @@ def process_frame(config_dict, pose_tracker, frame):
     )
     keypoint_number_threshold = config_dict.get("pose").get("keypoint_number_threshold")
 
-    # # Log likelihood thresholds
+    # # TODO: Log likelihood thresholds
     # keypoint_likelihood_threshold = config_dict.get("pose").get(
     #     "keypoint_likelihood_threshold"
     # )

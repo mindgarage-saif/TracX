@@ -75,9 +75,10 @@ class Multiview3DSettingsPanel(SettingsPanel):
             {
                 "Body": "COCO_17",
                 "Body + Feet": "HALPE_26",
-                "Body + Feet + Spine": "DFKI_BODY43",
-                "Spine Only": "DFKI_SPINE17",
+                "Body + Feet + Spine": "BODY_43",
                 "Full Body": "COCO_133",
+                "Hands": "HAND_21",
+                "Spine": "DFKI_SPINE17",
             },
             self,
         )

@@ -28,14 +28,13 @@ class Monocular2DSettingsPanel(SettingsPanel):
             {
                 "Body": "COCO_17",
                 "Body + Feet": "HALPE_26",
-                "Body + Feet + Spine": "DFKI_BODY43",
+                "Body + Feet + Spine": "BODY_43",
                 "Full Body": "COCO_133",
+                "Hands": "HAND_21",
             },
             self,
         )
-        self.pose_model.setToolTip(
-            "Pose model to use. Currently, only 'HALPE_26' is supported."
-        )
+        self.pose_model.setToolTip("Pose model to use.")
         scroll_layout.addWidget(self.pose_model)
 
         # [pose] mode

@@ -219,7 +219,7 @@ class Experiment:
         res_w, res_h = 0, 0
         if cfg.pose.pose_model in ["COCO_17", "COCO_133", "HALPE_26"]:
             PoseTracker2D.estimateDefault()
-        elif cfg.pose.pose_model == "DFKI_BODY43":
+        elif cfg.pose.pose_model == "BODY_43":
             res_w, res_h, _ = PoseTracker2D.estimateBodyWithSpine(
                 videos=self.videos_dir,
                 save_dir=self.pose2d_dir,

@@ -42,7 +42,7 @@ import numpy as np
 import cv2
 
 from Pose2Sim.common import natural_sort_key, min_with_single_indices, euclidean_distance
-from TracX_rtmlib import PoseTracker, Body, Wholebody, BodyWithFeet, BodyWithSpine, draw_skeleton
+from TracX_rtmlib import Body, Hand, BodyWithFeet, BodyWithSpine, PoseTracker, Wholebody, draw_skeleton
 
 
 ## AUTHORSHIP INFORMATION
@@ -439,11 +439,14 @@ def rtm_estimator(config_dict):
     elif pose_model.upper() == 'COCO_17':
         ModelClass = Body # 26 keypoints(halpe26)
         logging.info(f"Using COCO_17 model (body) for pose estimation.")
+    elif pose_model.upper() == 'HAND_21':
+        ModelClass = Hand
+        logging.info(f"Using HAND_21 model (hands) for pose estimation.")
     elif pose_model.upper() == 'BODY_43':
         ModelClass = BodyWithSpine
         logging.info(f"Using BODY_43 model (body and spine) for pose estimation.")
     else:
-        raise ValueError(f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17' or 'BODY_43'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation.")
+        raise ValueError(f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17', 'HAND_21' or 'BODY_43'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation.")
     logging.info(f'Mode: {mode}.\n')
 
 
