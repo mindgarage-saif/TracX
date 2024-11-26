@@ -31,6 +31,7 @@ class Monocular2DSettingsPanel(SettingsPanel):
                 "Body + Feet + Spine": "BODY_43",
                 "Full Body": "COCO_133",
                 "Hands": "HAND_21",
+                "Face": "FACE_106",
             },
             self,
         )

@@ -28,6 +28,8 @@ def draw_skeleton(
             skeleton = "halpe26"
         elif num_keypoints == 43:
             skeleton = "body43"
+        elif num_keypoints == 106:
+            skeleton = "face106"
         else:
             raise NotImplementedError
 
@@ -40,7 +42,7 @@ def draw_skeleton(
         scores = scores[None, :, :]
 
     num_instance = keypoints.shape[0]
-    if skeleton in ["coco17", "coco133", "hand21", "halpe26", "body43"]:
+    if skeleton in ["coco17", "coco133", "hand21", "halpe26", "body43", "face106"]:
         for i in range(num_instance):
             img = draw_mmpose(
                 img,
