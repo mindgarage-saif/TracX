@@ -47,6 +47,9 @@ import pandas as pd
 import toml
 from anytree import RenderTree
 from anytree.importer import DictImporter
+from scipy import interpolate
+from tqdm import tqdm
+
 from Pose2Sim.common import (
     convert_to_c3d,
     euclidean_distance,
@@ -56,11 +59,8 @@ from Pose2Sim.common import (
     weighted_triangulation,
     zup2yup,
 )
-from Pose2Sim.skeletons import *
-from scipy import interpolate
-from tqdm import tqdm
-
 from TracX.core.cameras import CameraSystem
+from TracX.skeletons import *
 
 ## AUTHORSHIP INFORMATION
 __author__ = "David Pagnon"

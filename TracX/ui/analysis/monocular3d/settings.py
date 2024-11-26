@@ -24,11 +24,11 @@ class Monocular3DSettingsPanel(SettingsPanel):
         # [pose] pose_model
         self.pose_model = Selection(
             "Pose Model",
-            {"Body + Feet": "body_with_feet"},
+            {"Body + Feet": "HALPE_26"},
             self,
         )
         self.pose_model.setToolTip(
-            "Pose model to use. Currently, only 'body_with_feet' is supported."
+            "Pose model to use. Currently, only 'HALPE_26' is supported."
         )
         scroll_layout.addWidget(self.pose_model)
 

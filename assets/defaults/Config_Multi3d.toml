@@ -233,19 +233,19 @@ id = 40
            id = 22
 
   [[pose.CUSTOM.children]]
-  name = "Spine_Lumba5"
+  name = "Lumbar5"
   id = 40
      [[pose.CUSTOM.children.children]]
-     name = "Spine_Lumba4"
+     name = "Lumbar4"
      id = 39
         [[pose.CUSTOM.children.children.children]]
-        name = "Spine_Lumba3"
+        name = "Lumbar3"
         id = 38
            [[pose.CUSTOM.children.children.children.children]]
-           name = "Spine_Lumba2"
+           name = "Lumbar2"
            id = 37
               [[pose.CUSTOM.children.children.children.children.children]]
-              name = "Spine_Lumba1"
+              name = "Lumbar1"
               id = 36
                  [[pose.CUSTOM.children.children.children.children.children.children]]
                  name = "Thoracic12"

@@ -32,7 +32,7 @@ result_dir = '' # BETWEEN SINGLE QUOTES! # If empty, project dir is current dir
 ##########################
 [pose]
 # Pose detection parameters
-pose_model = 'body_with_feet' # Only body_with_feet is available for now
+pose_model = 'HALPE_26' # Only HALPE_26 is available for now
 mode = 'balanced' # 'lightweight', 'balanced', or 'performance'
 det_frequency = 1 # Run person detection only every N frames, and inbetween track previously detected bounding boxes (keypoint detection is still run on all frames).
                   # Equal to or greater than 1, can be as high as you want in simple uncrowded cases. Much faster, but might be less accurate.

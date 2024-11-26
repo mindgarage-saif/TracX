@@ -25,11 +25,16 @@ class Monocular2DSettingsPanel(SettingsPanel):
         # [pose] pose_model
         self.pose_model = Selection(
             "Pose Model",
-            {"Body + Feet": "body_with_feet"},
+            {
+                "Body": "COCO_17",
+                "Body + Feet": "HALPE_26",
+                "Body + Feet + Spine": "DFKI_BODY43",
+                "Full Body": "COCO_133",
+            },
             self,
         )
         self.pose_model.setToolTip(
-            "Pose model to use. Currently, only 'body_with_feet' is supported."
+            "Pose model to use. Currently, only 'HALPE_26' is supported."
         )
         scroll_layout.addWidget(self.pose_model)
 

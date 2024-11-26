@@ -16,11 +16,12 @@ import numpy as np
 import pandas as pd
 from anytree import PreOrderIter, RenderTree
 from rtmlib import BodyWithFeet, PoseTracker
+from tqdm import tqdm
+
 from Sports2D.process import setup_video, sort_people_rtmlib, sort_people_sports2d
 from Sports2D.Utilities import filter
 from Sports2D.Utilities.common import *
-from Sports2D.Utilities.skeletons import *
-from tqdm import tqdm
+from TracX.skeletons import *
 
 ## CONSTANTS
 angle_dict = {  # lowercase!
@@ -1237,6 +1238,7 @@ def process_frame(config_dict, pose_tracker, frame):
     keypoints_ids = [node.id for _, _, node in RenderTree(model) if node.id != None]
     keypoints_names = [node.name for _, _, node in RenderTree(model) if node.id != None]
 
+    # FIXME: The following code assumes HALPE_26 model. Provide an alternate pipeline for other models here.
     Ltoe_idx = keypoints_ids[keypoints_names.index("LBigToe")]
     LHeel_idx = keypoints_ids[keypoints_names.index("LHeel")]
     Rtoe_idx = keypoints_ids[keypoints_names.index("RBigToe")]
