@@ -3,8 +3,8 @@ import os
 from distutils.dir_util import copy_tree
 
 import cv2
-from Pose2Sim.Utilities import bodykin_from_mot_osim
 
+from Pose2Sim.Utilities import bodykin_from_mot_osim
 from TracX.constants import (
     OPENSIM_DIR,
 )
@@ -21,11 +21,19 @@ class ExperimentVisualizer:
         self.experiment = experiment
         self.output_dir = experiment.output_dir
 
-    def _visualize_naive(self, motion_file):
+    def _visualize_naive(self, motion_file, overwrite=False):
         # Create a side-by-side visualization using OpenCV
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
         if os.path.exists(animation_file):
-            return animation_file
+            if not overwrite:
+                logging.info(
+                    f"Skipping visualization. File '{animation_file}' already exists.",
+                )
+                return animation_file
+            logging.info(
+                f"Overwriting existing visualization file '{animation_file}'...",
+            )
+            os.remove(animation_file)
 
         # Find FPS of the first camera video
         video_file = self.experiment.videos[0]
@@ -36,7 +44,7 @@ class ExperimentVisualizer:
 
         # Create the visualization
         animation_file = os.path.join(self.output_dir, "stick_animation.mp4")
-        if self.monocular:
+        if self.experiment.monocular:
             logging.info("Rendering monocular motion sequence...")
             motion_data = MotionSequence.from_monocular_json(motion_file, fps)
             renderer = StickFigureRenderer(

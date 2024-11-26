@@ -107,7 +107,7 @@ class Multiview3DAnalysisPage(QWidget):
             motionData = self.experiment.get_motion_file()
             self.downloadFile(motionData)
         except Exception as e:
-            self.showAlert(str(e), "Download Failed")
+            self.parent().showAlert(str(e), "Download Failed")
 
     def downloadFile(self, file_path):
         # Show a download dialog

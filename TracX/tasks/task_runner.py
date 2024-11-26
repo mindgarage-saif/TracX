@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
@@ -29,26 +28,29 @@ class TaskRunner(QObject):
         self.task_args = task_args
         self.task_kwargs = task_kwargs
 
+        # Set up logging if a log file path is provided
+        if self.log_file_path:
+            self.setup_logging()
+
+    def setup_logging(self):
+        """Configures the logging module to write logs to the specified file."""
+        log_formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        log_handler = logging.FileHandler(self.log_file_path)
+        log_handler.setFormatter(log_formatter)
+
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)  # Set desired logging level
+        logger.addHandler(log_handler)
+
+        # Prevent duplicate log messages in the console
+        logger.propagate = False
+
     def run(self):
         """Runs the provided task with the specified arguments, optionally logs output,
         and emits a signal when the task finishes.
         """
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
-        log_handler = None
-
-        if self.log_file_path:
-            try:
-                # Open the log file in append mode
-                log_handler = open(self.log_file_path, "a")  # noqa: SIM115
-
-                # Redirect stdout and stderr to the log file
-                sys.stdout = log_handler
-                sys.stderr = log_handler
-            except Exception as e:
-                self.finished.emit(False, e)
-                return
-
         try:
             # Execute the task and capture the result
             logging.info(f"Running task: {self.task_instance}")
@@ -60,13 +62,8 @@ class TaskRunner(QObject):
             import traceback
 
             trace = traceback.format_exc()
-            result = f"{e}\n{trace}"
-            self.finished.emit(False, result)
+            logging.error(f"Task failed with error: {e}\n{trace}")
+            self.finished.emit(False, f"{e}\n{trace}")
         finally:
-            # Restore the original stdout and stderr
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
-
-            # Close the log handler if it was opened
-            if log_handler:
-                log_handler.close()
+            # Clean up resources if needed
+            logging.info("Task completed.")
