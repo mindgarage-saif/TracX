@@ -5,14 +5,13 @@ from typing import Optional
 
 import toml
 from easydict import EasyDict as edict
-from Pose2Sim import Pose2Sim
 
+from Pose2Sim import Pose2Sim
 from TracX.constants import (
     APP_ASSETS,
     APP_PROJECTS,
     SUPPORTED_VIDEO_FORMATS,
 )
-from TracX.core.triangulation import triangulate_all
 
 from .pose import PoseTracker2D, lift_to_3d
 from .rotation import rotate_videos, unrotate_pose2d
@@ -240,8 +239,8 @@ class Experiment:
             unrotate_pose2d(self.pose2d_dir, calibration_file)
 
         # Person association
-        logging.info("Finding the most prominent person...")
-        Pose2Sim.personAssociation()
+        # logging.info("Finding the most prominent person...")
+        # Pose2Sim.personAssociation()
 
         # 2D-to-3D Lifting in Monocular Mode
         if self.monocular:
@@ -271,7 +270,7 @@ class Experiment:
 
             # TODO: Wrap triangulation in a try-except block and throw a nice error message
             logging.info("Triangulating 3D poses...")
-            triangulate_all(self)
+            Pose2Sim.triangulation()
 
             logging.info("Smoothing triangulated poses...")
             Pose2Sim.filtering()
