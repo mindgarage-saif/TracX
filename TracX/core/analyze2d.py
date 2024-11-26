@@ -14,14 +14,21 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from anytree import PreOrderIter, RenderTree
+from anytree import RenderTree
 from tqdm import tqdm
 
 from Sports2D.process import setup_video, sort_people_rtmlib, sort_people_sports2d
 from Sports2D.Utilities import filter
 from Sports2D.Utilities.common import *
 from TracX.skeletons import *
-from TracX_rtmlib import BodyWithFeet, PoseTracker
+from TracX_rtmlib import (
+    Body,
+    BodyWithFeet,
+    BodyWithSpine,
+    PoseTracker,
+    Wholebody,
+    draw_skeleton,
+)
 
 ## CONSTANTS
 angle_dict = {  # lowercase!
@@ -117,6 +124,7 @@ def setup_pose_tracker(config_dict):
     - pose_tracker: PoseTracker. The initialized pose tracker object
     """
     mode = config_dict.get("pose").get("mode")
+    pose_model = config_dict.get("pose").get("pose_model")
     det_frequency = config_dict.get("pose").get("det_frequency")
     tracking_mode = config_dict.get("pose").get("tracking_mode")
     multiperson = config_dict.get("process").get("multiperson")
@@ -169,14 +177,34 @@ def setup_pose_tracker(config_dict):
                 "\nNo valid CUDA installation found: using OpenVINO backend with CPU."
             )
 
-    logging.info(f"Pose tracking set up for BodyWithFeet model in {mode} mode.")
     logging.info(
         f'Persons are detected every {det_frequency} frames and tracked inbetween. Multi-person is {"" if tracking else "not "}selected.'
     )
 
+    # Select the appropriate model based on the model_type
+    if pose_model.upper() == "HALPE_26":
+        ModelClass = BodyWithFeet
+        logging.info("Using HALPE_26 model (body and feet) for pose estimation.")
+    elif pose_model.upper() == "COCO_133":
+        ModelClass = Wholebody
+        logging.info(
+            "Using COCO_133 model (body, feet, hands, and face) for pose estimation."
+        )
+    elif pose_model.upper() == "COCO_17":
+        ModelClass = Body  # 26 keypoints(halpe26)
+        logging.info("Using COCO_17 model (body) for pose estimation.")
+    elif pose_model.upper() == "BODY_43":
+        ModelClass = BodyWithSpine
+        logging.info("Using BODY_43 model (body and spine) for pose estimation.")
+    else:
+        raise ValueError(
+            f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17' or 'BODY_43'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation."
+        )
+    logging.info(f"Pose tracking set up for {ModelClass} model in {mode} mode. \n")
+
     # Initialize the pose tracker with Halpe26 model
     return PoseTracker(
-        BodyWithFeet,
+        ModelClass,
         det_frequency=det_frequency,
         mode=mode,
         backend=backend,
@@ -395,7 +423,6 @@ def draw_bounding_box(
     OUTPUT:
     - img: image with rectangles and person IDs
     """
-
     color_cycle = it.cycle(colors)
 
     for i, (x, y) in enumerate(zip(X, Y)):
@@ -432,87 +459,6 @@ def draw_bounding_box(
                 2,
                 cv2.LINE_AA,
             )
-
-    return img
-
-
-def draw_skel(img, X, Y, model, colors=[(255, 0, 0), (0, 255, 0), (0, 0, 255)]):
-    """
-    Draws keypoints and skeleton for each person.
-    Skeletons have a different color for each person.
-
-    INPUTS:
-    - img: opencv image
-    - X: list of list of x coordinates
-    - Y: list of list of y coordinates
-    - model: skeleton model (from skeletons.py)
-    - colors: list of colors to cycle through
-
-    OUTPUT:
-    - img: image with keypoints and skeleton
-    """
-
-    # Get (unique) pairs between which to draw a line
-    node_pairs = []
-    for data_i in PreOrderIter(model.root, filter_=lambda node: node.is_leaf):
-        node_branches = [node_i.id for node_i in data_i.path]
-        node_pairs += [
-            [node_branches[i], node_branches[i + 1]]
-            for i in range(len(node_branches) - 1)
-        ]
-    node_pairs = [list(x) for x in {tuple(x) for x in node_pairs}]
-
-    # Draw lines
-    colors = [(192, 192, 192)]
-    color_cycle = it.cycle(colors)
-    for x, y in zip(X, Y):
-        c = next(color_cycle)
-        if not np.isnan(x).all():
-            for n in node_pairs:
-                if not (
-                    np.isnan(x[n[0]])
-                    or np.isnan(y[n[0]])
-                    or np.isnan(x[n[1]])
-                    or np.isnan(y[n[1]])
-                ):
-                    pt1 = (int(x[n[0]]), int(y[n[0]]))
-                    pt2 = (int(x[n[1]]), int(y[n[1]]))
-
-                    # Calculate the direction vector from pt1 to pt2
-                    dx, dy = pt2[0] - pt1[0], pt2[1] - pt1[1]
-                    length = np.sqrt(dx**2 + dy**2)
-
-                    # Normalize the direction vector
-                    if length == 0:
-                        return None  # Avoid division by zero
-                    nx, ny = dx / length, dy / length
-
-                    # Perpendicular vector for the triangular width
-                    px, py = -ny, nx
-
-                    # Calculate the half-width of the triangle
-                    thickness = 20
-                    half_width = thickness // 2
-
-                    # Define the triangle points
-                    pt1_left = (
-                        int(pt1[0] + px * half_width),
-                        int(pt1[1] + py * half_width),
-                    )
-                    pt1_right = (
-                        int(pt1[0] - px * half_width),
-                        int(pt1[1] - py * half_width),
-                    )
-                    pt2_top = (int(pt2[0]), int(pt2[1]))
-
-                    # Draw the triangular shaft
-                    triangle_points = np.array(
-                        [pt1_left, pt1_right, pt2_top], dtype=np.int32
-                    )
-                    cv2.fillPoly(img, [triangle_points], c)
-
-                    # Draw the circular cap on the larger end
-                    cv2.circle(img, pt2, half_width, c, -1, cv2.LINE_AA)
 
     return img
 
@@ -1238,12 +1184,15 @@ def process_frame(config_dict, pose_tracker, frame):
     keypoints_ids = [node.id for _, _, node in RenderTree(model) if node.id != None]
     keypoints_names = [node.name for _, _, node in RenderTree(model) if node.id != None]
 
-    # FIXME: The following code assumes HALPE_26 model. Provide an alternate pipeline for other models here.
-    Ltoe_idx = keypoints_ids[keypoints_names.index("LBigToe")]
-    LHeel_idx = keypoints_ids[keypoints_names.index("LHeel")]
-    Rtoe_idx = keypoints_ids[keypoints_names.index("RBigToe")]
-    RHeel_idx = keypoints_ids[keypoints_names.index("RHeel")]
-    L_R_direction_idx = [Ltoe_idx, LHeel_idx, Rtoe_idx, RHeel_idx]
+    # Define flip indices to be used in angle computation
+    L_R_direction_idx = None
+    if pose_model == "HALPE_26":
+        # FIXME: The following code assumes HALPE_26 model. Provide an alternate pipeline for other models here.
+        Ltoe_idx = keypoints_ids[keypoints_names.index("LBigToe")]
+        LHeel_idx = keypoints_ids[keypoints_names.index("LHeel")]
+        Rtoe_idx = keypoints_ids[keypoints_names.index("RBigToe")]
+        RHeel_idx = keypoints_ids[keypoints_names.index("RHeel")]
+        L_R_direction_idx = [Ltoe_idx, LHeel_idx, Rtoe_idx, RHeel_idx]
 
     # Set up pose tracker
     tracking_rtmlib = tracking_mode == "rtmlib" and tracking
@@ -1264,7 +1213,7 @@ def process_frame(config_dict, pose_tracker, frame):
     else:  # single person
         keypoints, scores = np.array([keypoints[0]]), np.array([scores[0]])
 
-    # Process coordinates and compute angles
+    # Process coordinates
     valid_X, valid_Y, valid_scores = [], [], []
     valid_X_flipped, valid_angles = [], []
     for person_idx in range(len(keypoints)):
@@ -1302,28 +1251,30 @@ def process_frame(config_dict, pose_tracker, frame):
         valid_Y.append(person_Y)
         valid_scores.append(person_scores)
 
-        # Check whether the person is looking to the left or right
-        if flip_left_right:
-            person_X_flipped = flip_left_right_direction(
-                person_X, L_R_direction_idx, keypoints_names, keypoints_ids
-            )
-        else:
-            person_X_flipped = person_X.copy()
-        valid_X_flipped.append(person_X_flipped)
+        # Compute angles (only for HALPE_26 model)
+        if pose_model == "HALPE_26" and L_R_direction_idx:
+            # Check whether the person is looking to the left or right
+            if flip_left_right:
+                person_X_flipped = flip_left_right_direction(
+                    person_X, L_R_direction_idx, keypoints_names, keypoints_ids
+                )
+            else:
+                person_X_flipped = person_X.copy()
+            valid_X_flipped.append(person_X_flipped)
 
-        # Compute angles
-        person_angles = []
-        for ang_name in angle_names:
-            ang = compute_angle(
-                ang_name,
-                person_X_flipped,
-                person_Y,
-                angle_dict,
-                keypoints_ids,
-                keypoints_names,
-            )
-            person_angles.append(ang)
-        valid_angles.append(person_angles)
+            # Compute angles
+            person_angles = []
+            for ang_name in angle_names:
+                ang = compute_angle(
+                    ang_name,
+                    person_X_flipped,
+                    person_Y,
+                    angle_dict,
+                    keypoints_ids,
+                    keypoints_names,
+                )
+                person_angles.append(ang)
+            valid_angles.append(person_angles)
 
     # Draw keypoints and skeleton
     img = frame
@@ -1336,7 +1287,19 @@ def process_frame(config_dict, pose_tracker, frame):
         thickness=thickness,
     )
     img = draw_keypts(img, valid_X, valid_Y, scores, cmap_str="RdYlGn")
-    img = draw_skel(img, valid_X, valid_Y, model, colors=colors)
+
+    valid_XY = np.stack([valid_X, valid_Y], axis=-1)
+    draw_skeleton(
+        img,
+        valid_XY,
+        np.where(np.isnan(valid_XY[..., 0]), 0, 1),
+        openpose_skeleton=False,
+        kpt_thr=0.5,
+        radius=2,
+        line_width=2,
+    )
+
+    # Draw angles (if available, ignore exceptions)
     with contextlib.suppress(Exception):
         img = draw_angles(
             img,
