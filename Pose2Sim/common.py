@@ -149,6 +149,11 @@ def computeP(calib_file, undistort=False):
                 and isinstance(calib[c],dict)]
     P = []
     for cam in list(cal_keys):
+        # Use pre-computed projection matrix if available
+        if "projection_matrix" in calib[cam].keys():
+            P.append(np.array(calib[cam]['projection_matrix']))
+            continue
+
         K = np.array(calib[cam]['matrix'])
         if undistort:
             S = np.array(calib[cam]['size'])
