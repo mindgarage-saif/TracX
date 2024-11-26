@@ -83,7 +83,10 @@ Contributions are very welcome. Open a fresh issue to start a discussion around 
 Some of the planned updates include:
 - [ ] Migrate `Pose2Sim/` and `Sports2D/` to PyQt6
 - [ ] Enabled 2D tracking with all rtmlib models
-- [ ] Create GUI for configuring the camera system
+- [x] Create GUI for configuring the camera system
+  - [ ] Known Bug: The camera configuration does not clear when no cameras are selected
+  - [ ] TODO: Allow saving edited camera configurations
+  - [ ] TODO: Implement backend for importing camera configurations and connect to GUI
 - [ ] Add support for calibrating cameras from the GUI
 
 ## Acknowledgments

@@ -38,6 +38,25 @@ class Tab(QWidget):
     def addSpacing(self, size):
         self.layout.addSpacing(size)
 
+    def addLayout(self, layout, **kwargs):
+        self.layout.addLayout(layout, **kwargs)
+
+    def setAlignment(self, alignment):
+        self.layout.setAlignment(alignment)
+
+    def clear(self):
+        for i in reversed(range(self.layout.count())):
+            widget = self.layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
+                widget.deleteLater()
+
+        for i in reversed(range(self.layout.count())):
+            layout = self.layout.itemAt(i).layout()
+            if layout:
+                layout.setParent(None)
+                layout.deleteLater()
+
     def onSelected(self):
         """
         Called when the tab is selected.

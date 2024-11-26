@@ -6,6 +6,7 @@ from .frame import Frame
 from .icon_button import IconButton
 from .labeled_widget import LabeledWidget
 from .logs_widget import LogsWidget
+from .matrix import MatrixWidget
 from .multiple_selection import MultipleSelection
 from .radio_group import RadioGroup
 from .selection import Selection
@@ -26,6 +27,7 @@ __all__ = [
     "IconButton",
     "LabeledWidget",
     "LogsWidget",
+    "MatrixWidget",
     "MultipleSelection",
     "RadioGroup",
     "Selection",

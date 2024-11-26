@@ -15,14 +15,13 @@ class LabeledWidget(QWidget):
     ):
         super().__init__(parent)
         self.widget = widget
-        layout = (
+        self.layout = (
             QVBoxLayout(self)
             if orientation == Qt.Orientation.Vertical
             else QHBoxLayout(self)
         )
-        layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         label = QLabel(title)
         label.setProperty("class", style)
-        layout.addWidget(label)
-        layout.addWidget(widget)
-        layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(label)
+        self.layout.addWidget(widget)
