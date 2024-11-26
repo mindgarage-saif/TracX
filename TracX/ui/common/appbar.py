@@ -1,19 +1,20 @@
 from PyQt6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
     QLabel,
     QMessageBox,
     QPushButton,
     QSizePolicy,
-    QWidget,
 )
 
 from TracX.constants import APP_NAME, APP_VERSION
 from TracX.ui.styles import PAD_X
 
 
-class AppBar(QWidget):
+class AppBar(QFrame):
     def __init__(self, parent, height=32):
         super().__init__(parent)
+        self.setObjectName("AppBar")
         self.setFixedHeight(height)
         self.setSizePolicy(
             QSizePolicy.Policy.Expanding,

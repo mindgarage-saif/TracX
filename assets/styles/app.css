@@ -124,40 +124,24 @@ QSlider {{
 }}
 
 QFrame {{
-    border-radius: 16px;
     border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
 }}
 
 QFrame * {{
-    border-radius: 16px;
     border: initial;
 }}
 
 Frame {{
-    border-radius: 16px;
     background-color: rgba(0, 0, 0, 100);
     border: 2px solid {QTMATERIAL_PRIMARYCOLOR};
 }}
 
 Frame * {{
-    border-radius: 16px;
     border: initial;
 }}
 
 QLabel {{
     border: initial;
-}}
-
-QTabWidget {{
-    border-radius: 16px;
-}}
-
-QVBoxLayout {{
-    border-radius: 16px;
-}}
-
-QHBoxLayout {{
-    border-radius: 16px;
 }}
 
 /* Disabled Frame */
@@ -236,7 +220,6 @@ QScrollBar::sub-line:horizontal {{
 }}
 
 .video-gallery-item {{
-    border-radius: 0px;
     background-color: {QTMATERIAL_SECONDARYCOLOR};
     color: {QTMATERIAL_SECONDARYTEXTCOLOR};
 }}
@@ -251,8 +234,68 @@ QScrollBar::sub-line:horizontal {{
     background-color: transparent;
 }}
 
-
 QComboBox {{
     border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
     border-radius: 8px;
+}}
+
+QFrame#AppBar,
+QFrame#TabbedArea {{
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
+    border-bottom: 1px solid {QTMATERIAL_SECONDARYDARKCOLOR};
+}}
+
+QFrame#SettingsPanel {{
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
+}}
+
+#SettingsPanel QScrollArea {{
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
+    border: none;
+}}
+
+#SettingsPanel QScrollArea QComboBox,
+#SettingsPanel QScrollArea QLineEdit,
+#SettingsPanel QScrollArea QPushButton {{
+    background: {QTMATERIAL_SECONDARYLIGHTCOLOR};
+    color: {QTMATERIAL_SECONDARYTEXTCOLOR};
+    border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
+    border-radius: 4px;
+    text-align: center;
+    font-weight: normal;
+    font-size: 12px;
+    padding: 4px 8px;
+    height: 20px;
+}}
+
+#SettingsPanel QScrollArea QComboBox::drop-down {{
+    border: none;
+}}
+
+QFrame#Tab {{
+    border-radius: 0;
+}}
+
+#AnalysisPage,
+#AnalysisPage > QWidget {{
+    border-radius: 0;
+}}
+
+#StudioFrame > QFrame {{
+    border-radius: 0;
+    border: 1px solid {QTMATERIAL_SECONDARYCOLOR};
+}}
+
+#ExperimentDataWidget {{
+    border-radius: 16px;
+}}
+
+#VideoGalleryScrollWidget {{
+    background-color: {QTMATERIAL_SECONDARYCOLOR};
+}}
+
+#VideoPlayerWidget {{
+    background-color: black;
+    border: 2px solid {QTMATERIAL_PRIMARYLIGHTCOLOR};
+    border-radius: 16px;
 }}

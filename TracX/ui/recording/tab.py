@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
 )
 
 from TracX.ui.common import Tab
-from TracX.ui.styles import PAD_Y
+from TracX.ui.styles import PAD_X, PAD_Y
 
 from .cameras.camera_selector import CameraSelector
 
@@ -14,7 +14,7 @@ class RecordTab(Tab):
 
     def __init__(self, parent):
         super().__init__("Recording", parent, Qt.Orientation.Vertical)
-        self.layout.setContentsMargins(0, PAD_Y, 0, 0)
+        self.layout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.layout.setSpacing(PAD_Y)
 
         # Create a camera selector

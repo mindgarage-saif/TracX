@@ -35,13 +35,13 @@ class StreamProcessor(QObject):
             return
 
         try:
-            # TODO: Example processing: center crop to 16:9 aspect ratio
-            # processed = [self.center_crop(frame, 16 / 9) for frame in frames]
+            # TODO: Example processing: center crop to 4:3 aspect ratio
+            # processed = [self.center_crop(frame, 4 / 3) for frame in frames]
             self.processed_frames.emit(frames)
         except Exception as e:
             self.error_occurred.emit(str(e))
 
-    def center_crop(self, frame, target_aspect_ratio=16 / 9):
+    def center_crop(self, frame, target_aspect_ratio=4 / 3):
         """
         Crops the input frame to the target aspect ratio centered.
 

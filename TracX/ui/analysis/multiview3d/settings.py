@@ -1,55 +1,15 @@
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
     QLabel,
     QLineEdit,
-    QSizePolicy,
 )
 
-from TracX.core.cameras import CameraSystem, CameraVisualizer
-from TracX.ui.common import LabeledWidget, Selection, Tab, TabbedArea
+from TracX.ui.common import LabeledWidget, Selection
 from TracX.ui.styles import PAD_Y
 
 from ..monocular2d.settings import SettingsPanel
-
-
-class SettingsTab(Tab):
-    def __init__(self, parent):
-        super().__init__("Configuration", parent, Qt.Orientation.Vertical)
-
-
-class CamerasTab(Tab):
-    def __init__(self, parent):
-        super().__init__("Camera Settings", parent, Qt.Orientation.Vertical)
-        self.cameras = None
-        self.visualizer = None
-        self.canvas = None
-
-    def setCameraInfo(self, calib_file):
-        if calib_file is None:
-            self.cameras = None
-            self.visualizer = None
-            return
-
-        self.cameras = CameraSystem(calib_file)
-        self.visualizer = CameraVisualizer(self.cameras)
-        fig = self.visualizer.visualize()
-        self.showFigure(fig)
-
-    def showFigure(self, fig):
-        if self.canvas is not None:
-            self.canvas.setParent(None)
-            self.canvas.deleteLater()
-            self.canvas = None
-
-        self.canvas = FigureCanvas(fig)
-        self.canvas.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
-        )
-        self.addWidget(self.canvas)
 
 
 class Multiview3DSettingsPanel(SettingsPanel):
@@ -59,25 +19,10 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.onUpdate = lambda status, result: None
 
     def initScrollAreaContent(self, scroll_layout):
-        # Create the sidebar
-        self.tabbed_area = TabbedArea(self)
-        self.tabbed_area.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
-        )
-        scroll_layout.addWidget(self.tabbed_area)
-
-        # Add pages
-        self.config_tab = SettingsTab(self.tabbed_area)
-        self.tabbed_area.addTab(self.config_tab)
-
-        self.cameras_tab = CamerasTab(self.tabbed_area)
-        self.tabbed_area.addTab(self.cameras_tab)
-
         # section subheading
         heading = QLabel("Pose Estimation", self)
         heading.setProperty("class", "h2")
-        self.config_tab.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # self.correctRotationCheckbox = QCheckBox("Fix Rotation", self)
         # self.correctRotationCheckbox.setProperty("class", "body")
@@ -93,7 +38,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.multiperson.widget.setFixedWidth(24)
         self.multiperson.setToolTip("Enable multi-person pose estimation.")
         self.multiperson.setEnabled(False)
-        self.config_tab.addWidget(self.multiperson)
+        scroll_layout.addWidget(self.multiperson)
 
         # [project] participant_height
         self.participant_height = LabeledWidget(
@@ -107,7 +52,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         )
         self.participant_height.widget.setFixedWidth(48)
         self.participant_height.widget.setValidator(QtGui.QDoubleValidator(1.0, 2.0, 2))
-        self.config_tab.addWidget(self.participant_height)
+        scroll_layout.addWidget(self.participant_height)
 
         # [project] participant_mass
         self.participant_mass = LabeledWidget(
@@ -137,8 +82,8 @@ class Multiview3DSettingsPanel(SettingsPanel):
             self,
         )
         self.pose_model.changed.connect(self.onSkeletonChanged)
-        self.config_tab.addWidget(self.pose_model)
-        self.config_tab.addSpacing(8)
+        scroll_layout.addWidget(self.pose_model)
+        scroll_layout.addSpacing(8)
 
         # [pose] mode
         self.perfomance_mode = Selection(
@@ -153,7 +98,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.perfomance_mode.setToolTip(
             "Performance mode: 'lightweight' for speed, 'balanced' for a mix, and 'performance' for accuracy."
         )
-        self.config_tab.addWidget(self.perfomance_mode)
+        scroll_layout.addWidget(self.perfomance_mode)
 
         # [pose] det_frequency
         self.det_frequency = LabeledWidget(
@@ -167,7 +112,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.det_frequency.widget.setToolTip(
             "Run person detection only every N frames. Tracking is used for intermediate frames."
         )
-        self.config_tab.addWidget(self.det_frequency)
+        scroll_layout.addWidget(self.det_frequency)
 
         # [pose] tracking
         self.tracking = LabeledWidget(
@@ -180,7 +125,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
             "Enable tracking of detected people to get a consistent person ID across frames. Slightly slower but might facilitate synchronization if other people are in the background."
         )
         self.tracking.widget.setFixedWidth(24)
-        self.config_tab.addWidget(self.tracking)
+        scroll_layout.addWidget(self.tracking)
 
         # [pose] overwrite_pose
         self.overwrite_pose = LabeledWidget(
@@ -193,7 +138,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
             "Set to false if you don't want to recalculate pose estimation when it has already been done"
         )
         self.overwrite_pose.widget.setFixedWidth(24)
-        self.config_tab.addWidget(self.overwrite_pose)
+        scroll_layout.addWidget(self.overwrite_pose)
 
         # [pose] save_video
         self.save_video = LabeledWidget(
@@ -204,17 +149,17 @@ class Multiview3DSettingsPanel(SettingsPanel):
         )
         self.save_video.setToolTip("Save 2D pose visualizations to disk.")
         self.save_video.widget.setFixedWidth(24)
-        self.config_tab.addWidget(self.save_video)
+        scroll_layout.addWidget(self.save_video)
 
         # section subheading
         heading = QLabel("Post-Processing", self)
         heading.setProperty("class", "h2")
-        self.config_tab.addWidget(heading)
-        self.config_tab.addSpacing(PAD_Y // 2)
+        scroll_layout.addWidget(heading)
+        scroll_layout.addSpacing(PAD_Y // 2)
 
         heading = QLabel("Person Association", self)
         heading.setProperty("class", "h3")
-        self.config_tab.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [personAssociation] likelihood_threshold_association
         self.likelihood_threshold_association = LabeledWidget(
@@ -230,7 +175,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.likelihood_threshold_association.widget.setToolTip(
             "Threshold for person association. Persons above this threshold are considered the same person. Lower values are more strict."
         )
-        self.config_tab.addWidget(self.likelihood_threshold_association)
+        scroll_layout.addWidget(self.likelihood_threshold_association)
 
         # [personAssociation]reproj_error_threshold_association
         self.reproj_error_threshold_association = LabeledWidget(
@@ -246,7 +191,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.reproj_error_threshold_association.widget.setToolTip(
             "Reprojection error threshold for person association. Persons with a higher error are considered different. Lower values are more strict."
         )
-        self.config_tab.addWidget(self.reproj_error_threshold_association)
+        scroll_layout.addWidget(self.reproj_error_threshold_association)
 
         # [personAssociation] tracked_keypoint
         # FIXME: Should be a dropdown with names of keypoints available in the current model
@@ -264,7 +209,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         heading = QLabel("Triangulation", self)
         heading.setProperty("class", "h3")
         heading.setWordWrap(True)
-        self.config_tab.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [triangulation] likelihood_threshold_triangulation
         self.likelihood_threshold_triangulation = LabeledWidget(
@@ -280,7 +225,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.likelihood_threshold_triangulation.widget.setToolTip(
             "Threshold for triangulation. Points above this threshold are considered valid. Lower values are more strict."
         )
-        self.config_tab.addWidget(self.likelihood_threshold_triangulation)
+        scroll_layout.addWidget(self.likelihood_threshold_triangulation)
 
         # [triangulation] reproj_error_threshold (px)
         self.reproj_error_threshold = LabeledWidget(
@@ -311,12 +256,12 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.min_cameras_for_triangulation.widget.setToolTip(
             "Minimum number of cameras required to triangulate a point. An error is raised if fewer cameras have a valid point."
         )
-        self.config_tab.addWidget(self.min_cameras_for_triangulation)
+        scroll_layout.addWidget(self.min_cameras_for_triangulation)
 
         heading = QLabel("Interpolation", self)
         heading.setProperty("class", "h3")
         heading.setWordWrap(True)
-        self.config_tab.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [triangulation] interpolation
         self.interpolation = Selection(
@@ -333,7 +278,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.interpolation.setToolTip(
             "Interpolation method for missing frames. 'None' will not interpolate, 'linear' will interpolate linearly, 'cubic' will interpolate with a cubic spline, 'slinear' will interpolate with a spline of degree 1, and 'quadratic' will interpolate with a spline of degree 2."
         )
-        self.config_tab.addWidget(self.interpolation)
+        scroll_layout.addWidget(self.interpolation)
 
         # [triangulation] interpolation_frequency
         self.interp_if_gap_smaller_than = LabeledWidget(
@@ -347,7 +292,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.interp_if_gap_smaller_than.widget.setToolTip(
             "Specify the maximum gap size (in frames) for interpolation."
         )
-        self.config_tab.addWidget(self.interp_if_gap_smaller_than)
+        scroll_layout.addWidget(self.interp_if_gap_smaller_than)
 
         # [triangulation] fill_large_gaps_with
         self.fill_large_gaps_with = Selection(
@@ -362,7 +307,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.fill_large_gaps_with.setToolTip(
             "Choose the method for filling large gaps in data: 'last_value', 'nan', or 'zeros'."
         )
-        self.config_tab.addWidget(self.fill_large_gaps_with)
+        scroll_layout.addWidget(self.fill_large_gaps_with)
 
         # [triangulation] undistort_points
         self.undistort_points = LabeledWidget(
@@ -375,12 +320,12 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.undistort_points.setToolTip(
             "Undistort points before triangulation. Better if distorted image (parallel lines curvy on the edge or at least one param > 10^-2), but unnecessary (and slightly slower) if distortions are low."
         )
-        self.config_tab.addWidget(self.undistort_points)
+        scroll_layout.addWidget(self.undistort_points)
 
         # filtering
         heading = QLabel("Filtering", self)
         heading.setProperty("class", "h3")
-        self.config_tab.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [filtering] filter_type
         self.filter_type = Selection(
@@ -398,7 +343,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.filter_type.setToolTip(
             "Select the filter type: Butterworth, Gaussian, LOESS, or Median."
         )
-        self.config_tab.addWidget(self.filter_type)
+        scroll_layout.addWidget(self.filter_type)
 
         # [post-processing.butterworth] order and cut_off_frequency
         self.butterworth_order = LabeledWidget(
@@ -412,7 +357,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.butterworth_order.widget.setToolTip(
             "Set the order of the Butterworth filter."
         )
-        self.config_tab.addWidget(self.butterworth_order)
+        scroll_layout.addWidget(self.butterworth_order)
 
         self.butterworth_cut_off_frequency = LabeledWidget(
             "Cut-Off Frequency",
@@ -427,12 +372,12 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.butterworth_cut_off_frequency.widget.setToolTip(
             "Set the cut-off frequency (Hz) for the Butterworth filter."
         )
-        self.config_tab.addWidget(self.butterworth_cut_off_frequency)
+        scroll_layout.addWidget(self.butterworth_cut_off_frequency)
 
         # Scaling Settings
         heading = QLabel("Simulation Setup", self)
         heading.setProperty("class", "h2")
-        self.config_tab.addWidget(heading)
+        scroll_layout.addWidget(heading)
 
         # [simulation] simulation_type (matplotlib, opensim, blender, unrealengine)
         self.simulation_type = Selection(
@@ -448,7 +393,7 @@ class Multiview3DSettingsPanel(SettingsPanel):
         self.simulation_type.setToolTip(
             "Select the simulation type: Stick Figure, OpenSim, Blender, or Unreal Engine."
         )
-        self.config_tab.addWidget(self.simulation_type)
+        scroll_layout.addWidget(self.simulation_type)
 
     def refreshUI(self):
         super().refreshUI()
@@ -457,9 +402,6 @@ class Multiview3DSettingsPanel(SettingsPanel):
 
         # Get the experiment config
         cfg = self.experiment.cfg
-
-        calib_file = self.experiment.calibration_file
-        self.cameras_tab.setCameraInfo(calib_file)
 
         # Update the UI elements
         self.multiperson.widget.setChecked(cfg["project"]["multi_person"])

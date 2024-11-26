@@ -4,7 +4,6 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent
 from PyQt6.QtWidgets import (
     QFileDialog,
-    QFrame,
     QLabel,
     QSizePolicy,
     QVBoxLayout,
@@ -16,7 +15,7 @@ from TracX.constants import MAX_VIDEOS, MIN_VIDEOS, SUPPORTED_VIDEO_FORMATS
 from .video_gallery import VideoGallery
 
 
-class VideoUploaderWidget(QFrame):
+class VideoUploaderWidget(QWidget):
     """Widget for uploading experiment videos."""
 
     def __init__(
@@ -31,10 +30,8 @@ class VideoUploaderWidget(QFrame):
         layout.setSpacing(0)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.setObjectName("DragDropWidget")
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumHeight(400)
-        self.setAcceptDrops(True)
         self.min_num_videos = minNumVideos
         self.num_max_videos = numMaxVideos
         self.label = QLabel(
@@ -54,7 +51,6 @@ class VideoUploaderWidget(QFrame):
         )
         self.gallery.hide()
         layout.addWidget(self.gallery)
-        layout.addStretch()
 
         # Callback.
         self.onVideosSelected = lambda files: None

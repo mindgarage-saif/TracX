@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 )
 
 from TracX.ui.common import Tab
-from TracX.ui.styles import PAD_Y
+from TracX.ui.styles import PAD_X, PAD_Y
 
 from .experiment.create_experiment_dialog import CreateExperimentDialog
 from .experiment.experiment_list import ExperimentList
@@ -17,7 +17,7 @@ class AnalysisTab(Tab):
 
     def __init__(self, parent):
         super().__init__("Motion Analysis", parent, Qt.Orientation.Vertical)
-        self.layout.setContentsMargins(0, PAD_Y, 0, 0)
+        self.layout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.layout.setSpacing(0)
 
         # Add a title to the page

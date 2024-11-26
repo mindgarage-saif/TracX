@@ -9,17 +9,19 @@ from PyQt6.QtWidgets import (
 
 from TracX.constants import APP_ASSETS
 from TracX.core import Experiment
-from TracX.ui.common import EmptyState, Frame, VideoPlayerWidget, VideoUploaderWidget
+from TracX.ui.common import EmptyState, VideoPlayerWidget, VideoUploaderWidget
+from TracX.ui.styles import PAD_X, PAD_Y
 
 
-class ExperimentDataWidget(Frame):
+class ExperimentDataWidget(QWidget):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
+        self.setObjectName("ExperimentDataWidget")
         self.experiment = None
 
         # Create an inner layout for the frame
         self.innerLayout = QVBoxLayout(self)
-        self.innerLayout.setContentsMargins(0, 0, 0, 0)
+        self.innerLayout.setContentsMargins(PAD_X, PAD_Y, 0, PAD_Y)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.innerLayout.setSpacing(0)
 

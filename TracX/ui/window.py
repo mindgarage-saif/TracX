@@ -3,6 +3,7 @@ import logging
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
@@ -69,17 +70,16 @@ class StudioWindow(QMainWindow):
 
         # Layout
         window = QVBoxLayout(central_widget)
-        window.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
-        window.setSpacing(PAD_Y)
+        window.setContentsMargins(0, 0, 0, 0)
+        window.setSpacing(0)
 
         # Create app bar
-        self.appbar = AppBar(self, height=32)
-        self.appbar.setObjectName("AppBar")
+        self.appbar = AppBar(self, height=48)
+        self.appbar.innerLayout.setContentsMargins(PAD_X, 0, PAD_X, 0)
         window.addWidget(self.appbar)
 
         # Studio frame
         self.studioFrame = QWidget(self)
-        self.studioFrame.setContentsMargins(0, 0, 0, 0)
         self.studioFrame.setObjectName("StudioFrame")
         self.studioFrame.setSizePolicy(
             QSizePolicy.Policy.Expanding,
@@ -87,12 +87,13 @@ class StudioWindow(QMainWindow):
         )
         self.studioFrame.layout = QHBoxLayout(self.studioFrame)
         self.studioFrame.layout.setContentsMargins(0, 0, 0, 0)
-        self.studioFrame.layout.setSpacing(PAD_X)
+        self.studioFrame.layout.setSpacing(0)
         window.addWidget(self.studioFrame)
 
         # Create the sidebar
         sidebarWidth = int(width * 0.2)
         self.sidebar = TabbedArea(self.studioFrame)
+        self.sidebar.layout.setContentsMargins(0, 0, 0, 0)
         self.sidebar.setFixedWidth(int(sidebarWidth))
         self.sidebar.setSizePolicy(
             QSizePolicy.Policy.Fixed,
@@ -111,7 +112,7 @@ class StudioWindow(QMainWindow):
             "process": AnalysisPage,
             "record": RecordPage,
         }
-        self.pageFrame = QWidget(self.studioFrame)
+        self.pageFrame = QFrame(self.studioFrame)
         self.pageFrame.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,

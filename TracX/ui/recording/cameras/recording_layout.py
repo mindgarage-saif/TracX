@@ -81,7 +81,7 @@ class MultiCameraRecordUI(QFrame):
     def resizeEvent(self, event):
         max_cam_w = self.size().width()
         max_cam_h = self.size().height() - 48
-        aspect_ratio = 16 / 9
+        aspect_ratio = 4 / 3
         current_aspect_ratio = max_cam_w / max_cam_h
 
         if current_aspect_ratio > aspect_ratio:

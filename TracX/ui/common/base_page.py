@@ -2,7 +2,7 @@ import logging
 
 from PyQt6.QtWidgets import QHBoxLayout, QMessageBox, QWidget
 
-from TracX.ui.styles import PAD_X
+from TracX.ui.styles import PAD_X, PAD_Y
 
 logger = logging.getLogger(__name__)
 
@@ -11,11 +11,10 @@ class BasePage(QWidget):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.statusBar = parent.statusBar()
-        self.sidebar = parent.sidebar
 
         # Create an inner layout for the frame
         self.innerLayout = QHBoxLayout(self)
-        self.innerLayout.setContentsMargins(0, 0, 0, 0)
+        self.innerLayout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.innerLayout.setSpacing(PAD_X)
 
     def log(self, message: str) -> None:

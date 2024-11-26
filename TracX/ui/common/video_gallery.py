@@ -1,5 +1,14 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHBoxLayout, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QScrollArea,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+from TracX.ui.styles import PAD_X, PAD_Y
 
 from .video_gallery_item import VideoGalleryItem
 from .video_player_widget import VideoPlayerWidget
@@ -8,8 +17,9 @@ from .video_player_widget import VideoPlayerWidget
 class VideoGallery(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        self.setObjectName("VideoGallery")
         # Create the main layout for the VideoList
-        self.layout = QHBoxLayout()
+        self.layout = QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(16)
         self.setLayout(self.layout)
@@ -26,22 +36,21 @@ class VideoGallery(QWidget):
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
             QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum,
         )
         self.scroll_area.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
-        )
-        self.scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
-        self.scroll_area.setFixedWidth(256)
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
 
         # Create a container widget inside the scroll area
-        self.scroll_widget = QWidget(self.scroll_area)
-        self.scroll_layout = QVBoxLayout(self.scroll_widget)
-        self.scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.scroll_layout.setContentsMargins(16, 16, 16, 16)
+        self.scroll_widget = QFrame(self.scroll_area)
+        self.scroll_widget.setObjectName("VideoGalleryScrollWidget")
+        self.scroll_layout = QHBoxLayout(self.scroll_widget)
+        self.scroll_layout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.scroll_layout.setSpacing(8)
         self.scroll_widget.setLayout(self.scroll_layout)
 
@@ -64,7 +73,6 @@ class VideoGallery(QWidget):
 
     def setItems(self, video_paths: list):
         self.clear()
-        self.scroll_layout.addStretch()
 
         # Iterate through the list of video paths and create VideoPreview widgets
         for video_path in video_paths:

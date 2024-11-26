@@ -16,6 +16,7 @@ from .multiview3d import Multiview3DAnalysisPage
 class AnalysisPage(BasePage):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
+        self.innerLayout.setContentsMargins(0, 0, 0, 0)
 
         # Create an empty state layout
         self.emptyState = EmptyState(

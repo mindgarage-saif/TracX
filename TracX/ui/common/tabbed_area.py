@@ -2,11 +2,14 @@ import re
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
+
+from TracX.ui.styles import PAD_X, PAD_Y
 
 
 def slugify(text):
@@ -17,6 +20,7 @@ class Tab(QWidget):
     def __init__(self, title, parent, orientation=Qt.Orientation.Horizontal):
         assert isinstance(parent, TabbedArea), "Parent must be a TabbedArea"
         super().__init__(parent)
+        self.setObjectName("Tab")
         self.name = slugify(title)
         self.title = title
 
@@ -25,6 +29,7 @@ class Tab(QWidget):
             self.layout = QHBoxLayout(self)
         else:
             self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(PAD_X, PAD_Y, PAD_X, PAD_Y)
         self.setLayout(self.layout)
 
     def addWidget(self, widget):
@@ -40,7 +45,7 @@ class Tab(QWidget):
         """
 
 
-class TabbedArea(QWidget):
+class TabbedArea(QFrame):
     """
     A tabbed area that can be used to switch between different views.
     """
@@ -49,6 +54,7 @@ class TabbedArea(QWidget):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.setObjectName("TabbedArea")
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(16)

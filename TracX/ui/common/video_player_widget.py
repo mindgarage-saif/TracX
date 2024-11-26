@@ -154,7 +154,7 @@ class VideoPlayerController(QWidget):
 class VideoPlayerWidget(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setStyleSheet("background-color: #000000;")
+        self.setObjectName("VideoPlayerWidget")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Create an inner layout for the frame
@@ -211,7 +211,7 @@ class VideoPlayerWidget(QFrame):
     def resizeEvent(self, event):
         max_cam_w = self.size().width()
         max_cam_h = self.size().height() - 48
-        aspect_ratio = 16 / 9
+        aspect_ratio = 4 / 3
         current_aspect_ratio = max_cam_w / max_cam_h
 
         if current_aspect_ratio > aspect_ratio:
