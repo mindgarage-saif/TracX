@@ -4,11 +4,11 @@ from typing import Type
 
 import cv2
 import onnxruntime as ort
-from Pose2Sim import Pose2Sim
-from rtmlib import BodyWithFeet, PoseTracker
 from tqdm import tqdm
 
-from .solutions2d import BodyWithSpine
+from Pose2Sim import Pose2Sim
+from TracX_rtmlib import BodyWithFeet, BodyWithSpine, PoseTracker
+
 from .utils import save_to_openpose
 
 

@@ -15,13 +15,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from anytree import PreOrderIter, RenderTree
-from rtmlib import BodyWithFeet, PoseTracker
 from tqdm import tqdm
 
 from Sports2D.process import setup_video, sort_people_rtmlib, sort_people_sports2d
 from Sports2D.Utilities import filter
 from Sports2D.Utilities.common import *
 from TracX.skeletons import *
+from TracX_rtmlib import BodyWithFeet, PoseTracker
 
 ## CONSTANTS
 angle_dict = {  # lowercase!

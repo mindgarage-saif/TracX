@@ -219,6 +219,5 @@ dist/
 
 **/Calib_qualisys.toml
 **/pose-3d/
-**/pose/
 **/pose-sync/
 **/pose-associated/
