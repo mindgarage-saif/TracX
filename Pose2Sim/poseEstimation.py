@@ -12,7 +12,7 @@
     Results can optionally be displayed in real time.
 
     Supported models: HALPE_26 (default, body and feet), COCO_133 (body, feet, hands), COCO_17 (body)
-    Supported modes: lightweight, balanced, performance (edit paths at rtmlib/tools/solutions if you 
+    Supported modes: lightweight, balanced, performance (edit paths at TracX_rtmlib/tools/solution if you 
     need nother detection or pose models)
 
     Optionally gives consistent person ID across frames (slower but good for 2D analysis)
@@ -41,8 +41,8 @@ from tqdm import tqdm
 import numpy as np
 import cv2
 
-from rtmlib import PoseTracker, Body, Wholebody, BodyWithFeet, draw_skeleton
 from Pose2Sim.common import natural_sort_key, min_with_single_indices, euclidean_distance
+from TracX_rtmlib import PoseTracker, Body, Wholebody, BodyWithFeet, BodyWithSpine, draw_skeleton
 
 
 ## AUTHORSHIP INFORMATION
@@ -346,7 +346,7 @@ def rtm_estimator(config_dict):
     Results can optionally be displayed in real time.
 
     Supported models: HALPE_26 (default, body and feet), COCO_133 (body, feet, hands), COCO_17 (body)
-    Supported modes: lightweight, balanced, performance (edit paths at rtmlib/tools/solutions if you 
+    Supported modes: lightweight, balanced, performance (edit paths at TracX_rtmlib/tools/solution if you 
     need nother detection or pose models)
 
     Optionally gives consistent person ID across frames (slower but good for 2D analysis)
@@ -439,8 +439,11 @@ def rtm_estimator(config_dict):
     elif pose_model.upper() == 'COCO_17':
         ModelClass = Body # 26 keypoints(halpe26)
         logging.info(f"Using COCO_17 model (body) for pose estimation.")
+    elif pose_model.upper() == 'BODY_43':
+        ModelClass = BodyWithSpine
+        logging.info(f"Using BODY_43 model (body and spine) for pose estimation.")
     else:
-        raise ValueError(f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', or 'COCO_17'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation.")
+        raise ValueError(f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17' or 'BODY_43'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation.")
     logging.info(f'Mode: {mode}.\n')
 
 
