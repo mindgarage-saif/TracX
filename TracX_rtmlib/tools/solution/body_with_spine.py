@@ -17,38 +17,44 @@ class BodyWithSpine:
         "performance": {
             "det": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_x_8xb8-300e_humanart-a39d44ed.zip",
             "det_input_size": (640, 640),
-            "pose": os.path.join(
+            "pose": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmpose-x_simcc-body7_pt-body7-halpe26_700e-384x288-7fb6e239_20230606.zip",
+            "pose_input_size": (288, 384),
+            "spine_pose": os.path.join(
                 APP_ASSETS,
                 "models",
                 "3D",
                 "DFKI_Body43",
                 "rtmpose-l_body43-384x288.onnx",
             ),
-            "pose_input_size": (288, 384),
+            "spine_pose_input_size": (288, 384),
         },
         "lightweight": {
             "det": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_tiny_8xb8-300e_humanart-6f3252f9.zip",
             "det_input_size": (416, 416),
-            "pose": os.path.join(
+            "pose": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmpose-s_simcc-body7_pt-body7-halpe26_700e-256x192-7f134165_20230605.zip",
+            "pose_input_size": (192, 256),
+            "spine_pose": os.path.join(
                 APP_ASSETS,
                 "models",
                 "3D",
                 "DFKI_Body43",
                 "rtmpose-l_body43-384x288.onnx",
             ),
-            "pose_input_size": (288, 384),
+            "spine_pose_input_size": (288, 384),
         },
         "balanced": {
             "det": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_m_8xb8-300e_humanart-c2c7a14a.zip",
             "det_input_size": (640, 640),
-            "pose": os.path.join(
+            "pose": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmpose-m_simcc-body7_pt-body7-halpe26_700e-256x192-4d3e73dd_20230605.zip",
+            "pose_input_size": (192, 256),
+            "spine_pose": os.path.join(
                 APP_ASSETS,
                 "models",
                 "3D",
                 "DFKI_Body43",
                 "rtmpose-l_body43-384x288.onnx",
             ),
-            "pose_input_size": (288, 384),
+            "spine_pose_input_size": (288, 384),
         },
     }
 
@@ -69,24 +75,40 @@ class BodyWithSpine:
             device (str, optional): Device for inference ('cpu' or 'cuda'). Default is 'cpu'.
         """
 
-        if pose is None:
-            pose = self.MODE[mode]["pose"]
-            pose_input_size = self.MODE[mode]["pose_input_size"]
+        pose = self.MODE[mode]["pose"]
+        pose_input_size = self.MODE[mode]["pose_input_size"]
 
-        if det is None:
-            det = self.MODE[mode]["det"]
-            det_input_size = self.MODE[mode]["det_input_size"]
+        det = self.MODE[mode]["det"]
+        det_input_size = self.MODE[mode]["det_input_size"]
 
         self.det_model = YOLOX(
             det, model_input_size=det_input_size, backend=backend, device=device
         )
-        self.pose_model = RTMPose(
+        self.body_model = RTMPose(
             pose,
             model_input_size=pose_input_size,
             to_openpose=to_openpose,
             backend=backend,
             device=device,
         )
+        self.spine_pose = RTMPose(
+            self.MODE[mode]["spine_pose"],
+            model_input_size=self.MODE[mode]["spine_pose_input_size"],
+            to_openpose=to_openpose,
+            backend=backend,
+            device=device,
+        )
+
+        def forward(image, bboxes):
+            keypoints, scores = self.body_model(image, bboxes=bboxes)
+            spine_keypoints, spine_scores = self.spine_pose(image, bboxes=bboxes)
+            spine_keypoints = spine_keypoints[:, -17:]
+            spine_scores = spine_scores[:, -17:]
+            keypoints = np.concatenate([keypoints, spine_keypoints], axis=1)
+            scores = np.concatenate([scores, spine_scores], axis=1)
+            return keypoints, scores
+
+        self.pose_model = forward
 
     def __call__(self, image: np.ndarray):
         """
