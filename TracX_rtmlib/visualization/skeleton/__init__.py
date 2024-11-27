@@ -7,6 +7,7 @@ from rtmlib.visualization.skeleton.openpose134 import openpose134
 
 from .body43 import body43
 from .face106 import face106
+from .wholebody150 import wholebody150
 
 __all__ = [
     "coco17",
@@ -17,4 +18,5 @@ __all__ = [
     "halpe26",
     "body43",
     "face106",
+    "wholebody150",
 ]

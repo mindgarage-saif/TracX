@@ -206,3 +206,5 @@ BODY_43 = Node(
 # HAND_21 (hand-only skeleton with 21 joints)
 HAND_21 = Node("Wrist", id=0, children=[])
 FACE_106 = Node("Nose", id=0, children=[])
+
+WHOLEBODY_150 = COCO_133

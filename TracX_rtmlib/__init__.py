@@ -12,6 +12,7 @@ from .tools import (
     RTMDet,
     RTMPose,
     Wholebody,
+    WholebodyWithSpine,
 )
 from .visualization import draw_bbox, draw_skeleton
 
@@ -28,5 +29,6 @@ __all__ = [
     "RTMO",
     "RTMPose",
     "Wholebody",
+    "WholebodyWithSpine",
     "YOLOX",
 ]

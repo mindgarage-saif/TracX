@@ -30,6 +30,7 @@ class Monocular2DSettingsPanel(SettingsPanel):
                 "Body + Feet": "HALPE_26",
                 "Body + Feet + Spine": "BODY_43",
                 "Full Body": "COCO_133",
+                "Full Body + Spine": "WHOLEBODY_150",
                 "Hands": "HAND_21",
                 "Face": "FACE_106",
             },
