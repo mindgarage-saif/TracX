@@ -10,6 +10,8 @@ from PyQt6.QtWidgets import (
 from TracX.constants import APP_NAME, APP_VERSION
 from TracX.ui.styles import PAD_X
 
+from .settings import SettingsDialog
+
 
 class AppBar(QFrame):
     def __init__(self, parent, height=32):
@@ -71,8 +73,5 @@ class AppBar(QFrame):
         )
 
     def showSettingsDialog(self):
-        QMessageBox.information(
-            self,
-            "Settings",
-            "Settings functionality is under development and will be available in a future update.",
-        )
+        dialog = SettingsDialog(self)
+        dialog.exec()

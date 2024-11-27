@@ -1,5 +1,9 @@
+import asyncio
+import logging
 import os
 import shutil
+import threading
+import time
 
 from PyQt6.QtWidgets import (
     QFileDialog,
@@ -10,8 +14,7 @@ from PyQt6.QtWidgets import (
 
 from TracX.core import Experiment
 from TracX.core.analyze2d import process_frame, setup_pose_tracker
-
-# from TracX.streaming import MotionDataStreamer
+from TracX.streaming import MotionDataStreamer
 from TracX.ui.styles import PAD_Y
 
 from .data_widget import ExperimentDataWidget
@@ -59,7 +62,7 @@ class Monocular2DAnalysisPage(QWidget):
         self.model = None
 
         # TODO: Data streaming
-        # self.streamer = MotionDataStreamer(host="0.0.0.0", port=8765)
+        self.streamer = MotionDataStreamer(host="0.0.0.0", port=8765)
 
     def setExperiment(self, name):
         self.experiment = Experiment.open(name)
@@ -67,9 +70,9 @@ class Monocular2DAnalysisPage(QWidget):
         self.settings.setExperiment(self.experiment)
         self.refreshUI()
 
-        # self.streamer.stop()
-        # server_thread = threading.Thread(target=self.streamer.start)
-        # server_thread.start()
+        self.streamer.stop()
+        server_thread = threading.Thread(target=self.streamer.start)
+        server_thread.start()
 
     def refreshUI(self):
         if self.experiment is None:
@@ -92,17 +95,23 @@ class Monocular2DAnalysisPage(QWidget):
 
         frame, motion_data = process_frame(self.experiment.cfg, self.model, frame)
 
-        # async def send_motion_data(motion_data):
-        #     x, y, scores, angles, metainfo = motion_data
-        #     data = {
-        #         "keypoints": [{"x": x, "y": y, "score": s} for x, y, s in zip(x, y, scores)],
-        #         "angles": angles,
-        #         "metadata": {"timestamp": time.time(), **metainfo},
-        #     }
-        #     logging.debug(f"Sending motion data: {data}")
-        #     await self.streamer.stream_frame(data)
+        async def send_motion_data(motion_data):
+            xs, ys, scores, angles, metainfo = motion_data
+            image_size = frame.shape[:2]
+            data = {
+                "keypoints": [
+                    {"x": x, "y": y, "score": s} for x, y, s in zip(xs, ys, scores)
+                ],
+                "angles": angles,
+                "metadata": {
+                    "image_size": image_size,
+                    "timestamp": time.time(),
+                    **metainfo,
+                },
+            }
+            await self.streamer.stream_frame(data)
 
-        # asyncio.run(send_motion_data(motion_data))
+        asyncio.run(send_motion_data(motion_data))
 
         return frame
 
@@ -132,6 +141,6 @@ class Monocular2DAnalysisPage(QWidget):
                 shutil.copyfile(file_path, save_path)
                 # TOOD: Show a success message
 
-    # def __del__(self):
-    #     self.streamer.stop()
-    #     logging.debug("Stopped the WebSocket server.")  # FIXME: Hack
+    def __del__(self):
+        self.streamer.stop()
+        logging.debug("Stopped the WebSocket server.")  # FIXME: Hack
