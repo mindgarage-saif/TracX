@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from typing import Any
 
 import numpy as np
@@ -18,19 +19,22 @@ class MotionDataStreamer:
         self.clients = set()  # Track connected clients
         self.is_running = False
 
-    async def _handler(self, websocket, path):
+    async def _handler(self, websocket):
         """
         Handle new WebSocket connections.
         :param websocket: The WebSocket connection object.
-        :param path: The URL path of the WebSocket (unused).
         """
         # Add client to the connected set
         self.clients.add(websocket)
         try:
             async for _ in websocket:  # Keep the connection open
                 pass
-        except websockets.ConnectionClosed:
-            pass
+        except websockets.ConnectionClosed as e:
+            logging.debug(f"Connection closed: {e}")
+            exit()
+        except Exception as e:
+            logging.error(f"Error in handler: {e}")
+            exit()
         finally:
             # Remove client on disconnect
             self.clients.remove(websocket)
@@ -75,6 +79,7 @@ class MotionDataStreamer:
         # Handle numpy arrays in the data
         def default_serializer(obj):
             if isinstance(obj, np.ndarray):
+                obj = np.where(np.isnan(obj), None, obj)
                 return obj.tolist()
             raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
