@@ -159,6 +159,53 @@ class Experiment:
     def has_videos(self):
         return self.num_videos > 0
 
+    def calibrate_cameras(
+            self,
+            overwrite_intrinsics=True,
+            intrinsics_extension="jpg",
+            intrinsics_corners_nb=(8, 13),
+            intrinsics_square_size=20, # mm
+            calculate_extrinsics=True,
+            extrinsics_method="board",
+            extrinsics_extension="jpg",
+            extrinsics_corners_nb=(8, 13),
+            extrinsics_square_size=20, # mm
+            show_reprojection_error=True,
+    ):
+        # Update parameters in the configuration file
+        cfg = self.cfg
+        cfg.calibration.calibration_type = "calculate"
+
+        # [calibration.calculate.intrinsics]
+        cfg.calibration.calculate.intrinsics.overwrite_intrinsics = overwrite_intrinsics
+        cfg.calibration.calculate.intrinsics.intrinsics_extension = intrinsics_extension
+        cfg.calibration.calculate.intrinsics.intrinsics_corners_nb = intrinsics_corners_nb
+        cfg.calibration.calculate.intrinsics.intrinsics_square_size = intrinsics_square_size
+
+        # [calibration.calculate.extrinsics]
+        cfg.calibration.calculate.extrinsics.calculate_extrinsics = calculate_extrinsics
+        cfg.calibration.calculate.extrinsics.extrinsics_method = extrinsics_method
+        cfg.calibration.calculate.extrinsics.board.extrinsics_extension = extrinsics_extension
+        cfg.calibration.calculate.extrinsics.board.extrinsics_corners_nb = extrinsics_corners_nb
+        cfg.calibration.calculate.extrinsics.board.extrinsics_square_size = extrinsics_square_size
+        cfg.calibration.calculate.extrinsics.board.show_reprojection_error = show_reprojection_error
+
+        # Update the configuration file
+        self.update_config(cfg)
+
+        # Execute the calibration
+        cwd = os.getcwd()
+        os.chdir(self.path)
+        try:
+            Pose2Sim.calibration()
+        except Exception as e:
+            logging.error(f"Failed to calibrate cameras: {e}")
+
+            import traceback
+            traceback.print_exc()
+        finally:
+            os.chdir(cwd)
+
     def set_camera_parameters(self, params_file):
         if params_file.split(".")[-1].lower() != "toml":
             raise ValueError(
@@ -168,7 +215,13 @@ class Experiment:
         shutil.copy(params_file, self.calibration_file)
 
     def get_camera_parameters(self):
-        return self.calibration_file if os.path.exists(self.calibration_file) else None
+        all_files = os.listdir(self.calibration_dir)
+        for file in all_files:
+            if file.startswith("Calib_") and file.endswith(".toml"):
+                self.calibration_file = os.path.join(self.calibration_dir, file)
+                return os.path.join(self.calibration_dir, file)
+
+        return None
 
     def update_config(self, cfg):
         def merge_dicts(d1, d2):
