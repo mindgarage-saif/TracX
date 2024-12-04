@@ -149,6 +149,7 @@ class StickFigureRenderer(MotionRenderer):
 
         # Write the image to the video
         self.writer.write(image)
+        plt.close(fig)
 
     def render(self, fps=24):
         # Get the footsteps

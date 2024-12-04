@@ -88,9 +88,13 @@ class CamerasTab(Tab):
             QSizePolicy.Policy.Expanding,
         )
 
-        self.calibrationButton = QPushButton("Import File", self)
-        self.calibrationButton.clicked.connect(self.selectCalibrationFile)
-        self.calibrationImport.layout.addWidget(self.calibrationButton)
+        self.importCalibrationButton = QPushButton("Import File", self)
+        self.importCalibrationButton.clicked.connect(self.selectCalibrationFile)
+        self.calibrationImport.layout.addWidget(self.importCalibrationButton)
+
+        self.startCalibrationButton = QPushButton("Calibrate Manually", self)
+        self.startCalibrationButton.clicked.connect(self.calibrateManually)
+        self.calibrationImport.layout.addWidget(self.startCalibrationButton)
 
         # Panel 1 (Section 2): Modifying calibration parameters
         self.calibrationTabs = TabbedArea(self)
@@ -123,10 +127,10 @@ class CamerasTab(Tab):
                 self.experiment.set_camera_parameters(selected_file)
                 self.refreshUI()
 
-    def setExperiment(self, experiment):
+    def setExperiment(self, experiment: Experiment):
         self.experiment = experiment
-        calib_file = self.experiment.calibration_file
-        self.setCameraInfo(calib_file)
+        cameraParameters = self.experiment.get_camera_parameters()
+        self.setCameraInfo(cameraParameters)
 
     def refreshUI(self):
         experiment: Experiment = self.experiment
@@ -138,10 +142,34 @@ class CamerasTab(Tab):
         if file_path is not None:
             filename = os.path.basename(file_path)
             self.calibrationLabel.setText("Calibration file: " + filename)
-            self.calibrationButton.setEnabled(False)
+            self.importCalibrationButton.setEnabled(False)
         else:
             self.calibrationLabel.setText("No calibration file uploaded")
-            self.calibrationButton.setEnabled(True)
+            self.importCalibrationButton.setEnabled(True)
+
+    def calibrateManually(self):
+        # TODO: Get following parameters from the UI
+        self.experiment.calibrate_cameras(
+            overwrite_intrinsics=True,
+            intrinsics_extension="jpg",
+            intrinsics_corners_nb=(8, 13),
+            intrinsics_square_size=20, # mm
+            calculate_extrinsics=False,
+        )
+
+        # TODO: Update extrinsics calibration code to not require cv2 windows so that it will work in the UI
+        # self.experiment.calibrate_cameras(
+        #     overwrite_intrinsics=False,
+        #     intrinsics_extension="jpg",
+        #     intrinsics_corners_nb=(8, 13),
+        #     intrinsics_square_size=20, # mm
+        #     calculate_extrinsics=True,
+        #     extrinsics_method="board",
+        #     extrinsics_extension="jpg",
+        #     extrinsics_corners_nb=(8, 13),
+        #     extrinsics_square_size=20, # mm
+        #     show_reprojection_error=True,
+        # )
 
     def setCameraInfo(self, calib_file):
         if calib_file is None or not os.path.exists(calib_file):

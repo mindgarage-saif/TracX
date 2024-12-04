@@ -67,9 +67,9 @@ def adapt_scaling_xml(
     if time_range is not None:
         for item in root.iter("time_range"):
             item.text = str(time_range[0]) + "," + str(time_range[1])
-    else:
-        for item in root.iter("time_range"):
-            item.text = " "
+    # else:
+    #     for item in root.iter("time_range"):
+    #         item.text = " "
 
     # Change the output model file
     for item in root.iter("output_model_file"):
@@ -97,9 +97,9 @@ def adapt_ik_xml(setup_file, trc_file, output_dir, time_range=None):
     if time_range is not None:
         for item in root.iter("time_range"):
             item.text = str(time_range[0]) + " " + str(time_range[1])
-    else:
-        for item in root.iter("time_range"):
-            item.text = " "
+    # else:
+    #     for item in root.iter("time_range"):
+    #         item.text = " "
 
     for item in root.iter("output_motion_file"):
         item.text = os.path.abspath(os.path.join(output_dir, "ik.mot"))
@@ -139,17 +139,19 @@ def create_osim_models(
     os.makedirs(output_dir, exist_ok=True)
 
     # Scaling
+    time_range = (2.0, 92.0)  # TODO: Get this from the trc file
     scaling_file = os.path.basename(scaling_file)
     adapt_scaling_xml(
         setup_file=scaling_setup_file,
         trc_file=trc,
         output_dir=output_dir,
         model_path=model_path,
+        time_range=time_range,
     )
     do_scaling(os.path.join(output_dir, scaling_file))
 
     # Inverse Kinematics
-    adapt_ik_xml(ik_setup_path, trc, output_dir)
+    adapt_ik_xml(ik_setup_path, trc, output_dir, time_range=time_range)
     do_ik(os.path.join(output_dir, ik_file))
 
     print("The results can be found in: ", output_dir)
