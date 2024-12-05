@@ -1,3 +1,4 @@
+import logging
 import os
 
 import cv2
@@ -60,7 +61,7 @@ class VideoGalleryItem(QFrame):
         # Capture the video
         cap = cv2.VideoCapture(self.path)
         if not cap.isOpened():
-            print(f"Failed to open video: {self.path}")
+            logging.error(f"Failed to open video: {self.path}")
             return
 
         # Get video metadata

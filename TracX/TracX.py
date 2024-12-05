@@ -133,7 +133,7 @@ def kinematics(name: str, overwrite: bool = False):
         experiment = Experiment.open(name)
         pose_model = experiment.cfg["pose"]["pose_model"]
     except FileNotFoundError:
-        print(f"Experiment {name} not found.")
+        logging.error(f"Experiment {name} not found.")
         return
 
     # Find the motion file

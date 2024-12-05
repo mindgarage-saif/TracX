@@ -202,7 +202,7 @@ class Experiment:
             logging.error(f"Failed to calibrate cameras: {e}")
 
             import traceback
-            traceback.print_exc()
+            logging.debug(traceback.format_exc())
         finally:
             os.chdir(cwd)
 
