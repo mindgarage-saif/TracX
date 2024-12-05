@@ -87,12 +87,8 @@ class Multiview3DAnalysisPage(QWidget):
         self.data.videoUploader.previewSelected(
             self.experiment.videos,
         )
-        hasMotionData = self.experiment.get_motion_file() is not None
-        # self.settings.estimateButton.setEnabled(not hasMotionData)
-        self.settings.exportButton.setEnabled(hasMotionData)
-
         self.settings.analyzeButton.log_file = self.experiment.log_file
-        self.settings.visualizeButton.log_file = self.experiment.log_file
+        self.settings.kinematicsButton.log_file = self.experiment.log_file
         self.logs_view.start_log_streaming(self.experiment.log_file)
 
     def handleDataUpload(self, status):

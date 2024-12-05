@@ -30,6 +30,7 @@ class IconButton(QPushButton):
 
     def setIconFile(self, iconFile, iconSize):
         if iconFile is None:
+            self.setFixedHeight(iconSize * 1.5)
             return
 
         path = os.path.join(APP_ASSETS, "icons", iconFile)

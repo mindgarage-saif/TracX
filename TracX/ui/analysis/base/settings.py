@@ -3,7 +3,6 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
@@ -34,21 +33,22 @@ class SettingsPanel(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
 
-        # Save Button
-        self.saveButton = QPushButton("Save", self)
-        self.saveButton.clicked.connect(self.applyConfigChanges)
-        layout.addWidget(self.saveButton)
-
         # Estimate Motion Button
         self.analyzeButton = EstimateMotionButton(self.onAnalyzed)
+        self.analyzeButton.before_start.connect(self.applyConfigChanges)
+        self.analyzeButton.before_start.connect(self.disableButtons)
+        self.analyzeButton.after_finish.connect(self.enableButtons)
         layout.addWidget(self.analyzeButton)
+
+        self.kinematicsButton = KinematicsButton(self.onVisualized)
+        self.kinematicsButton.before_start.connect(self.applyConfigChanges)
+        self.kinematicsButton.before_start.connect(self.disableButtons)
+        self.kinematicsButton.after_finish.connect(self.enableButtons)
+        layout.addWidget(self.kinematicsButton)
 
         # Download Button
         self.exportButton = IconButton("export.png", 24, self)
         layout.addWidget(self.exportButton)
-
-        self.visualizeButton = KinematicsButton(self.onVisualized)
-        layout.addWidget(self.visualizeButton)
 
         main_layout.addWidget(button_bar)
 
@@ -113,6 +113,16 @@ class SettingsPanel(QFrame):
         self.experiment = experiment
         self.refreshUI()
 
+    def disableButtons(self):
+        self.analyzeButton.setEnabled(False)
+        self.kinematicsButton.setEnabled(False)
+        self.exportButton.setEnabled(False)
+    
+    def enableButtons(self):
+        self.analyzeButton.setEnabled(True)
+        self.kinematicsButton.setEnabled(True)
+        self.exportButton.setEnabled(True)
+
     def refreshUI(self):
         if self.experiment is None:
             return
@@ -126,7 +136,7 @@ class SettingsPanel(QFrame):
 
         # Update buttons
         self.analyzeButton.task.experiment = self.experiment.name
-        self.visualizeButton.task.experiment = self.experiment.name
+        self.kinematicsButton.task.experiment = self.experiment.name
 
     def updateConfig(self, cfg):
         """Read the configuration from the UI components.

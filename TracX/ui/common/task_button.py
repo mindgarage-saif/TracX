@@ -1,6 +1,6 @@
 import logging
 
-from PyQt6.QtCore import QThread
+from PyQt6.QtCore import QThread, pyqtSignal
 
 from TracX.tasks import TaskRunner
 
@@ -11,6 +11,9 @@ class BaseTaskButton(IconButton):
     """Base class for buttons associated with tasks.
     Clicking the button will trigger the associated task.
     """
+
+    before_start = pyqtSignal()
+    after_finish = pyqtSignal()
 
     def __init__(self, label, task_class, task_config, callback):
         """Initializes the button with a label and task to be executed on click.
@@ -66,6 +69,8 @@ class BaseTaskButton(IconButton):
         self.on_finish(success, result)
 
     def on_start(self):
+        """Callback function to handle the task start."""
+        self.before_start.emit()
         self.setEnabled(False)
 
     def on_finish(self, success, result):
@@ -77,4 +82,6 @@ class BaseTaskButton(IconButton):
 
         """
         self.setEnabled(True)
+        self.after_finish.emit()
+        # TODO: Replace callback with signals
         self.callback(success, result)

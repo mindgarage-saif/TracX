@@ -375,26 +375,26 @@ class Multiview3DSettingsPanel(SettingsPanel):
         )
         scroll_layout.addWidget(self.butterworth_cut_off_frequency)
 
-        # Scaling Settings
-        heading = QLabel("Simulation Setup", self)
-        heading.setProperty("class", "h2")
-        scroll_layout.addWidget(heading)
+        # # Scaling Settings
+        # heading = QLabel("Simulation Setup", self)
+        # heading.setProperty("class", "h2")
+        # scroll_layout.addWidget(heading)
 
-        # [simulation] simulation_type (matplotlib, opensim, blender, unrealengine)
-        self.simulation_type = Selection(
-            "Simulation Type",
-            {
-                "Stick Figure": "matplotlib",
-                "OpenSim": "opensim",
-                "Blender": "blender",
-                "Unreal Engine": "unrealengine",
-            },
-            self,
-        )
-        self.simulation_type.setToolTip(
-            "Select the simulation type: Stick Figure, OpenSim, Blender, or Unreal Engine."
-        )
-        scroll_layout.addWidget(self.simulation_type)
+        # # [simulation] simulation_type (matplotlib, opensim, blender, unrealengine)
+        # self.simulation_type = Selection(
+        #     "Simulation Type",
+        #     {
+        #         "Stick Figure": "matplotlib",
+        #         "OpenSim": "opensim",
+        #         "Blender": "blender",
+        #         "Unreal Engine": "unrealengine",
+        #     },
+        #     self,
+        # )
+        # self.simulation_type.setToolTip(
+        #     "Select the simulation type: Stick Figure, OpenSim, Blender, or Unreal Engine."
+        # )
+        # scroll_layout.addWidget(self.simulation_type)
 
     def refreshUI(self):
         super().refreshUI()
