@@ -221,3 +221,6 @@ dist/
 **/pose-3d/
 **/pose-sync/
 **/pose-associated/
+
+# aitviewer
+imgui.ini
