@@ -16,6 +16,11 @@ APP_PROJECTS = os.path.join(APP_FILES, "Projects")
 POSE2SIM_ASSETS = os.path.join(APP_HOME, "Pose2Sim", "OpenSim_Setup")
 OPENSIM_GEOMETRY = os.path.join(POSE2SIM_ASSETS, "Geometry")
 OPENSIM_FILES = {
+    "BODY_43": {
+        "Model": os.path.join(APP_ASSETS, "models", "3D", "Model_DFKI_Body43.osim"),
+        "Scaling_Setup": os.path.join(APP_ASSETS, "models", "3D", "Scaling_Setup_DFKI_Body43.xml"),
+        "IK_Setup": os.path.join(APP_ASSETS, "models", "3D", "IK_Setup_DFKI_Body43.xml"),
+    },
     "COCO_17": {
         "Model": os.path.join(POSE2SIM_ASSETS, "Model_Pose2Sim_Coco17.osim"),
         "Scaling_Setup": os.path.join(POSE2SIM_ASSETS, "Scaling_Setup_Pose2Sim_Coco17.xml"),
@@ -30,7 +35,13 @@ OPENSIM_FILES = {
         "Model": os.path.join(POSE2SIM_ASSETS, "Model_Pose2Sim_Halpe26.osim"),
         "Scaling_Setup": os.path.join(POSE2SIM_ASSETS, "Scaling_Setup_Pose2Sim_Halpe26.xml"),
         "IK_Setup": os.path.join(POSE2SIM_ASSETS, "IK_Setup_Pose2Sim_Halpe26.xml"),
-    }
+    },
+    "WHOLEBODY_150": {  # TODO: Reusing COCO_133 files for now until new files are available.
+        "Model": os.path.join(POSE2SIM_ASSETS, "Model_Pose2Sim_Coco133.osim"),
+        "Scaling_Setup": os.path.join(POSE2SIM_ASSETS, "Scaling_Setup_Pose2Sim_Coco133.xml"),
+        "IK_Setup": os.path.join(POSE2SIM_ASSETS, "IK_Setup_Pose2Sim_Coco133.xml"),
+    },
+    # TODO: Add OpenSim files for hands and face models.
 }
 
 # Define supported formats.

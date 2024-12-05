@@ -22,7 +22,7 @@ class BodyWithSpine:
             "spine_pose": os.path.join(
                 APP_ASSETS,
                 "models",
-                "3D",
+                "2D",
                 "DFKI_Body43",
                 "rtmpose-l_body43-384x288.onnx",
             ),
@@ -36,7 +36,7 @@ class BodyWithSpine:
             "spine_pose": os.path.join(
                 APP_ASSETS,
                 "models",
-                "3D",
+                "2D",
                 "DFKI_Body43",
                 "rtmpose-l_body43-384x288.onnx",
             ),
@@ -50,7 +50,7 @@ class BodyWithSpine:
             "spine_pose": os.path.join(
                 APP_ASSETS,
                 "models",
-                "3D",
+                "2D",
                 "DFKI_Body43",
                 "rtmpose-l_body43-384x288.onnx",
             ),
