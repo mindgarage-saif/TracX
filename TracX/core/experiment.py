@@ -93,7 +93,7 @@ class Experiment:
 
     @staticmethod
     def open(name):
-        logging.info(f"Opening experiment '{name}'...")
+        logging.debug(f"Opening experiment '{name}'...")
         return Experiment(name, create=False)
 
     @staticmethod

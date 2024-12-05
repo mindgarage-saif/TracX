@@ -11,7 +11,7 @@ class VideoProcessor(QObject):
 
     def __init__(self, player: VideoPlayer):
         super().__init__()
-        logging.info("Creating video processor %d for player %d", id(self), id(player))
+        logging.debug("Creating video processor %d for player %d", id(self), id(player))
         self._player: VideoPlayer = player
         self._player.frame.connect(self._enqueue_frame)
 
@@ -73,7 +73,7 @@ class VideoProcessor(QObject):
 
     def stop(self):
         """Stop processing, drop all frames, and reset the processor."""
-        logging.info("Stopping video processor %d", id(self))
+        logging.debug("Stopping video processor %d", id(self))
         logging.debug(
             "%d unprocessed frames still in queue will be dropped",
             len(self.frame_queue),
@@ -94,7 +94,7 @@ class VideoProcessor(QObject):
 
     def pause(self):
         """Pause processing and drop all unprocessed frames."""
-        logging.info("Pausing video processor %d", id(self))
+        logging.debug("Pausing video processor %d", id(self))
         self.queue_mutex.lock()
         self.is_paused = True
         self.frame_queue.clear()  # Drop all pending frames
@@ -103,7 +103,7 @@ class VideoProcessor(QObject):
     def resume(self):
         """Resume processing if it was paused."""
         if self.is_running and self.is_paused:
-            logging.info("Resuming paused video processor %d", id(self))
+            logging.debug("Resuming paused video processor %d", id(self))
             self.queue_mutex.lock()
             self.is_paused = False
             self.queue_not_empty.wakeAll()  # Wake the processing thread if it’s waiting
@@ -114,7 +114,7 @@ class VideoProcessor(QObject):
         if (
             not self._thread.isRunning()
         ):  # Start from scratch if the thread was never started or stopped
-            logging.info("Starting video processor %d", id(self))
+            logging.debug("Starting video processor %d", id(self))
             self.is_running = True
             self.is_paused = False
             self._thread.start()
