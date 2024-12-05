@@ -3,8 +3,8 @@ from TracX import TracX
 from .base_task import BaseTask
 
 
-class EstimateMotionTask(BaseTask):
-    """Task for estimating motion."""
+class KinematicsTask(BaseTask):
+    """Task for performing kinematics analysis."""
 
     def __init__(self, experiment):
         super().__init__(experiment)
@@ -15,4 +15,4 @@ class EstimateMotionTask(BaseTask):
         if not experiment_name:
             raise ValueError("Experiment name is required")
 
-        TracX.process(experiment_name)
+        return TracX.kinematics(self.experiment)

@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from TracX.ui.analysis import EstimateMotionButton, VisualizeMotionButton
+from TracX.ui.analysis import EstimateMotionButton, KinematicsButton
 from TracX.ui.common import IconButton
 from TracX.ui.styles import PAD_X, PAD_Y
 
@@ -48,7 +48,7 @@ class SettingsPanel(QFrame):
         self.exportButton.setEnabled(False)
         layout.addWidget(self.exportButton)
 
-        self.visualizeButton = VisualizeMotionButton(self.onVisualized)
+        self.visualizeButton = KinematicsButton(self.onVisualized)
         layout.addWidget(self.visualizeButton)
 
         main_layout.addWidget(button_bar)

@@ -206,6 +206,50 @@ class Experiment:
         finally:
             os.chdir(cwd)
 
+    def calibrate_extrinsics(
+        self,
+        person_height=1.74, # meters
+        extrinsics_extension="jpg",
+    ):
+        extrinsics_folder = os.path.join(self.calibration_dir, "extrinsics")
+
+        def estimate_pose(image_path):
+            pass
+
+        poses = {}
+        for cam in os.listdir(extrinsics_folder):
+            cam_folder = os.path.join(extrinsics_folder, cam)
+            if not os.path.isdir(cam_folder):
+                continue
+
+            # Get the first image in the camera folder
+            img_files = [
+                f for f in os.listdir(cam_folder) if f.endswith(extrinsics_extension)
+            ]
+            if len(img_files) == 0:
+                raise ValueError(f"No images found for camera '{cam}'")
+            
+            # NOTE: This must be a T-pose image showing the full body!!!
+            #       which should be automatically verified and an error
+            #       should be raised if the image is not valid.
+            # TODO: Implement the image validation
+            img_file = os.path.join(cam_folder, img_files[0])
+
+            # Estimate the pose from the image
+            poses[cam] = estimate_pose(img_file)
+
+        # Define a set of 3D points for the person
+        points = [
+            (0, 0, 0),  # Origin at middle of heels
+            (0, 0, person_height),  # Z-axis pointing upwards (using head top)
+        ]
+
+        # Set the middle of heels as the origin
+        L_HEEL_IDX = 24
+        R_HEEL_IDX = 25
+        heel_mid = (poses["cam1"][L_HEEL_IDX] + poses["cam2"][R_HEEL_IDX]) / 2
+        pass
+
     def set_camera_parameters(self, params_file):
         if params_file.split(".")[-1].lower() != "toml":
             raise ValueError(

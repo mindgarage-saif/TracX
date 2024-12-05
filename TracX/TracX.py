@@ -4,11 +4,12 @@ import shutil
 from datetime import datetime
 
 import cv2
+from Pose2Sim.Utilities import bodykin_from_mot_osim
 
 from TracX.core import Experiment
 from TracX.core.analyze2d import process as process2d
 from TracX.core.analyze3d import lift_2d_to_3d
-from TracX.rendering.opensim import create_osim_models
+from TracX.kinematics import run_kinematics
 
 
 def process_mono2d(experiment: Experiment):
@@ -86,12 +87,6 @@ def process_mono3d(experiment: Experiment):
         # logging.info("Filtering 3D poses")
         # Pose2Sim.filtering(experiment.cfg)
 
-        logging.info("Creating OpenSim models")
-        create_osim_models(
-            trc=pose3d_file,
-            experiment_dir=experiment.path,
-        )
-
 
 def process_multi3d(experiment: Experiment):
     # FIXME: Move processing out of the Experiment class
@@ -102,7 +97,7 @@ def process(name: str):
     try:
         experiment = Experiment.open(name)
     except FileNotFoundError:
-        print(f"Experiment {name} not found.")
+        logging.error(f"Experiment {name} not found.")
         return
 
     if len(experiment.videos) == 0:
@@ -131,3 +126,51 @@ def process(name: str):
 
     # Run the processing function
     process_fun(experiment)
+
+
+def kinematics(name: str):
+    try:
+        experiment = Experiment.open(name)
+        pose_model = experiment.cfg["pose"]["pose_model"]
+    except FileNotFoundError:
+        print(f"Experiment {name} not found.")
+        return
+
+    # Find the motion file
+    motion_file = experiment.get_motion_file()
+    if motion_file is None:
+        logging.error(
+            "Process the experiment to create the motion file before kinematics computation"
+        )
+        return
+
+    currentDateAndTime = datetime.now()
+    logging.info(
+        "---------------------------------------------------------------------"
+    )
+    logging.info("OpenSim Kinematics")
+    logging.info(f"On {currentDateAndTime.strftime('%A %d. %B %Y, %H:%M:%S')}")
+    logging.info(f"Motion file: {motion_file}")
+    logging.info(f"Pose model: {pose_model}")
+    logging.info(f"Output directory: {experiment.output_dir}")
+    logging.info(
+        "---------------------------------------------------------------------"
+    )
+
+    # TODO: Read time range from the config file
+    output, mot, scaled_model = run_kinematics(
+        motion_file=motion_file,
+        output_dir=experiment.output_dir,
+        pose_model=pose_model,
+        time_range=None,  # Use the entire motion file
+    )
+
+    with_blender = False  # TODO: Implement Blender integration
+    if with_blender:
+        bodykin_from_mot_osim.bodykin_from_mot_osim_func(
+            mot,
+            scaled_model,
+            os.path.join(output, "bodykin.csv"),
+        )
+
+    return output, mot, scaled_model

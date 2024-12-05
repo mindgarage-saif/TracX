@@ -1,12 +1,9 @@
 import os
 import shutil
 
-from PyQt6.QtCore import QUrl
-from PyQt6.QtMultimedia import QMediaPlayer
-from PyQt6.QtMultimediaWidgets import QVideoWidget
-from PyQt6.QtWidgets import QDialog, QFileDialog, QVBoxLayout
+from PyQt6.QtWidgets import QFileDialog
 
-from TracX.tasks import EstimateMotionTask, VisualizeMotionTask
+from TracX.tasks import EstimateMotionTask, KinematicsTask
 from TracX.ui.common import BaseTaskButton
 
 
@@ -27,14 +24,9 @@ class EstimateMotionButton(BaseTaskButton):
             self.setEnabled(True)
 
 
-class OpenSimButton(BaseTaskButton):
+class KinematicsButton(BaseTaskButton):
     def __init__(self, callback):
-        super().__init__(
-            "folder.png",
-            VisualizeMotionTask,
-            {},
-            callback,
-        )
+        super().__init__("folder.png",  KinematicsTask, None, callback)
 
     def on_start(self):
         super().on_start()
@@ -52,7 +44,7 @@ class OpenSimButton(BaseTaskButton):
         parent_dir = os.path.dirname(output_dir)
         output_zip = os.path.join(
             parent_dir,
-            f"{self.task.config}-opensim",
+            f"{self.task.experiment}-opensim",
         )
         shutil.make_archive(output_zip, "zip", output_dir)
 
@@ -68,40 +60,3 @@ class OpenSimButton(BaseTaskButton):
                 shutil.move(output_zip, save_path)
                 # TOOD: Show a success message
                 print(f"Saved OpenSim files to {save_path}")
-
-
-class VisualizeMotionButton(BaseTaskButton):
-    def __init__(self, callback):
-        super().__init__("visualize.png", VisualizeMotionTask, {}, callback)
-
-    def on_start(self):
-        super().on_start()
-        # TODO: Change icon
-
-    def on_finish(self, status, result):
-        super().on_finish(status, result)
-        if status and result is not None:
-            self.preview_video(result)
-
-    def preview_video(self, result):
-        if result is None:
-            return
-
-        dialog = QDialog()
-        dialog.setWindowTitle("Motion Preview")
-        dialog.setModal(True)
-        dialog.setLayout(QVBoxLayout())
-
-        video_widget = QVideoWidget()
-        dialog.layout().addWidget(video_widget)
-
-        player = QMediaPlayer()
-        player.setVideoOutput(video_widget)
-        player.setSource(QUrl.fromLocalFile(result))
-        player.setLoops(QMediaPlayer.Loops.Infinite)
-        player.play()
-
-        # Resize the dialog, hide buttons, and show the video
-        dialog.resize(800, 600)
-        dialog.exec()
-        player.stop()
