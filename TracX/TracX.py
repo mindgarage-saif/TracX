@@ -128,7 +128,7 @@ def process(name: str):
     process_fun(experiment)
 
 
-def kinematics(name: str):
+def kinematics(name: str, overwrite: bool = False):
     try:
         experiment = Experiment.open(name)
         pose_model = experiment.cfg["pose"]["pose_model"]
@@ -143,6 +143,14 @@ def kinematics(name: str):
             "Process the experiment to create the motion file before kinematics computation"
         )
         return
+
+    # Skip kinematics if the mot and scaled model files already exist
+    output_dir = experiment.output_dir
+    mot_file = os.path.join(output_dir, "ik.mot")
+    scaled_model_file = os.path.join(output_dir, "scaled_model.osim")
+    if not overwrite and os.path.exists(mot_file) and os.path.exists(scaled_model_file):
+        logging.info("Kinematics files already exist. Skipping kinematics computation")
+        return output_dir, mot_file, scaled_model_file
 
     currentDateAndTime = datetime.now()
     logging.info(

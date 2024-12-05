@@ -10,7 +10,7 @@ from aitviewer.utils.vtp_to_ply import convert_meshes
 from aitviewer.viewer import Viewer
 
 
-def display_model_in_viewer(
+def render(
     osim: Optional[str] = None,
     mot: Optional[str] = None,
     fps: Optional[int] = None,
@@ -31,9 +31,9 @@ def display_model_in_viewer(
         joints (bool, optional): Show model joints as spheres. Defaults to False.
     """
 
-    if args.osim is not None:
+    if osim is not None:
         # Check that a folder named Geometry exists in the same folder as the osim file.
-        osim_dir = os.path.dirname(args.osim)
+        osim_dir = os.path.dirname(osim)
         geom_dir = os.path.join(osim_dir, "Geometry")
         if not os.path.exists(geom_dir):
             print(
@@ -52,23 +52,23 @@ def display_model_in_viewer(
             # Convert the provided meshes to .ply
             convert_meshes(geom_dir, geom_dir)
 
-    if args.mot is None:
+    if mot is None:
         osim_seq = OSIMSequence.a_pose(
-            args.osim,
+            osim,
             name="OpenSim template",
-            show_joint_angles=args.joints,
-            color_skeleton_per_part=args.color_parts,
-            color_markers_per_part=args.color_markers,
+            show_joint_angles=joints,
+            color_skeleton_per_part=color_parts,
+            color_markers_per_part=color_markers,
         )
 
     else:
         osim_seq = OSIMSequence.from_files(
-            args.osim,
-            args.mot,
-            show_joint_angles=args.joints,
-            color_skeleton_per_part=args.color_parts,
-            color_markers_per_part=args.color_markers,
-            fps_out=args.fps,
+            osim,
+            mot,
+            show_joint_angles=joints,
+            color_skeleton_per_part=color_parts,
+            color_markers_per_part=color_markers,
+            fps_out=fps,
         )
 
     v = Viewer()
@@ -76,16 +76,16 @@ def display_model_in_viewer(
 
     v.lock_to_node(osim_seq, (5, 2, 0), smooth_sigma=5.0)
 
-    if args.mocap is not None:
+    if mocap is not None:
         # check that the mocap file is in .c3d format
-        assert args.mocap.endswith(".c3d"), "Mocap file must be in .c3d format."
+        assert mocap.endswith(".c3d"), "Mocap file must be in .c3d format."
         marker_seq = Markers.from_c3d(
-            args.mocap, fps_out=args.fps, color=[0, 255, 0, 255]
+            mocap, fps_out=fps, color=[0, 255, 0, 255]
         )
         v.scene.add(marker_seq)
 
-    if args.fps is not None:
-        v.playback_fps = args.fps
+    if fps is not None:
+        v.playback_fps = fps
 
     v.run_animations = True
 
@@ -132,4 +132,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    display_model_in_viewer(**args.__dict__)
+    render(
+        osim=args.osim,
+        mot=args.mot,
+        fps=args.fps,
+        color_parts=args.color_parts,
+        color_markers=args.color_markers,
+        mocap=args.mocap,
+        joints=args.joints,
+    )

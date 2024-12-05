@@ -314,8 +314,9 @@ class Experiment:
         # Execute the 2D pose estimation
         logging.info("Executing 2D pose estimatioan...")
         res_w, res_h = 0, 0
-        if cfg.pose.pose_model in ["COCO_17", "COCO_133", "HALPE_26"]:
-            PoseTracker2D.estimateDefault()
+        # TODO: Do not hardcode the model names here
+        if cfg.pose.pose_model in ["COCO_17", "COCO_133", "HALPE_26", "BODY_43", "WHOLEBODY_150"]:
+            Pose2Sim.poseEstimation()
         elif cfg.pose.pose_model == "BODY_43":
             res_w, res_h, _ = PoseTracker2D.estimateBodyWithSpine(
                 videos=self.videos_dir,

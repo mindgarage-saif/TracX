@@ -45,7 +45,6 @@ class SettingsPanel(QFrame):
 
         # Download Button
         self.exportButton = IconButton("export.png", 24, self)
-        self.exportButton.setEnabled(False)
         layout.addWidget(self.exportButton)
 
         self.visualizeButton = KinematicsButton(self.onVisualized)
@@ -148,7 +147,7 @@ class SettingsPanel(QFrame):
         self.experiment.update_config(cfg)
 
     def onAnalyzed(self, status, result):
-        self.exportButton.setEnabled(status)
+        pass
 
     def onVisualized(self, status, result):
         pass

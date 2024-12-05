@@ -41,7 +41,6 @@ class TaskRunner(QObject):
         log_handler.setFormatter(log_formatter)
 
         logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)  # Set desired logging level
         logger.addHandler(log_handler)
 
         # Prevent duplicate log messages in the console
@@ -59,11 +58,11 @@ class TaskRunner(QObject):
             self.finished.emit(True, result)
         except Exception as e:
             # If an error occurs, log it and emit the signal with failure status
+            logging.error(f"Task failed with error: {e}")
             import traceback
-
             trace = traceback.format_exc()
-            logging.error(f"Task failed with error: {e}\n{trace}")
-            self.finished.emit(False, f"{e}\n{trace}")
+            logging.debug(trace)
+            self.finished.emit(False, e)
         finally:
             # Clean up resources if needed
             logging.info("Task completed.")

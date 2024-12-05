@@ -16,3 +16,4 @@ class EstimateMotionTask(BaseTask):
             raise ValueError("Experiment name is required")
 
         TracX.process(experiment_name)
+        TracX.kinematics(self.experiment, overwrite=True)

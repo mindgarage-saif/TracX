@@ -135,7 +135,19 @@ def run_kinematics(
         logging.info("Reading time range from the motion file...")
         time_col = read_trc(motion_file)[2]  # Pandas Column object (take first and last values)
         time_range = (time_col.iloc[0], time_col.iloc[-1])
-    logging.info(f"Time range: {time_range}")
+
+    # If duration is longer than 10 seconds, use the middle 10 seconds for scaling
+    duration = time_range[1] - time_range[0]
+    if duration > 10:
+        logging.info("Duration of the motion file is longer than 10 seconds, using the middle 10 seconds for scaling...")
+        scaling_time_range = (time_range[0] + duration / 2 - 5, time_range[0] + duration / 2 + 5)
+    else:
+        scaling_time_range = time_range
+    logging.info(f"Scaled time range: {scaling_time_range}")
+    
+    # Use the complete time range for IK
+    ik_time_range = time_range
+    logging.info(f"IK time range: {ik_time_range}")
 
     # Run OpenSim Scaling
     try:
@@ -145,7 +157,7 @@ def run_kinematics(
             marker_file=marker_file,
             model_file=model_file,
             output_dir=output_dir,
-            time_range=time_range,
+            time_range=scaling_time_range,
         )
 
         logging.info("Running OpenSim Scaling...")
@@ -163,7 +175,7 @@ def run_kinematics(
             ik_file=osim_ik_file,
             marker_file=marker_file,
             output_dir=output_dir,
-            time_range=time_range,
+            time_range=ik_time_range,
         )
 
         logging.info("Running OpenSim Inverse Kinematics...")

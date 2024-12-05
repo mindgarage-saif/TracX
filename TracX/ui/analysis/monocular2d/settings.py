@@ -448,9 +448,6 @@ class Monocular2DSettingsPanel(SettingsPanel):
         )
 
         # Update buttons
-        isAnalyzed = self.experiment.get_motion_file() is not None
-        self.analyzeButton.setEnabled(not isAnalyzed)
-        self.exportButton.setEnabled(isAnalyzed)
         self.analyzeButton.log_file = self.experiment.log_file
 
     def updateConfig(self, cfg):

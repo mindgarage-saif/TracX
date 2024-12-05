@@ -34,16 +34,18 @@ class Studio(QApplication):
         sys.exit(self.exec())
 
 
-def configure_logging():
+def configure_logging(debug=False):
+    logging_level = logging.DEBUG if debug else logging.INFO
+
     # Set up file handler with rotating logs, limited to 1MB per file with 0 backup files
     file_handler = RotatingFileHandler("tracx.log", maxBytes=1_000_000, backupCount=0)
-    file_handler.setLevel(logging.DEBUG)  # TODO: Change to logging.INFO for production
+    file_handler.setLevel(logging_level)
     file_format = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     file_handler.setFormatter(file_format)
 
     # Set up colored console handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
+    console_handler.setLevel(logging_level)
     console_format = ColoredFormatter(
         "%(log_color)s%(asctime)s [%(levelname)s] %(message)s",
         log_colors={
@@ -57,7 +59,7 @@ def configure_logging():
     console_handler.setFormatter(console_format)
 
     # Set up root logger with both handlers
-    logging.basicConfig(level=logging.DEBUG, handlers=[file_handler, console_handler])
+    logging.basicConfig(level=logging_level, handlers=[file_handler, console_handler])
 
     return logging.getLogger(__name__)
 

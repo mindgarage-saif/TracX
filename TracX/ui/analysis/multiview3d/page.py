@@ -105,7 +105,8 @@ class Multiview3DAnalysisPage(QWidget):
     def downloadMotionData(self):
         try:
             motionData = self.experiment.get_motion_file()
-            self.downloadFile(motionData)
+            assert motionData is not None
+            self.downloadFolder(self.experiment.output_dir)
         except Exception as e:
             self.parent().showAlert(str(e), "Download Failed")
 
@@ -120,3 +121,24 @@ class Multiview3DAnalysisPage(QWidget):
             if save_path:
                 shutil.copyfile(file_path, save_path)
                 # TOOD: Show a success message
+
+    def downloadFolder(self, folder_path):
+        # Zip the output directory
+        folder_path = os.path.abspath(folder_path)
+        parent_dir = os.path.dirname(folder_path)
+        output_zip = os.path.join(
+            parent_dir,
+            f"{self.experiment.name}-export",
+        )
+        shutil.make_archive(output_zip, "zip", folder_path)
+
+        # Open a file dialog to save the zip file
+        output_zip += ".zip"
+        file_dialog = QFileDialog(self)
+        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        file_dialog.selectFile(os.path.basename(output_zip))
+
+        if file_dialog.exec():
+            save_path = file_dialog.selectedFiles()[0]
+            if save_path:
+                shutil.move(output_zip, save_path)
