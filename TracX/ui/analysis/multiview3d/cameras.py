@@ -3,15 +3,19 @@ import os
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
+    QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
+    QWidget,
 )
 
 from TracX.core import Experiment
@@ -29,16 +33,27 @@ class CamerasTab(Tab):
         self.experiment = None
 
         # Panel 1: Adding cameras and defining/importing calibration parameters
-        camerasLayout = QVBoxLayout()
+        camerasLayoutWrapper = QWidget(self)
+        camerasLayoutWrapper.setFixedWidth(400)
+        camerasLayoutWrapper.setSizePolicy(
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
+        )
+        camerasLayout = QVBoxLayout(camerasLayoutWrapper)
         camerasLayout.setContentsMargins(0, 0, 0, 0)
         camerasLayout.setSpacing(PAD_Y)
-        self.addLayout(camerasLayout)
-
+        self.addWidget(camerasLayoutWrapper)
+        
         # Panel 2: Visualization of camera calibration
-        self.canvasLayout = QVBoxLayout()
+        canvasLayoutWrapper = QWidget(self)
+        canvasLayoutWrapper.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+        self.canvasLayout = QVBoxLayout(canvasLayoutWrapper)
         self.canvasLayout.setContentsMargins(0, 0, 0, 0)
         self.canvasLayout.setSpacing(0)
-        self.addLayout(self.canvasLayout)
+        self.addWidget(canvasLayoutWrapper)
 
         # Divide panel 1 into two vertical sections, one for adding
         # cameras and the other for modifying calibration parameters
@@ -57,50 +72,107 @@ class CamerasTab(Tab):
 
         # Panel 1 (Section 1): Adding cameras
         self.camerasList = QListWidget(self)
-        self.camerasList.setFixedWidth(400)
         self.camerasList.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
         self.camerasList.itemSelectionChanged.connect(self.onCameraSelected)
         camerasLayout1.addWidget(self.camerasList)
 
-        # Define a drop-down menu for selecting calibration file type
+        # Add headers for sectioning
+        calibrationHeader = QLabel("<b>Import Calibration</b>", self)
+        calibrationHeader.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        camerasLayout1.addWidget(calibrationHeader)
+
+        # Spacer after header for neat separation
+        camerasLayout1.addSpacing(PAD_Y // 2)
+
+        # Updated Import Calibration button section
         self.calibrationType = QComboBox(self)
-        self.calibrationType.addItem("Pose2Sim")
-        self.calibrationType.addItem("AniPose")
-        self.calibrationType.addItem("bioCV")
-        self.calibrationType.addItem("Caliscope")
-        self.calibrationType.addItem("EasyMocap")
-        self.calibrationType.addItem("FreeMocap")
-        self.calibrationType.addItem("OpenCap")
-        self.calibrationType.addItem("Optitrack")
-        self.calibrationType.addItem("Qualisys")
-        self.calibrationType.addItem("Vicon")
+        self.calibrationType.addItems([
+            "Pose2Sim", "AniPose", "bioCV", "Caliscope",
+            "EasyMocap", "FreeMocap", "OpenCap", "Optitrack",
+            "Qualisys", "Vicon"
+        ])
+        self.calibrationType.setToolTip("Select the calibration format")
 
-        self.calibrationImport = LabeledWidget(
-            "Import Calibration File", self.calibrationType
-        )
-        camerasLayout1.addWidget(self.calibrationImport)
-        self.calibrationImport.setFixedWidth(400)
-        self.calibrationImport.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
-            QSizePolicy.Policy.Expanding,
-        )
-
-        self.importCalibrationButton = QPushButton("Import File", self)
+        self.importCalibrationButton = QPushButton("📂 Import File", self)
+        self.importCalibrationButton.setToolTip("Import an existing calibration file")
         self.importCalibrationButton.clicked.connect(self.selectCalibrationFile)
-        self.calibrationImport.layout.addWidget(self.importCalibrationButton)
 
-        self.startCalibrationButton = QPushButton("Calibrate Manually", self)
+        importLayout = QHBoxLayout()
+        importLayout.addWidget(self.calibrationType, stretch=3)
+        importLayout.addWidget(self.importCalibrationButton, stretch=1)
+        camerasLayout1.addLayout(importLayout)
+
+        # Add "OR" label with spacing
+        orLabel = QLabel("<b>OR</b>", self)
+        orLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        camerasLayout1.addSpacing(PAD_Y // 2)
+        camerasLayout1.addWidget(orLabel)
+        camerasLayout1.addSpacing(PAD_Y // 2)
+
+        # One-click calibration header
+        oneClickHeader = QLabel("<b>One-Click Calibration (Beta)</b>", self)
+        oneClickHeader.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        camerasLayout1.addWidget(oneClickHeader)
+        camerasLayout1.addSpacing(PAD_Y // 2)
+
+        # Create input fields for checkerboard size and square size
+        checkerboardSizeLayout = QHBoxLayout()
+        checkerboardSizeLayout.addWidget(QLabel("Checkerboard Size (h, w): "), stretch=1)
+        
+        self.checkerboardHeightInput = QLineEdit(self)
+        self.checkerboardHeightInput.setPlaceholderText("Height")
+        self.checkerboardHeightInput.setValidator(QIntValidator(1, 20, self))
+        self.checkerboardHeightInput.setText("8")
+        checkerboardSizeLayout.addWidget(self.checkerboardHeightInput, stretch=1)
+
+        checkerboardSizeLayout.addWidget(QLabel("x"))
+        
+        self.checkerboardWidthInput = QLineEdit(self)
+        self.checkerboardWidthInput.setPlaceholderText("Width")
+        self.checkerboardWidthInput.setValidator(QIntValidator(1, 20, self))
+        self.checkerboardWidthInput.setText("13")
+        checkerboardSizeLayout.addWidget(self.checkerboardWidthInput, stretch=1)
+        
+        camerasLayout1.addLayout(checkerboardSizeLayout)
+        squareSizeLayout = QHBoxLayout()
+        squareSizeLayout.addWidget(QLabel("Square Size (mm): "), stretch=1)
+        self.squareSizeInput = QLineEdit(self)
+        self.squareSizeInput.setPlaceholderText("Enter square size in mm")
+        squareSizeLayout.addWidget(self.squareSizeInput, stretch=1)
+        camerasLayout1.addLayout(squareSizeLayout)
+
+
+        # Updated One-Click Calibration section
+        self.startCalibrationButton = QPushButton("✨ Start One-Click Calibration", self)
+        self.startCalibrationButton.setToolTip("Automatically calibrate cameras using checkerboard videos")
         self.startCalibrationButton.clicked.connect(self.calibrateManually)
-        self.calibrationImport.layout.addWidget(self.startCalibrationButton)
+        camerasLayout1.addWidget(self.startCalibrationButton)
+
+        # Simplified description using bullet points
+        autoCalibrationDescription = QLabel(
+            "- Place a checkerboard video for each camera under `<experiment-dir>/calibration/intrinsics/CAMERA_ID/<name>.mp4`.\n"
+            "- For extrinsics, place a checkerboard image under `<experiment-dir>/calibration/extrinsics/CAMERA_ID/<name>.jpg`.\n"
+            "- Click the button above to start the calibration process.\n"
+            "\n"
+            "This feature is experimental and may not always produce accurate results. All input videos must be "
+            "synchronized and have the same duration.\n"
+            "\n"
+            "For extrinsics calibration, ensure the checkerboard is placed flat on a ground plane or table visible from all cameras. This setup is essential to correctly determine the real-world axes and accurately orient the estimated motion data. Misalignment of the checkerboard with the ground plane may result in visual artifacts, such as the human figure appearing to float or being incorrectly oriented in 3D visualizations.",
+        )
+        autoCalibrationDescription.setWordWrap(True)
+        autoCalibrationDescription.setStyleSheet("color: gray; font-size: 12px;")
+        camerasLayout1.addWidget(autoCalibrationDescription)
+
+        # Add spacing after description
+        camerasLayout1.addStretch()
 
         # Panel 1 (Section 2): Modifying calibration parameters
         self.calibrationTabs = TabbedArea(self)
-        self.calibrationTabs.tabs.setFixedWidth(400)
         self.calibrationTabs.tabs.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
         camerasLayout2.addWidget(self.calibrationTabs)
@@ -132,6 +204,13 @@ class CamerasTab(Tab):
         cameraParameters = self.experiment.get_camera_parameters()
         self.setCameraInfo(cameraParameters)
 
+        # Update the auto-calibrate checkerboard size and square size fields
+        intrinsics_corners_nb = experiment.cfg["calibration"]["calculate"]["intrinsics"]["intrinsics_corners_nb"]
+        intrinsics_square_size = experiment.cfg["calibration"]["calculate"]["intrinsics"]["intrinsics_square_size"]
+        self.checkerboardHeightInput.setText(str(intrinsics_corners_nb[0]))
+        self.checkerboardWidthInput.setText(str(intrinsics_corners_nb[1]))
+        self.squareSizeInput.setText(str(intrinsics_square_size))
+
     def refreshUI(self):
         experiment: Experiment = self.experiment
         cameraParameters = experiment.get_camera_parameters()
@@ -148,12 +227,13 @@ class CamerasTab(Tab):
             self.importCalibrationButton.setEnabled(True)
 
     def calibrateManually(self):
-        # TODO: Get following parameters from the UI
+        intrinsics_corners_nb = (int(self.checkerboardHeightInput.text()), int(self.checkerboardWidthInput.text()))
+        intrinsics_square_size = float(self.squareSizeInput.text())
         self.experiment.calibrate_cameras(
             overwrite_intrinsics=True,
-            intrinsics_extension="jpg",
-            intrinsics_corners_nb=(8, 13),
-            intrinsics_square_size=20, # mm
+            intrinsics_extension="mp4",
+            intrinsics_corners_nb=intrinsics_corners_nb,
+            intrinsics_square_size=intrinsics_square_size, # mm
             calculate_extrinsics=False,
         )
 
@@ -178,7 +258,6 @@ class CamerasTab(Tab):
             self.clearFigure()
             self.camerasList.clear()
             self.camerasList.hide()
-            self.calibrationImport.show()
             return
 
         self.cameras = CameraSystem(calib_file)
@@ -192,7 +271,6 @@ class CamerasTab(Tab):
             item = QListWidgetItem(camera.id)
             self.camerasList.addItem(item)
         self.camerasList.show()
-        self.calibrationImport.hide()
 
     def clearFigure(self):
         if self.canvas is not None:

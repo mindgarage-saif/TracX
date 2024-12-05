@@ -309,7 +309,7 @@ class Experiment:
         # Set video format and overwrite flag
         # TODO: Read these from self.cfg
         videos_format = os.path.splitext(self.videos[0])[-1].lower()
-        overwrite = False
+        overwrite = cfg.get("pose").get("overwrite_pose", False)
 
         # Execute the 2D pose estimation
         logging.info("Executing 2D pose estimatioan...")
@@ -337,11 +337,12 @@ class Experiment:
             unrotate_pose2d(self.pose2d_dir, calibration_file)
 
         # Person association
-        # logging.info("Finding the most prominent person...")
-        # Pose2Sim.personAssociation()
+        logging.info("Finding the most prominent person...")
+        Pose2Sim.personAssociation()
 
         # 2D-to-3D Lifting in Monocular Mode
         if self.monocular:
+            # TODO: Update this to output a .trc file
             logging.info("Lifting 2D poses to 3D...")
             if cfg.pose3d_model == "baseline":
                 if res_w == 0 or res_h == 0:
@@ -363,17 +364,13 @@ class Experiment:
 
         # Triangulation in Multiview Mode
         else:
-            # logging.info("Calibrating cameras...")
-            # Pose2Sim.calibration()
-
             # TODO: Wrap triangulation in a try-except block and throw a nice error message
             logging.info("Triangulating 3D poses...")
             Pose2Sim.triangulation()
 
-            logging.info("Smoothing triangulated poses...")
-            Pose2Sim.filtering()
-
-        # TODO: Filtering should be moved here
+        # Filtering
+        logging.info("Smoothing triangulated poses...")
+        Pose2Sim.filtering()
 
         # Restore the working directory
         os.chdir(cwd)
