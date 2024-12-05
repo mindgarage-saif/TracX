@@ -49,7 +49,7 @@ from anytree.importer import DictImporter
 import logging
 
 from Pose2Sim.common import sort_stringlist_by_last_number
-from Pose2Sim.skeletons import *
+from TracX.skeletons import *
 
 
 ## AUTHORSHIP INFORMATION

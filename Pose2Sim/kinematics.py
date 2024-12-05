@@ -45,7 +45,7 @@ from anytree import PreOrderIter
 import opensim
 
 from Pose2Sim.common import natural_sort_key, euclidean_distance, trimmed_mean
-from Pose2Sim.skeletons import *
+from TracX.skeletons import *
 
 
 

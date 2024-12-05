@@ -47,7 +47,7 @@ import logging
 
 from Pose2Sim.common import retrieve_calib_params, computeP, weighted_triangulation, \
     reprojection, euclidean_distance, sort_stringlist_by_last_number
-from Pose2Sim.skeletons import *
+from TracX.skeletons import *
 
 
 ## AUTHORSHIP INFORMATION
