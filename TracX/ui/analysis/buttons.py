@@ -2,7 +2,13 @@ import contextlib
 
 from TracX.tasks import EstimateMotionTask, KinematicsTask
 from TracX.ui.common import BaseTaskButton
-from TracX.rendering import render
+try:
+    from TracX.rendering import render
+except ImportError:
+    def render(*args, **kwargs):
+        raise ImportError(
+            "The rendering module is not available. Please install the `requirements-extra.txt` file."
+        )
 
 
 class EstimateMotionButton(BaseTaskButton):
