@@ -6,7 +6,7 @@ APP_NAME_SLUG = APP_NAME.lower().replace(" ", "-")
 APP_VERSION = "0.1.0"
 
 # Define paths.
-APP_HOME = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+APP_HOME = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 APP_ASSETS = os.path.join(APP_HOME, "assets")
 APP_CACHE = os.path.join(os.path.expanduser("~"), ".cache", APP_NAME_SLUG)
 APP_FILES = os.path.join(os.path.expanduser("~"), APP_NAME)
@@ -57,3 +57,10 @@ def create_directories():
     """Create necessary directories."""
     for directory in [APP_CACHE, APP_FILES, APP_RECORDINGS, APP_PROJECTS]:
         os.makedirs(directory, exist_ok=True)
+
+
+# Enable feature flags (set using environment variables).
+FEATURE_RECORDING_ENABLED = os.getenv("FEATURE_RECORDING_ENABLED", "0") == "1"
+FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED = os.getenv("FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED", "0") == "1"
+FEATURE_MONOCULAR_3D_ANALYSIS_ENABLED = os.getenv("FEATURE_MONOCULAR_3D_ANALYSIS_ENABLED", "0") == "1"
+FEATURE_STREAMING_ENABLED = os.getenv("FEATURE_STREAMING_ENABLED", "0") == "1"

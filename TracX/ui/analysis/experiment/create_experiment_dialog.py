@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from TracX.constants import FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED, FEATURE_MONOCULAR_3D_ANALYSIS_ENABLED
 from TracX.core import Experiment
 from TracX.ui.common import RadioGroup
 from TracX.ui.styles import PAD_X, PAD_Y
@@ -34,7 +35,7 @@ class CreateExperimentDialog(QDialog):
         self.motion_setup = RadioGroup(
             "Select Motion Type", self, Qt.Orientation.Horizontal
         )
-        self.motion_setup.addButton("2D")
+        self.motion_setup.addButton("2D") if FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED else None
         self.motion_setup.addButton("3D")
         self.motion_setup.addStretch()
         self.motion_setup.selectionChanged.connect(self.onMotionTypeChanged)
@@ -44,7 +45,7 @@ class CreateExperimentDialog(QDialog):
         self.camera_setup = RadioGroup(
             "Camera Configuration", self, Qt.Orientation.Horizontal
         )
-        self.camera_setup.addButton("Monocular")
+        self.camera_setup.addButton("Monocular") if FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED or FEATURE_MONOCULAR_3D_ANALYSIS_ENABLED else None
         self.camera_setup.addButton("Multiview")
         self.camera_setup.addStretch()
         self.innerLayout.addWidget(self.camera_setup)
@@ -110,12 +111,16 @@ class CreateExperimentDialog(QDialog):
         self.layout.addWidget(self.error_message)
 
     def onMotionTypeChanged(self, button):
-        if button.text() == "2D":
-            self.camera_setup.buttons()[0].setChecked(True)
-            self.camera_setup.buttons()[1].setEnabled(False)
-        else:  # 3D
-            self.camera_setup.buttons()[1].setEnabled(True)
-
+        if FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED:
+            if button.text() == "2D":
+                self.camera_setup.buttons()[0].setEnabled(True)
+                self.camera_setup.buttons()[0].setChecked(True)
+                self.camera_setup.buttons()[1].setEnabled(False)
+            else:
+                self.camera_setup.buttons()[0].setEnabled(FEATURE_MONOCULAR_3D_ANALYSIS_ENABLED)
+                self.camera_setup.buttons()[1].setEnabled(True)
+                self.camera_setup.buttons()[1].setChecked(True)
+        
     def createExperiment(self):
         try:
             name = self.experiment_name.text().strip()

@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from TracX.constants import APP_NAME
+from TracX.constants import APP_NAME, FEATURE_RECORDING_ENABLED
 from TracX.ui.analysis import AnalysisPage, AnalysisTab
 from TracX.ui.common import AppBar, TabbedArea
 from TracX.ui.recording import RecordPage, RecordTab
@@ -102,16 +102,16 @@ class StudioWindow(QMainWindow):
         self.studioFrame.layout.addWidget(self.sidebar)
 
         # Add pages
+        self.pages = {}
         self.analysisTab = AnalysisTab(self.sidebar)
         self.sidebar.addTab(self.analysisTab)
+        self.pages["process"] = AnalysisPage
 
-        self.recordTab = RecordTab(self.sidebar)
-        self.sidebar.addTab(self.recordTab)
+        if FEATURE_RECORDING_ENABLED:
+            self.recordTab = RecordTab(self.sidebar)
+            self.sidebar.addTab(self.recordTab)
+            self.pages["record"] = RecordPage
 
-        self.pages = {
-            "process": AnalysisPage,
-            "record": RecordPage,
-        }
         self.pageFrame = QFrame(self.studioFrame)
         self.pageFrame.setSizePolicy(
             QSizePolicy.Policy.Expanding,

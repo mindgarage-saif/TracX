@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
 )
 
-from TracX.constants import APP_NAME, APP_VERSION
+from TracX.constants import APP_NAME, APP_VERSION, FEATURE_STREAMING_ENABLED
 from TracX.ui.styles import PAD_X
 
 from .settings import SettingsDialog
@@ -54,22 +54,22 @@ class AppBar(QFrame):
         self.innerLayout.addWidget(about)
 
         # Settings button
-        settings = QPushButton("⚙️", self)
-        settings.setObjectName("SettingsButton")
-        settings.setProperty("class", "secondary_button")
-        settings.setStyleSheet("font-size: 16pt; padding: 0;")
-        settings.setFixedSize(32, 32)
-        settings.mousePressEvent = lambda event: self.showSettingsDialog()
-        self.innerLayout.addWidget(settings)
+        if FEATURE_STREAMING_ENABLED:
+            settings = QPushButton("⚙️", self)
+            settings.setObjectName("SettingsButton")
+            settings.setProperty("class", "secondary_button")
+            settings.setStyleSheet("font-size: 16pt; padding: 0;")
+            settings.setFixedSize(32, 32)
+            settings.mousePressEvent = lambda event: self.showSettingsDialog()
+            self.innerLayout.addWidget(settings)
 
     def showAboutDialog(self):
         QMessageBox.about(
             self,
             "About " + APP_NAME + " v" + APP_VERSION,
-            f"{APP_NAME} is a sophisticated tool designed for recording and processing motion capture data, primarily aimed at advancing research in the field of biomechanics and human motion analysis. "
-            + "Developed by the German Research Center for Artificial Intelligence (DFKI) in Kaiserslautern, Germany, it integrates state-of-the-art algorithms and user-friendly interfaces to facilitate high-precision data acquisition and analysis."
-            + "\n\n"
-            + f"The name {APP_NAME} is derived from 'Positura Animata', which translates to 'animated posture' in Latin, reflecting the tool's focus on capturing and analyzing dynamic human postures.",
+            f"{APP_NAME} is a markerless human motion analysis software developed by the German Research Center for Artificial Intelligence (DFKI) in Kaiserslautern, Germany.\n\n"
+            f"This software is available for research purposes only and is not intended for commercial use. All rights reserved by DFKI.\n\n"
+            f"Please visit the https://projects.dfki.uni-kl.de/tracx/ for more information.",
         )
 
     def showSettingsDialog(self):
