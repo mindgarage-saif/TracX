@@ -155,6 +155,20 @@ def computeP(calib_file, undistort=False):
             continue
 
         K = np.array(calib[cam]['matrix'])
+
+        # Check if K is normalized by looking at cx, cy values
+        fx, fy = K[0,0], K[1,1]
+        cx, cy = K[0,2], K[1,2]
+        is_normalized = (cx <= 1 and cy <= 1)
+        if is_normalized:
+            # Unnormalize K by image size
+            S = np.array(calib[cam]['size'])
+            fx *= S[0]
+            fy *= S[1]
+            cx *= S[0]
+            cy *= S[1]
+            K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
+
         if undistort:
             S = np.array(calib[cam]['size'])
             dist = np.array(calib[cam]['distortions'])
@@ -164,6 +178,13 @@ def computeP(calib_file, undistort=False):
             Kh = np.block([K, np.zeros(3).reshape(3,1)])
         R, _ = cv2.Rodrigues(np.array(calib[cam]['rotation']))
         T = np.array(calib[cam]['translation'])
+
+        # Invert extrinsics, if required
+        is_inverted = calib[cam].get('inverted', False)
+        if is_inverted:
+            R = R.T
+            T = - R @ T
+
         H = np.block([[R,T.reshape(3,1)], [np.zeros(3), 1 ]])
         
         P.append(Kh @ H)
