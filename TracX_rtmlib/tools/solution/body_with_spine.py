@@ -8,7 +8,6 @@ from TracX.constants import APP_ASSETS
 
 
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
 from scipy.interpolate import CubicSpline
 from scipy.optimize import minimize
 
@@ -173,7 +172,7 @@ class BodyWithSpine:
         to_openpose: bool = False,
         backend="onnxruntime",
         device: str = "cpu",
-        postprocess=False,
+        postprocess=True,
     ):
         """
         Initialize the DFKI_Body43 pose estimation model.
