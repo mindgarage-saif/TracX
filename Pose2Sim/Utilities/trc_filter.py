@@ -36,7 +36,7 @@ mpl.use('qt5agg')
 mpl.rc('figure', max_open_warning=0)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QTabWidget, QVBoxLayout
+from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QTabWidget, QVBoxLayout
 from scipy import signal
 from scipy.ndimage import gaussian_filter1d
 from statsmodels.nonparametric.smoothers_lowess import lowess

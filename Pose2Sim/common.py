@@ -24,7 +24,7 @@ mpl.use('qt5agg')
 mpl.rc('figure', max_open_warning=0)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QTabWidget, QVBoxLayout
+from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QTabWidget, QVBoxLayout
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="c3d")
 
