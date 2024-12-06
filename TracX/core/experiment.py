@@ -11,6 +11,8 @@ from TracX.constants import (
     APP_ASSETS,
     APP_PROJECTS,
     SUPPORTED_VIDEO_FORMATS,
+    FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED,
+    FEATURE_MONOCULAR_3D_ANALYSIS_ENABLED,
 )
 
 from .pose import PoseTracker2D, lift_to_3d
@@ -79,6 +81,13 @@ class Experiment:
 
             # Open the experiment and read the metadata
             e = Experiment.open(f)
+
+            # Skip experiments that are not enabled
+            if e.is_2d and not FEATURE_MONOCULAR_2D_ANALYSIS_ENABLED:
+                continue
+
+            if e.monocular and not FEATURE_MONOCULAR_3D_ANALYSIS_ENABLED:
+                continue
 
             experiments.append(
                 {
