@@ -201,6 +201,8 @@ BODY_43 = Node(
     ],
 )
 
+BODY_53 = BODY_43
+
 # NOTE: The following import is required for compatibility with existing client code.
 # It can be removed after refactoring the client code to eliminate this dependency.
 # HAND_21 (hand-only skeleton with 21 joints)

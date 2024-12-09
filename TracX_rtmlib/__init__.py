@@ -5,6 +5,7 @@ from .tools import (
     YOLOX,
     Body,
     BodyWithFeet,
+    BodyWithFeetUE5,
     BodyWithSpine,
     Face,
     Hand,

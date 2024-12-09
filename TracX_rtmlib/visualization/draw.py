@@ -28,6 +28,8 @@ def draw_skeleton(
             skeleton = "halpe26"
         elif num_keypoints == 43:
             skeleton = "body43"
+        elif num_keypoints == 53:
+            skeleton = "body53"
         elif num_keypoints == 106:
             skeleton = "face106"
         elif num_keypoints == 150:
@@ -50,6 +52,7 @@ def draw_skeleton(
         "hand21",
         "halpe26",
         "body43",
+        "body53",
         "face106",
         "wholebody150",
     ]:

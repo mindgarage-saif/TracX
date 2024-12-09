@@ -24,6 +24,7 @@ from TracX.skeletons import *
 from TracX_rtmlib import (
     Body,
     BodyWithFeet,
+    BodyWithFeetUE5,
     BodyWithSpine,
     Face,
     Hand,
@@ -199,6 +200,9 @@ def setup_pose_tracker(config_dict):
     elif pose_model.upper() == "BODY_43":
         ModelClass = BodyWithSpine
         logging.info("Using BODY_43 model (body and spine) for pose estimation.")
+    elif pose_model.upper() == "BODY_53":
+        ModelClass = BodyWithFeetUE5
+        logging.info("Using BODY_53 model (body and feet for UE5) for pose estimation.")
     elif pose_model.upper() == "HAND_21":
         ModelClass = Hand
         logging.info("Using HAND_21 model (hands) for pose estimation.")
@@ -212,7 +216,7 @@ def setup_pose_tracker(config_dict):
         )
     else:
         raise ValueError(
-            f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17', 'HAND_21', 'FACE_106', 'WHOLEBODY_150' or 'BODY_43'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation."
+            f"Invalid model_type: {pose_model}. Must be 'HALPE_26', 'COCO_133', 'COCO_17', 'HAND_21', 'FACE_106', 'WHOLEBODY_150', 'BODY_43' or 'BODY_53'. Use another network (MMPose, DeepLabCut, OpenPose, AlphaPose, BlazePose...) and convert the output files if you need another model. See documentation."
         )
     logging.info(f"Pose tracking set up for {ModelClass} model in {mode} mode. \n")
 

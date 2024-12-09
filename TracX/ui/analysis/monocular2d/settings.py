@@ -26,6 +26,7 @@ class Monocular2DSettingsPanel(SettingsPanel):
         self.pose_model = Selection(
             "Pose Model",
             {
+                "UE5": "BODY_53",
                 "Body": "COCO_17",
                 "Body + Feet": "HALPE_26",
                 "Body + Feet + Spine": "BODY_43",
